@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load staticfiles %}
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Your day sir</title>
+    <script src="{% static 'time_table/base.js' %}"></script>
+    <script src="{% static 'time_table/moment.js' %}"></script>
+    <script>
+        var CONTEXT = {
+            MIN_PX_SCALE: 1,// 1 min = 1px
+            BREADTH: 100,// px
+            EPOCH:moment(),
+            NO_DAYS: 1// in the timetable
+        };
+
+        {#    1 min = scale px    #}
+        {#    time divisions div  #}
+        function render_time_divisions(scale, no_days) {
+            // defaults
+            scale = scale == undefined ? 1 : scale;
+            no_days = no_days == undefined ? 1 : no_days;
+            CONTEXT['NO_DAYS'] = no_days;
+
+            scale = scale * 60;
+            var $time_divisions_div = $("#time-divisions-div");
+            $($time_divisions_div).empty();
+
+            for (var i = 0; i <= 24 * no_days; ++i) {
+                var top = i * scale;
+                var time_division = element(
+                    ["div"],
+                    [
+                        {
+                            "style": "position:absolute;width:100%;top:" + top + "px",
+                            "class": "divider teal"
+                        }
+                    ],
+                    [""],
+                    [true]
+                );
+
+                var time_hint = element(
+                    ["span"],
+                    [
+                        {
+                            "style": "position:absolute;top:" + top + "px;"
+                        }
+                    ],
+                    [i + ":00"],
+                    [true]
+                );
+
+                //console.log(division);
+                $($time_divisions_div).append(time_division);
+                $($time_divisions_div).append(time_hint);
+            }
+
+            // pushing the clipper in time stubs div to make the inner heights
+            // of time stubs div and time divisions div equal
+            var total_height = 24 * no_days * scale;
+            $('#clipper').css({
+                "top": total_height + "px"
+            })
+        }
+
+
+        {#    time stubs div   #}
+        function render_rectangle(top, left, height, width, details) {
+            var display_name = "";
+            for (var j = 0; j < details['name'].length; j++) {
+                display_name += details['name'].charAt(j) + "<br>";
+            }
+
+            var rectangle = element(
+                ["a"],
+                [
+                    {
+                        "href": "#",
+                        "class": "white-text waves-effect z-depth-5",
+                        "style": "position:absolute;" +
+                        "top: " + top + "px;" +
+                        "left: " + left + "px;" +
+                        "width:" + width + "px;" +
+                        "height:" + height + "px;" +
+                        "background-color:" + details['bg']
+                    }
+                ],
+                [display_name],
+                [true]
+            );
+            //console.log(rectangle);
+            var $time_stubs_div = $("#time-stubs-div");
+            $($time_stubs_div).append(rectangle);
+        }
+
+
+        function render_event_stub(details) {
+            render_rectangle(details['epoch'], 300, details['duration'] * CONTEXT['MIN_PX_SCALE'], CONTEXT['BREADTH'],
+                {
+                    name: "dynamic",
+                    bg: "red"
+                })
+        }
+
+
+        $(document).ready(function () {
+            {# getting references #}
+            var $time_table_div = $('#time-table-div');
+            var $time_divisions_div = $('#time-divisions-div');
+            var $time_stubs_div = $('#time-stubs-div');
+            var $scale_select = $('#scale-select');
+            {# getting references #}
+
+
+            {# timetable height #}
+            $('.fill-viewport').height($(document).height() * (0.90));
+
+
+            {# setting preferences #}
+            CONTEXT["MIN_PX_SCALE"] = 1;
+            CONTEXT["BREADTH"] = $($time_table_div).width() / 35;
+
+
+            {# toolbars #}
+            // scale
+            $($scale_select).val(CONTEXT["MIN_PX_SCALE"] * 60); // hour px selection
+            render_time_divisions(CONTEXT["MIN_PX_SCALE"]);
+
+
+            {# scale change listener #}
+            $($scale_select).on("change", function () {
+                CONTEXT["MIN_PX_SCALE"] = $(this).val() / 60;
+                render_time_divisions(CONTEXT["MIN_PX_SCALE"]);
+            });
+
+
+            {# scroll sync #}
+            $($time_stubs_div).on('scroll', function () {
+                $('#time-divisions-div').scrollTop($(this).scrollTop());
+            });
+
+            render_rectangle(200, 200, 200, CONTEXT["BREADTH"], {name: "hey", bg: "green"});
+            render_rectangle(60, 100, 600, CONTEXT["BREADTH"], {name: "hey", bg: "blue"});
+            render_rectangle(60, 2300, 600, CONTEXT["BREADTH"], {name: "hey", bg: "blue"})
+
+            var a = moment().format();
+            var b = moment().add(1,'d');
+            var duration = moment.duration(b.diff(a));
+
+        });
+    </script>
+
+    <style>
+
+        #time-table-div {
+            height: 100%;
+            position: relative;
+            padding: 0;
+        }
+
+        #time-divisions-div {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            overflow: scroll;
+        }
+
+        #time-stubs-div {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            overflow: scroll;
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="row fill-viewport">
+    <div class="col m1 l2 ">
+        <label>
+            Scale
+            <p class="range-field">
+                <input type="range" id="scale-select" min="30" max="120"/>
+            </p>
+        </label>
+    </div>
+
+    <div id="time-table-div" class="col m10 l8 white row">
+
+        <div id="day-hint"
+             class="waves-effect waves-yellow teal-text flow-text"
+             style="
+            text-align: center;
+            margin: 0;
+            width: 100%;
+            padding-top: 10px;
+            padding-bottom: 10px;">
+            Today
+        </div>
+        <div class="divider"></div>
+
+        <div id="time-divisions-div">
+
+        </div>
+
+        <div id="time-stubs-div">
+            <hr id="clipper" style="position: absolute;background-color: red;">
+        </div>
+
+    </div>
+
+    <div class="col m1 l2 "></div>
+</div>
+</body>
+</html>

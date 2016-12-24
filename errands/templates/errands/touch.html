@@ -1,0 +1,222 @@
+{% extends 'errands/__base__.html' %}
+{% block title %}Touch-Errand{% endblock %}
+{% block style %}
+    <style>
+        .remove-td:hover {
+            background-color: rgba(255, 0, 0, 0.50);
+        }
+
+        #fixed_top {
+            position: fixed;
+            z-index: 100;
+            width: inherit;
+        }
+
+        #fixed_left {
+            position: fixed;
+            z-index: 100;
+            width: inherit;
+        }
+
+        #pieces_table {
+            margin-top: 100px;
+        }
+
+        #pieces_table .card-content {
+            margin: 0;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    {% load staticfiles %}
+    <script src="{% static 'errands/html_build_strings.js' %}"></script>
+    <script>
+        function Piece(pk, time_period, duration, epoch_date, epoch_time, misc) {
+            this.pk = pk;
+            this.time_period = time_period;
+            this.duration = duration;
+            this.epoch_date = epoch_date;
+            this.epoch_time = epoch_time;
+            this.misc = misc;
+        }
+
+        {#  Get data  #}
+        var Context = {
+            Errand: {
+                {% for i in errand %}
+                    {# insert errand description #}
+                {% endfor %}
+            },
+            Old_Pieces: [
+                {% for i in old_pieces %}
+                    {# insert old pieces descritpions #}
+                {% endfor %}
+            ],
+            New_Pieces: []
+        };
+
+        {#  Initialize the UI using data  #}
+        {#  Set listeners for events and change Errand Object correspondingly #}
+        $(document).ready(function () {
+            $('#errand_tag')
+                .on(
+                    'keyup',
+                    function () {
+                        $('#errand_head').html($(this).val());
+                    }
+                )
+            ;
+            $('#piece_add_btn')
+                .on(
+                    'click',
+                    function () {
+                        $('#pieces_list').append(HTML_STRINGS.PIECE);
+                    }
+                )
+            ;
+            $('#pieces_list')
+                .on(
+                    'click',
+                    '.remove-btn',
+                    function () {
+                        var id = $(this).parent().parent().attr('id');
+                        $('tr').filter('#' + id).remove();
+                    }
+                )
+                // time-period
+                .on(
+                    'click',
+                    '.time-period-div .option-select',
+                    function () {
+                        var on = $(this).prop('checked');
+                        var $time_period_select = $(this).parent().parent().parent().find('.time-period-select');
+                        var $days = $($time_period_select).find('.days');
+                        var $seconds = $($time_period_select).find('.seconds');
+
+                        if (!on) {
+                            $time_period_select.fadeOut();
+                            $($days).val(0);
+                            $($seconds).val(0);
+                        }
+                        else {
+                            $time_period_select.fadeIn()
+                        }
+                    }
+                )
+                // duration
+                .on(
+                    'click',
+                    '.duration-div .option-select',
+                    function () {
+                        var on = $(this).prop('checked');
+                        var $duration_select = $(this).parent().parent().parent().find('.duration-select');
+                        var $days = $($duration_select).find('.days');
+                        var $seconds = $($duration_select).find('.seconds');
+
+                        if (!on) {
+                            $duration_select.fadeOut();
+                            $($days).val(0);
+                            $($seconds).val(0);
+                        }
+                        else {
+                            $duration_select.fadeIn()
+                        }
+                    }
+                )
+            ;
+        });
+    </script>
+    <div class="row">
+        <div class="col l2">
+            <div id="fixed_left" class="white">
+                <br>
+                <div class="row">
+                    <div class="col l12 input-field">
+                        <input id="errand_tag" type="text" class="validate" value="">
+                        <label for="errand_tag">Tag</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col l12 input-field">
+                        <textarea id="errand_comment" class="materialize-textarea"></textarea>
+                        <label for="errand_comment">Comment</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col l8">
+            {# Fixed Top #}
+            <div id="fixed_top" class="white">
+                <div class="row" style="margin:0">
+                    <div id="errand_head" class="col l6 flow-text"></div>
+                    <div class="right-align">
+                        <p class="flow-text"><span id="pieces_count">3</span> Pieces</p>
+                    </div>
+                </div>
+                <div class="row" style="margin: 0">
+                    <div class="col l12 divider"></div>
+                </div>
+            </div>
+            {# Pieces Table #}
+            <div id="pieces_table">
+                <table class="bordered striped highlight">
+                    {# Pieces List #}
+                    <tbody id="pieces_list">
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="col l2">
+            {# Submit Form Btn #}
+            <a id="submit_btn"
+               class="waves-effect waves-light btn-large btn-floating blue z-depth-5"
+               style="position:fixed;top: 20px;right: 20px;">
+                <i class="material-icons">send</i>
+            </a>
+            {# Pieces Add Btn #}
+            <a id="piece_add_btn"
+               class="waves-effect waves-light btn-large btn-floating green z-depth-5"
+               style="position:fixed;bottom: 20px;right: 20px;">
+                <i class="material-icons">add</i>
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% comment %}
+
+
+        .time-period-div .fig {
+            position: relative;
+            height: 20px;
+            margin-top: 20px;
+        }
+
+        .time-point {
+            position: absolute;
+            height: 30px;
+            width: 30px;
+            border-radius: 15px;
+            border: 2px solid teal;
+        }
+
+        .time-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            top: 14px;
+        }
+
+                                <div class="col l6 fig">
+                                    <a class="black time-line z-depth-3 btn" style=""></a>
+                                    <a class="white waves-effect waves-teal time-point z-depth-5"
+                                       style="left: 10%;"></a>
+                                    <a class="white waves-effect waves-teal time-point z-depth-5"
+                                       style="left: 45%;"></a>
+                                    <a class="white waves-effect waves-teal time-point z-depth-5"
+                                       style="left: 80%;"></a>
+                                </div>
+{% endcomment %}

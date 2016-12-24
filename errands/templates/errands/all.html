@@ -1,0 +1,37 @@
+{% extends 'errands/__base__.html' %}
+{% block title %}errands{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col l3"></div>
+
+        <div class="col l6">
+            <table>
+                <colgroup>
+                    <col width="90%">
+                    <col width="10%">
+                </colgroup>
+
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th></th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                    <td>dfsad</td>
+                    <td>dfsad</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col l3">
+            <a href="{% url 'errands:touch' 0 %}"
+               class="btn-floating btn-large waves-effect waves-light red"
+               style="position: fixed;bottom: 50px;right: 50px">
+                <i class="material-icons">add</i></a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,20 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {% load staticfiles %}
-    <meta charset="UTF-8">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/css/materialize.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.8/js/materialize.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Your day sir</title>
-    <script src="{% static 'time_table/base.js' %}"></script>
-    <script src="{% static 'time_table/moment.js' %}"></script>
+{% extends 'time_table/__base__.html' %}
+{% block title %}
+    Your day sir
+{% endblock %}
+{% block script %}
     <script>
         var CONTEXT = {
             MIN_PX_SCALE: 1,// 1 min = 1px
             BREADTH: 100,// px
-            EPOCH:moment(),
+            EPOCH: moment(),
             NO_DAYS: 1// in the timetable
         };
 
@@ -77,7 +70,7 @@
             }
 
             var rectangle = element(
-                ["a"],
+                ["button"],
                 [
                     {
                         "href": "#",
@@ -114,6 +107,7 @@
             var $time_divisions_div = $('#time-divisions-div');
             var $time_stubs_div = $('#time-stubs-div');
             var $scale_select = $('#scale-select');
+            var $date_select = $('#date-select');
             {# getting references #}
 
 
@@ -127,10 +121,26 @@
 
 
             {# toolbars #}
-            // scale
             $($scale_select).val(CONTEXT["MIN_PX_SCALE"] * 60); // hour px selection
-            render_time_divisions(CONTEXT["MIN_PX_SCALE"]);
-
+            {# ajax setup #}
+            $('#get_errands_on_submit').on('click', function () {
+                var data = {
+                    date: moment($($date_select).val(), 'YYYY-MM-DD').format('DD-MM-YYYY')
+                };
+                $.ajax(
+                    {
+                        url: 'http://192.168.0.122:8000/time_table/get_errands_on/',
+                        type: 'POST',
+                        data: data,
+                        error: function () {
+                            alert('action could not be done')
+                        },
+                        success: function (result) {
+                            alert(result)
+                        },
+                        async: true
+                    })
+            });
 
             {# scale change listener #}
             $($scale_select).on("change", function () {
@@ -144,17 +154,21 @@
                 $('#time-divisions-div').scrollTop($(this).scrollTop());
             });
 
+
+            render_time_divisions(CONTEXT["MIN_PX_SCALE"]);
+
             render_rectangle(200, 200, 200, CONTEXT["BREADTH"], {name: "hey", bg: "green"});
             render_rectangle(60, 100, 600, CONTEXT["BREADTH"], {name: "hey", bg: "blue"});
             render_rectangle(60, 2300, 600, CONTEXT["BREADTH"], {name: "hey", bg: "blue"})
 
             var a = moment().format();
-            var b = moment().add(1,'d');
+            var b = moment().add(1, 'd');
             var duration = moment.duration(b.diff(a));
 
         });
     </script>
-
+{% endblock %}
+{% block style %}
     <style>
 
         #time-table-div {
@@ -178,44 +192,53 @@
         }
 
     </style>
-</head>
+{% endblock %}
 
-<body>
-<div class="row fill-viewport">
-    <div class="col m1 l2 ">
-        <label>
-            Scale
-            <p class="range-field">
-                <input type="range" id="scale-select" min="30" max="120"/>
-            </p>
-        </label>
-    </div>
+{% block body %}
+    <div class="row fill-viewport">
+        <div class="col m1 l2">
+            <label>
+                Scale
+                <p class="range-field">
+                    <input type="range" id="scale-select" min="30" max="120"/>
+                </p>
+            </label>
+            <label>
+                Date
+                <input id="date-select" type="date">
+            </label>
+            <button id="get_errands_on_submit">Go</button>
+        </div>
 
-    <div id="time-table-div" class="col m10 l8 white row">
+        <div id="time-table-div" class="col m10 l8 white row">
 
-        <div id="day-hint"
-             class="waves-effect waves-yellow teal-text flow-text"
-             style="
+            <div id="day-hint"
+                 class="waves-effect waves-yellow teal-text flow-text"
+                 style="
             text-align: center;
             margin: 0;
             width: 100%;
             padding-top: 10px;
             padding-bottom: 10px;">
-            Today
+                Today
+            </div>
+            <div class="divider"></div>
+
+            <div id="time-divisions-div">
+
+            </div>
+
+            <div id="time-stubs-div">
+                <hr id="clipper" style="position: absolute;background-color: red;">
+            </div>
+
         </div>
-        <div class="divider"></div>
 
-        <div id="time-divisions-div">
-
+        <div class="col m1 l2 ">
+            <a href="{% url 'time_table:touch_errand' 0 %}"
+               class="btn-floating btn-large waves-effect waves-light red"
+               style="position: fixed;bottom: 100px;right: 100px">
+                <i class="material-icons">add</i></a>
         </div>
-
-        <div id="time-stubs-div">
-            <hr id="clipper" style="position: absolute;background-color: red;">
-        </div>
-
     </div>
-
-    <div class="col m1 l2 "></div>
-</div>
-</body>
-</html>
+{% endblock %}

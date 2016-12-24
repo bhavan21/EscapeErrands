@@ -13,6 +13,9 @@ class JKeys:
     minutes = 'minutes'
     seconds = 'seconds'
 
+    pieces = 'pieces'
+    additional = 'additional'
+
     def __init__(self):
         pass
 
@@ -45,7 +48,7 @@ class Piece:
             """
             assumes that all critical key-value pairs are present in 'dict_info'
             the other parameters are ignored
-            self.kwargs is None
+            self.misc is None
             """
             self.dict_info = dict_info
             # time_period
@@ -158,44 +161,45 @@ class Errand:
     Ordered List of pieces and some details makes an errand
     """
 
-    def __init__(self, list_of_dict=None):
+    def __init__(self, list_info=None, additional=None):
         """
-        both should not be given simultaneously
-        :param list_of_dict: list of dictionaries
+        :param list_info: list of dictionaries for making pieces
+        :param additional: dict for other decoration
         """
         self.pieces = []
-
-        if list_of_dict is not None:
+        self.additional = additional
+        if list_info is not None:
             """
             assumes that list of pieces is valid
             """
-            for piece in list_of_dict:
+            for piece in list_info:
                 self.pieces.append(Piece(piece))
 
     def serialize(self):
         list_of_pieces = []
         for piece in self.pieces:
             list_of_pieces.append(piece.serialize())
-        return json.dumps(list_of_pieces)
+        total = {JKeys.pieces: list_of_pieces, JKeys.additional: self.additional}
+        return json.dumps(total)
 
-    def part_of(self, date_param):
+    def subset_in(self, date_param):
         """
         :param date_param: 
         :return list of pieces in json_string form which occur in the given date_param 
         if zero of its pieces belongs to the day returns False 
         """
-        list_of_indices = []
+        set_of_indices = []
         count = 0
         for piece in self.pieces:
             ret = piece.belongs_to(date_param)
             if ret is not False:
-                list_of_indices.append(count)
+                set_of_indices.append(count)
             count += 1
 
-        if len(list_of_indices) == 0:
+        if len(set_of_indices) == 0:
             return False
         else:
-            return list_of_indices
+            return set(set_of_indices)
 
 
 s1 = {
@@ -209,10 +213,22 @@ s2 = {
     "time_period": {"days": 7, "seconds": 0},
     "duration": {"days": 0, "seconds": 0},
     "epoch_time": "10:14:00",
-    "epoch_date": "12/12/2014"
+    "epoch_date": "3/12/2014"
 }
+
+s3 = {
+    "tag": "hello",
+    "time_period": {"days": 7, "seconds": 0},
+    "duration": {"days": 0, "seconds": 0},
+    "epoch_time": "10:14:00",
+    "epoch_date": "17/12/2014",
+    "next": 1,
+    "prev": 2
+}
+
+'{"tag": "hello","time_period": {"days": 7, "seconds": 0},"duration": {"days": 0, "seconds": 0},"epoch_time": "10:14:00","epoch_date": "17/12/2014","next": 1,"prev": 2}'
 
 a1 = Piece(dict_info=s1)
 a2 = Piece(dict_info=s2)
 b = Errand([s1, s2])
-print (b.part_of(dt.now().date()))
+c = Errand([s1, s2, s3])

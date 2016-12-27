@@ -1,5 +1,6 @@
 analysis,
 ordering,
+gmail,
 notifications,
 misc feature,
 repeat end,

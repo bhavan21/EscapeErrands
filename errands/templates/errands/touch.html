@@ -1,5 +1,5 @@
 {% extends 'errands/__base__.html' %}
-{% block title %}Touch-Errand{% endblock %}
+{% block title %}{% if errand %}{{ errand.tag }}{% else %}New Errand{% endif %}{% endblock %}
 {% block style %}
     <style>
         .remove-td:hover {
@@ -14,8 +14,12 @@
 
         #fixed_left {
             position: fixed;
-            z-index: 100;
-            width: inherit;
+            z-index: 101;
+        {#            width: inherit;#}
+        }
+
+        #fixed_right {
+            z-index: 102;
         }
 
         #pieces_table {
@@ -31,56 +35,136 @@
     {% load staticfiles %}
     <script src="{% static 'errands/html_build_strings.js' %}"></script>
     <script>
-        function Piece(pk, time_period, duration, epoch_date, epoch_time, misc) {
-            this.pk = pk;
-            this.time_period = time_period;
-            this.duration = duration;
-            this.epoch_date = epoch_date;
-            this.epoch_time = epoch_time;
-            this.misc = misc;
-        }
-
         {#  Get data  #}
         var Context = {
-            Errand: {
-                {% for i in errand %}
-                    {# insert errand description #}
-                {% endfor %}
-            },
-            Old_Pieces: [
-                {% for i in old_pieces %}
-                    {# insert old pieces descritpions #}
-                {% endfor %}
-            ],
-            New_Pieces: []
-        };
-
-        {#  Initialize the UI using data  #}
-        {#  Set listeners for events and change Errand Object correspondingly #}
-        $(document).ready(function () {
-            $('#errand_tag')
-                .on(
-                    'keyup',
-                    function () {
-                        $('#errand_head').html($(this).val());
-                    }
-                )
+                Errand: {
+                    pk: Number("{{ errand.pk }}"),
+                    tag: "{{ errand.tag }}",
+                    comment: "{{ errand.comment }}"
+                },
+                Old_Pieces: [
+                    {% for i in old_pieces %}
+                        {
+                            pk:{{ i.pk }},
+                            time_period: {
+                                days:{{ i.time_period.days }},
+                                seconds:{{ i.time_period.seconds }}
+                            },
+                            duration: {
+                                days:{{ i.duration.days }},
+                                seconds:{{ i.duration.seconds }}
+                            },
+                            epoch_date: "{{ i.epoch_date }}",
+                            epoch_time: "{{ i.epoch_time }}",
+                            tag: "{{ i.tag }}",
+                            comment: "{{ i.comment }}"
+                        },
+                        {# insert old pieces descritpions #}
+                    {% endfor %}
+                ]
+            }
             ;
-            $('#piece_add_btn')
+
+        var New_Pieces_Pk = 0;
+        $(document).ready(function () {
+            {# references #}
+            var $pieces_count = $('#pieces_count');
+            var $piece_add_btn = $('#piece_add_btn');
+            var $pieces_list = $('#pieces_list');
+
+            var $errand_inputs = $('#errand_inputs');
+            var $errand_hints = $('#errand_hints');
+            var $errand_tag = $('#errand_tag');
+            var $errand_tag_hint = $('#errand_tag_hint');
+            var $errand_comment = $('#errand_comment');
+            var $errand_comment_hint = $('#errand_comment_hint');
+            {# references #}
+
+            {#  Initialize the UI using data  #}
+            {# errand inputs #}
+            $($errand_tag).val(Context.Errand.tag);
+            $($errand_comment).val(Context.Errand.comment).trigger('autoresize');
+            {# errand hints #}
+            $($errand_tag_hint).html(Context.Errand.tag);
+            $($errand_comment_hint).html(Context.Errand.comment);
+
+            {# Old Pieces #}
+            for (var i = 0; i < Context.Old_Pieces.length; ++i) {
+                //noinspection JSUnresolvedVariable
+                $($pieces_list).append(
+                    HTML_STRINGS.PIECE(
+                        ('o' + Context.Old_Pieces[i].pk),
+                        Context.Old_Pieces[i].epoch_date,
+                        Context.Old_Pieces[i].epoch_time,
+                        Context.Old_Pieces[i].time_period,
+                        Context.Old_Pieces[i].duration,
+                        Context.Old_Pieces[i].tag,
+                        Context.Old_Pieces[i].comment
+                    )
+                );
+            }
+            update_pieces_count();
+
+            {#  Set listeners for events and change Errand Object correspondingly #}
+            {# update functions #}
+            function update_pieces_count() {
+                var pieces_count = $($pieces_list).children().length;
+                $($pieces_count).html(pieces_count);
+            }
+
+            {# update functions #}
+
+            {# Errands Inputs FadeToggle #}
+            $($errand_hints)
                 .on(
                     'click',
                     function () {
-                        $('#pieces_list').append(HTML_STRINGS.PIECE);
+                        $($errand_inputs).fadeToggle(0);
                     }
                 )
             ;
-            $('#pieces_list')
+            {# Errands Tag Hint #}
+            $($errand_tag)
+                .on(
+                    'keyup',
+                    function () {
+                        $($errand_tag_hint).html($(this).val());
+                    }
+                )
+            ;
+            {# Errands Comment Hint #}
+            $($errand_comment)
+                .on(
+                    'keyup',
+                    function () {
+                        $($errand_comment_hint).html($(this).val());
+                    }
+                )
+            ;
+            {# Add New Piece #}
+            $($piece_add_btn)
+                .on(
+                    'click',
+                    function () {
+                        $($pieces_list).append(HTML_STRINGS.PIECE('n' + (New_Pieces_Pk + 1)));
+                        New_Pieces_Pk++;
+                        update_pieces_count();
+                    }
+                )
+            ;
+            {# Piece List Listeners #}
+            {# Remove Listener #}
+            {# option-select (switch) Listeners #}
+            $($pieces_list)
                 .on(
                     'click',
                     '.remove-btn',
                     function () {
                         var id = $(this).parent().parent().attr('id');
-                        $('tr').filter('#' + id).remove();
+                        $('tr').filter('#' + id).fadeOut(500, function () {
+                            $(this).remove();
+                            update_pieces_count();
+                        });
                     }
                 )
                 // time-period
@@ -124,38 +208,175 @@
                     }
                 )
             ;
+
+            function touch(Flag) {
+                var SUBMIT = true;
+                var Errand = {
+                    pk: Context.Errand.pk,
+                    tag: $($errand_tag).val(),
+                    comment: $($errand_comment).val().replace(/(?:\r\n|\r|\n)/g, ' ')
+                };
+
+                var New_Pieces = [];
+                var Old_Pieces = [];
+
+                $($pieces_list).children('tr').each(
+                    function () {
+                        {# id #}
+                        var id = $(this).attr('id');
+                        var length = id.length;
+                        var pk = id.substr(1, length - 1);
+                        {# epoch #}
+                        var epoch_date = $(this).find('.epoch-date').val();
+                        {# validation #}
+                        if (epoch_date == "") {
+                            SUBMIT = false;
+                            alert('Some Pieces have invalid epoch');
+                            return;
+                        }
+                        var epoch_time = $(this).find('.epoch-time').val();
+                        {# validation #}
+                        if (epoch_time == "") {
+                            SUBMIT = false;
+                            alert('Some Pieces have invalid epoch');
+                            return;
+                        }
+                        {# Adding default seconds to the epoch_time #}
+                        epoch_time += ":00";
+                        {# replacing \n with '' #}
+                        var comment = $(this).find('.comment').val();
+                        comment = comment.replace(/(?:\r\n|\r|\n)/g, ' ');
+
+                        var Piece = {
+                            pk: pk,
+                            epoch_date: epoch_date,
+                            epoch_time: epoch_time,
+                            time_period: {
+                                {# default is 0 #}
+                                days: $(this).find('.time-period-div .days').val(),
+                                {# default is 0 #}
+                                seconds: $(this).find('.time-period-div .seconds').val()
+                            },
+                            duration: {
+                                {# default is 0 #}
+                                days: $(this).find('.duration-div .days').val(),
+                                {# default is 0 #}
+                                seconds: $(this).find('.duration-div .seconds').val()
+                            },
+                            tag: $(this).find('.tag').val(),
+                            comment: comment
+                        };
+
+                        if (id.charAt(0) == "n") {
+                            New_Pieces.push(Piece)
+                        }
+                        else if (id.charAt(0) == "o") {
+                            Old_Pieces.push(Piece)
+                        }
+                    }
+                );
+
+                if (SUBMIT) {
+                    $('#__flag__').val(Flag);
+                    $('#__errand__').val(JSON.stringify(Errand));
+                    $('#__old_pieces__').val(JSON.stringify(Old_Pieces));
+                    $('#__new_pieces__').val(JSON.stringify(New_Pieces));
+                    $('#process_touch_fm').submit();
+                }
+
+                console.log(JSON.stringify(Errand));
+                console.log(JSON.stringify(Old_Pieces));
+                console.log(JSON.stringify(New_Pieces));
+            }
+
+            {# Sync #}
+            $('#sync_btn')
+                .on(
+                    'click',
+                    function () {
+                        touch(0)
+                    }
+                )
+            ;
+
+            {# Submit #}
+            $('#submit_btn')
+                .on(
+                    'click',
+                    function () {
+                        touch(1)
+                    }
+                )
+            ;
+
+            {# Delete #}
+            $('#delete_btn')
+                .on(
+                    'click',
+                    function () {
+                        $('#__pk__').val(Context.Errand.pk);
+                        $('#delete_fm').submit()
+                    }
+                )
+            ;
         });
     </script>
+
+    <div style="display: none;">
+        <form id="process_touch_fm" method="post" action="{% url 'errands:process_touch' %}">
+            {% csrf_token %}
+            <input id="__flag__" name="Flag" type="text">
+            <input id="__errand__" name="Errand" type="text">
+            <input id="__old_pieces__" name="Old_Pieces" type="text">
+            <input id="__new_pieces__" name="New_Pieces" type="text">
+        </form>
+        <form id="delete_fm" method="post" action="{% url 'errands:delete' %}">
+            {% csrf_token %}
+            <input id="__pk__" name="pk" type="text">
+        </form>
+    </div>
+
     <div class="row">
-        <div class="col l2">
+        <div class="col l2 m0 s0">
             <div id="fixed_left" class="white">
-                <br>
-                <div class="row">
-                    <div class="col l12 input-field">
-                        <input id="errand_tag" type="text" class="validate" value="">
-                        <label for="errand_tag">Tag</label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col l12 input-field">
-                        <textarea id="errand_comment" class="materialize-textarea"></textarea>
-                        <label for="errand_comment">Comment</label>
+                <div id="errand_inputs" class="card waves-effect hoverable">
+                    <div class="card-content">
+                        <div class="row">
+                            <div class="col l12 m12 s12 input-field">
+                                <input id="errand_tag" type="text" class="validate" value="">
+                                <label for="errand_tag">Tag</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col l12 m12 s12 input-field">
+                                <textarea id="errand_comment" class="materialize-textarea"></textarea>
+                                <label for="errand_comment">Comment</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col l8">
+        <div class="col l8 m12 s12">
             {# Fixed Top #}
             <div id="fixed_top" class="white">
-                <div class="row" style="margin:0">
-                    <div id="errand_head" class="col l6 flow-text"></div>
-                    <div class="right-align">
-                        <p class="flow-text"><span id="pieces_count">3</span> Pieces</p>
+                <div id="errand_hints" class="row" style="margin:0">
+                    <div class="col l3 m3 s3 flow-text">
+                        <p id="errand_tag_hint" class="truncate">
+                        </p>
+                    </div>
+                    <div class="col l4 m4 s4">
+                        <p id="errand_comment_hint"
+                           class="truncate grey-text">
+                        </p>
+                    </div>
+                    <div class="col l3 m3 s3 offset-l2 offset-m2 offset-s2">
+                        <p class="flow-text"><span id="pieces_count">{{ old_pieces|length }}</span> Pieces</p>
                     </div>
                 </div>
                 <div class="row" style="margin: 0">
-                    <div class="col l12 divider"></div>
+                    <div class="col l12 m12 s12 divider"></div>
                 </div>
             </div>
             {# Pieces Table #}
@@ -169,19 +390,56 @@
 
         </div>
 
-        <div class="col l2">
-            {# Submit Form Btn #}
-            <a id="submit_btn"
-               class="waves-effect waves-light btn-large btn-floating blue z-depth-5"
-               style="position:fixed;top: 20px;right: 20px;">
-                <i class="material-icons">send</i>
-            </a>
-            {# Pieces Add Btn #}
-            <a id="piece_add_btn"
-               class="waves-effect waves-light btn-large btn-floating green z-depth-5"
-               style="position:fixed;bottom: 20px;right: 20px;">
-                <i class="material-icons">add</i>
-            </a>
+        <div class="col l2 m0 s0">
+
+            <div class="fixed-action-btn vertical">
+                <a class="btn-floating waves-effect waves-light btn-large pink">
+                    <i class=" material-icons">menu</i>
+                </a>
+                <ul>
+                    <li>
+                        {# Submit Form Btn #}
+                        <a id="submit_btn"
+                           class="waves-effect waves-light btn-floating btn-large blue z-depth-5">
+                            <i class="material-icons">send</i>
+                        </a>
+                    </li>
+                    <li>
+                        {# Sync Form Btn #}
+                        <a id="sync_btn"
+                           class="waves-effect waves-light btn-floating btn-large green z-depth-5">
+                            <i class="material-icons">sync</i>
+                        </a>
+                    </li>
+                    {% if errand %}
+                        <li>
+                            {# Delete Form Btn #}
+                            <a id="delete_btn"
+                               class="waves-effect waves-light btn-floating btn-large red darken-4 z-depth-5">
+                                <i class="material-icons">delete</i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li>
+                        {# Cancel Btn #}
+                        <a id="cancel_btn"
+                           href="{% url 'errands:all' %}"
+                           class="waves-effect waves-light btn-floating btn-large orange darken-4 z-depth-5">
+                            <i class="material-icons">close</i>
+                        </a>
+                    </li>
+                    <li>
+                        {# Pieces Add Btn #}
+                        <a id="piece_add_btn"
+                           class="waves-effect waves-light btn-floating btn-large teal z-depth-5">
+                            <i class="material-icons">add</i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="fixed_right"></div>
+
         </div>
     </div>
 {% endblock %}

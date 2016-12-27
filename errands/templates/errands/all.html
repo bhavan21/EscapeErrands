@@ -5,7 +5,7 @@
         <div class="col l3"></div>
 
         <div class="col l6">
-            <table>
+            <table class="highlight">
                 <colgroup>
                     <col width="90%">
                     <col width="10%">
@@ -13,25 +13,32 @@
 
                 <thead>
                 <tr>
-                    <th>Name</th>
+                    <th>Tag</th>
                     <th></th>
                 </tr>
                 </thead>
 
                 <tbody>
-                <tr>
-                    <td>dfsad</td>
-                    <td>dfsad</td>
-                </tr>
+                {% for i in errands %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'errands:touch' i.pk %}">
+                            {{ i.tag }}
+                            </a>
+                        </td>
+                        <td>dfsad</td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
 
         <div class="col l3">
-            <a href="{% url 'errands:touch' 0 %}"
-               class="btn-floating btn-large waves-effect waves-light red"
-               style="position: fixed;bottom: 50px;right: 50px">
-                <i class="material-icons">add</i></a>
+            <div class="fixed-action-btn">
+                <a href="{% url 'errands:touch' 0 %}"
+                   class="btn-floating btn-large waves-effect waves-light pink">
+                    <i class="material-icons">add</i>
+                </a>
+            </div>
         </div>
-    </div>
 {% endblock %}

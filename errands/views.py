@@ -160,3 +160,28 @@ def delete(request):
         return httpRPR(reverse('errands:all'))
     else:
         return httpR('Invalid Access')
+
+
+def ajax_read(request, pk):
+    try:
+        errand = Errand.objects.get(pk=pk)
+        piece_descriptions = []
+        pieces = errand.piece_set.all()
+        for piece in pieces:
+            piece_descriptions.append(piece.description)
+
+    except ObjectDoesNotExist:
+        return httpR('-1')
+
+    json_string = json.dumps({'pieces': piece_descriptions})
+    return httpR(json_string)
+
+
+def ajax_stubs(request):
+    if request.method == 'POST':
+        if 'epoch' in request.POST and 'end' in request.POST:
+            return httpR('Hi')
+        else:
+            return httpR('Invalid Access')
+    else:
+        return httpR('Invalid Access')

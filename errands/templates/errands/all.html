@@ -1,44 +1,156 @@
 {% extends 'errands/__base__.html' %}
-{% block title %}errands{% endblock %}
+{% block title %}Errands{% endblock %}
+{% block style %}
+    <style>
+
+        #errands_list .remove-btn i {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        #errands_list .edit-btn i {
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        #errands_list .tag {
+            margin-left: 10px;
+        }
+
+        #errands_list .remove-btn:hover {
+            background-color: rgba(255, 0, 0, 0.6);
+        }
+
+        #errands_list .edit-btn:hover {
+            background-color: rgba(0, 255, 128, 0.6);
+        }
+
+        #errands_list .head:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+
+    </style>
+{% endblock %}
 {% block body %}
+    <script>
+        $(document).ready(function () {
+            {# Material Initalizations #}
+
+            {# Listeners #}
+
+            {# Remove btn #}
+            $('.remove-btn')
+                .on(
+                    'click',
+                    function () {
+                        var that = $(this).parent().parent();
+                        $(that).fadeOut(100, function () {
+                            $(that).find('.delete_fm').submit();
+                        });
+                    }
+                )
+            ;
+
+            {# Ajax Read #}
+            $('#errands_list')
+                .on(
+                    'click',
+                    '.errand-def',
+                    function () {
+                        var that = $(this);
+                        var id = $(this).attr('id');
+                        {#                        $.ajax(#}
+                        {#                            {#}
+                        {#                                url: '/errands/ajax_read/' + id + '/',#}
+                        {#                                error: function () {#}
+                        {#                                    alert('action could not be done')#}
+                        {#                                },#}
+                        {#                                success: function (result) {#}
+                        {#                                    $(that).find('.figure').html(result);#}
+                        {#                                }#}
+                        {#                            }#}
+                        {#                        )#}
+
+                    }
+                )
+            ;
+
+
+        })
+    </script>
     <div class="row">
-        <div class="col l3"></div>
+        <div class="col l2 m0"></div>
 
-        <div class="col l6">
-            <table class="highlight">
-                <colgroup>
-                    <col width="90%">
-                    <col width="10%">
-                </colgroup>
+        <div class="col l8 m12">
+            <div>
+                <h4 class="teal-text">{{ errands|length }} Errand{% if errands|length > 1 %}s{% endif %}</h4>
+                <ul id="errands_list" class="collapsible" data-collapsible="accordion">
+                    {% for i in errands %}
 
-                <thead>
-                <tr>
-                    <th>Tag</th>
-                    <th></th>
-                </tr>
-                </thead>
+                        <li id="{{ i.pk }}" class="errand-def">
+                            <div class="collapsible-header head">
+                                <span class="badge">
+                                    {{ forloop.counter }}
+                                </span>
+                                <a class="waves-effect waves-red remove-btn">
+                                    <i class="material-icons">delete</i>
+                                </a>
+                                <a href="{% url 'errands:touch' i.pk %}"
+                                   class="waves-effect waves-yellow edit-btn">
+                                    <i class="material-icons">mode_edit</i>
+                                </a>
+                                <span class="blue-text tag">
+                                    {{ i.tag }}
+                                </span>
+                            </div>
+                            <div class="collapsible-body waves-effect waves-yellow">
+                                <form class="delete_fm" method="post" action="{% url 'errands:delete' %}"
+                                      style="display: none">
+                                    {% csrf_token %}
+                                    {# Delete Form Btn #}
+                                    <input hidden name="pk" value="{{ i.pk }}">
+                                </form>
+                                <div class="row">
+                                    <div class="col l4 m4">
+                                        <p class="grey-text flow-text truncate">
+                                            {{ i.comment }}
+                                        </p>
+                                    </div>
+                                    <div class="col l8 m8 figure">
+                                        <div class="preloader-wrapper active">
+                                            <div class="spinner-layer spinner-red-only">
+                                                <div class="circle-clipper left">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="gap-patch">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="circle-clipper right">
+                                                    <div class="circle"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
 
-                <tbody>
-                {% for i in errands %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'errands:touch' i.pk %}">
-                            {{ i.tag }}
-                            </a>
-                        </td>
-                        <td>dfsad</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                </ul>
+            </div>
         </div>
 
-        <div class="col l3">
+        <div class="col l2 m0">
             <div class="fixed-action-btn">
                 <a href="{% url 'errands:touch' 0 %}"
-                   class="btn-floating btn-large waves-effect waves-light pink">
+                   class="btn-floating btn-large waves-effect waves-light pink z-depth-5">
                     <i class="material-icons">add</i>
                 </a>
             </div>
         </div>
+    </div>
+    <div id="graph">
+
+    </div>
 {% endblock %}

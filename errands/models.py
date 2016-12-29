@@ -11,8 +11,11 @@ class Std:
     output_d_format = '%Y-%m-%d'
 
     std_t_format = '%H:%M:%S'
-    input_t_format = '%H:%M:%S'
+    input_t_format = '%H:%M'
     output_t_format = '%H:%M'
+
+    input_dt_format = '%Y-%m-%d %H:%M'
+    output_dt_format = '%Y-%m-%d %H:%M'
 
     class Keys:
         pk = 'pk'

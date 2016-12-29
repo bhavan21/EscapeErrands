@@ -33,7 +33,7 @@
 {% endblock %}
 {% block body %}
     {% load staticfiles %}
-    <script src="{% static 'errands/html_build_strings.js' %}"></script>
+    <script src="{% static 'errands/js/html_build_strings.js' %}"></script>
     <script>
         {#  Get data  #}
         var Context = {
@@ -241,8 +241,6 @@
                             alert('Some Pieces have invalid epoch');
                             return;
                         }
-                        {# Adding default seconds to the epoch_time #}
-                        epoch_time += ":00";
                         {# replacing \n with '' #}
                         var comment = $(this).find('.comment').val();
                         comment = comment.replace(/(?:\r\n|\r|\n)/g, ' ');

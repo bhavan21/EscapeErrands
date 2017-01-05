@@ -19,6 +19,7 @@
     <orderEntry type="library" name="bootstrap" level="application" />
     <orderEntry type="library" name="materialize" level="application" />
     <orderEntry type="library" name="highcharts" level="application" />
+    <orderEntry type="library" name="jquery.mobile-1.4.5" level="application" />
   </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Django" />

@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^process_touch/$', views.process_touch, name='process_touch'),
     # host/errands/delete/ -- pk is sent through POST method for security
     url(r'^delete/$', views.delete, name='delete'),
+
     # host/errands/ajax_read/pk/
     url(r'^ajax_read/(?P<pk>[0-9]+)/$', views.ajax_read, name='ajax_read'),
+    # host/errands/fetch_stubs/
+    url(r'^fetch_stubs/$', views.fetch_stubs, name='fetch_stubs'),
 ]

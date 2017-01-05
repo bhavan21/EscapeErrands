@@ -1,0 +1,622 @@
+{% extends 'errands/__base__.html' %}
+{% block title %}Time Table{% endblock %}
+{% block style %}
+    <style>
+        .loading {
+            position: fixed;
+            z-index: 999;
+            width: 100vw;
+            height: 100vh;
+            background-color: white;
+        }
+
+        #time-hints-div {
+            z-index: 10;
+        }
+
+        button {
+            border: ButtonShadow;
+        }
+
+        .rectangle:hover {
+            opacity: 0.9;
+        }
+
+        .clipper {
+            position: absolute;
+            background-color: transparent;
+            margin: 0
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <script>
+        // references
+        var $time_table_div;
+        var $time_divisions_div;
+        var $time_hints_div;
+        var $event_stubs_div;
+        var $task_stubs_div;
+        var $scale_select;
+        var $date_select;
+        var $date_select_div;
+        var $cursor_bar;
+        var $cursor_bar_hint;
+        var $top_hint;
+        var $top_hint_div;
+        var $loading;
+        var $detail_div;
+        var $yesterday;
+        var $tomorrow;
+
+        var Context = {
+            Time_Table: {
+                Scale: {
+                    Px_To_Min: 90 / 60 // 1 min = 1px
+                },
+                Range: {
+                    LB: function () {
+                        return moment().hour(0).minute(0).second(0);
+                    },
+                    UB: function () {
+                        return Context.Time_Table.Range.LB().add(1, 'd');
+                    }
+                },
+                Height: $(document).height() * (0.9), //px
+                Scroll_Top: 0,
+                Reload_Top_Fixed_Hint: function () {
+                    $($top_hint)
+                        .html(
+                            Context.Time_Table.Range
+                                .LB()
+                                .add(Context.Time_Table.Scroll_Top / Context.Time_Table.Scale.Px_To_Min, 'm')
+                                .format('MMM Do dddd')
+                        );
+                }
+            },
+            Stubs: {
+                Task: {
+                    Def: [],
+                    Breadth: '90%',
+                    Height: '30px',
+                    Left: '5%'
+                },
+                Event: {
+                    Lanes: [],
+                    Breadth: 30, //px
+                    Padding: 5, // px
+                    Initial_Left: 50 // px
+                },
+                No: 0
+            }
+        };
+
+        // number - color
+        // time divisions
+        function render_time_divisions(scale, no_days) {
+            // defaults
+            scale = scale === undefined ? 1 : scale;
+            no_days = no_days === undefined ? 1 : no_days;
+
+            var $time_divisions_div = $('#time-divisions-div');
+
+            for (var i = 0; i <= 24 * no_days; ++i) {
+                // div for every 60 minutes
+                var top = i * scale * 60;
+                var time_division;
+                var time_hint;
+                // day change
+                if (i % 24 == 0) {
+                    time_division = element(
+                        ['div'],
+                        [
+                            {
+                                'style': 'position:absolute;width:100%;top:' + top + 'px',
+                                'class': 'divider pink remove-on-reload'
+                            }
+                        ],
+                        [''],
+                        [true]
+                    );
+
+                    time_hint = element(
+                        ['span'],
+                        [
+                            {
+                                'style': 'position:absolute;top:' + top + 'px;',
+                                'class': 'pink white-text z-depth-2 remove-on-reload time-hint'
+                            }
+                        ],
+                        [Context.Time_Table.Range.LB().add(i * 60, 'm').format('HH:mm')],
+                        [true]
+                    );
+                }
+                // normal time division
+                else {
+                    time_division = element(
+                        ['div'],
+                        [
+                            {
+                                'style': 'position:absolute;width:100%;top:' + top + 'px',
+                                'class': 'divider teal remove-on-reload'
+                            }
+                        ],
+                        [''],
+                        [true]
+                    );
+
+                    time_hint = element(
+                        ['span'],
+                        [
+                            {
+                                'style': 'position:absolute;top:' + (top + 1) + 'px;',// + ==> linear movement
+                                'class': 'teal white-text z-depth-2 remove-on-reload time-hint'
+                            }
+                        ],
+                        [Context.Time_Table.Range.LB().add(i * 60, 'm').format('HH:mm')],
+                        [true]
+                    );
+                }
+
+                //console.log(division);
+                $($time_divisions_div).append(time_division);
+                $($time_hints_div).append(time_hint);
+            }
+
+            // pushing the clipper in time stubs div to make the inner heights
+            // of time stubs div and time divisions div equal
+            var total_height = 24 * 60 * no_days * scale;
+            $('.clipper').css({
+                'top': total_height + 'px'
+            })
+        }
+        // rectangle
+        function render_rectangle(top, left, height, breadth, container, details) {
+            var rectangle = element(
+                ['button'],
+                [
+                    {
+                        'class': 'rectangle white-text waves-light waves-effect hoverable remove-on-reload',
+                        'title': details.title,
+                        'pk': details.pk,
+                        'style': 'position:absolute;font-size:xx-small;' +
+                        'top: ' + top + ';' +
+                        'left: ' + left + ';' +
+                        'width:' + breadth + ';' +
+                        'height:' + height + ';' +
+                        'background-color:' + details['bg']
+                    }
+                ],
+                [details.tag],
+                [true]
+            );
+            //console.log(rectangle);
+
+            $(container).append(rectangle);
+        }
+        // event stub
+        function render_event_stub(stub, lane) {
+            // Geometry
+            //noinspection JSUnresolvedVariable
+            var epoch = moment(stub.epoch[0], Std.dt_format);
+            var end = moment(stub.end[0], Std.dt_format);
+            // Top
+            var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
+                * Context.Time_Table.Scale.Px_To_Min;
+            // Height
+            var height = moment.duration(end.diff(epoch)).asMinutes() * Context.Time_Table.Scale.Px_To_Min;
+            // Display Name
+            /* Full Vertical Display */
+            var display_name = '';
+            for (var i = 0; i < stub.tag.length; ++i) {
+                display_name += stub.tag.charAt(i) + '<br>'
+            }
+            /* Two letter Vertical Display */
+            {#            var split = stub.tag.split(' ');#}
+            {#            var display_name = '';#}
+            {#            if (split.length > 1) {#}
+            {#                display_name = (split[0].charAt(0) + '<br>' + split[1].charAt(0))#}
+            {#            }#}
+            {#            else {#}
+            {#                if (split[0].length > 1) display_name = split[0].charAt(0) + split[0].charAt(1);#}
+            {#                else display_name = split[0].charAt(0);#}
+            {#            }#}
+            // Rendering
+            render_rectangle(
+                top + 'px',
+                lane * (Context.Stubs.Event.Breadth + Context.Stubs.Event.Padding) + Context.Stubs.Event.Initial_Left + 'px',
+                height + 'px',
+                Context.Stubs.Event.Breadth + 'px',
+                $($event_stubs_div),
+                {
+                    tag: display_name,
+                    title: stub.tag,
+                    pk: stub.pk,
+                    bg: stub.color
+                });
+        }
+        // event stubs
+        function render_event_stubs() {
+            Context.Stubs.No = 0;
+            for (var i = 0; i < Context.Stubs.Event.Lanes.length; ++i) {
+                for (var j = 0; j < Context.Stubs.Event.Lanes[i].length; ++j) {
+                    render_event_stub(Context.Stubs.Event.Lanes[i][j], i);
+                    Context.Stubs.No++;
+                }
+            }
+        }
+        // task stub
+        function render_task_stub(stub, i) {
+            {% comment %} Timed Form {% endcomment %}
+            //noinspection JSUnresolvedVariable
+            //var epoch = moment(stub.epoch[0], Std.dt_format);
+            //var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
+            //    * Context.Time_Table.Scale.Px_To_Min;
+            {% comment %} Stacked Form {% endcomment %}
+            // Height
+            var height = Context.Stubs.Task.Height;
+            // Top
+            var top = i * height;
+            // Rendering
+            render_rectangle(
+                top + 'px',
+                Context.Stubs.Task.Left,
+                height,
+                Context.Stubs.Task.Breadth,
+                $($task_stubs_div),
+                {
+                    tag: stub.tag,
+                    title: stub.tag,
+                    pk: stub.pk,
+                    bg: stub.color
+                });
+        }
+        // task stub
+        function render_task_stubs() {
+            for (var i = 0; i < Context.Stubs.Task.Def.length; ++i) {
+                render_task_stub(Context.Stubs.Task.Def[i], i);
+                Context.Stubs.No++;
+            }
+        }
+        // reload UI
+        function reload() {
+            // Remove all removable objects
+            $('.remove-on-reload').remove();
+            // Initializing Height
+            $('#middle').height(Context.Time_Table.Height);
+            // Render Time Divisions and Time Hints
+            render_time_divisions(Context.Time_Table.Scale.Px_To_Min);
+            // Render Event Stubs
+            render_event_stubs();
+            // Render Task Stubs
+            render_task_stubs();
+            // Stubs Count Hint
+            $('#stubs_count').html(Context.Stubs.No);
+            // Loading Complete
+            $($loading).fadeOut(0);
+        }
+
+
+        // Cursor Bar Render
+        function cursor_hint_bar(e) {
+            var pos_wrt_time_divisions =
+                e.clientY + Context.Time_Table.Scroll_Top - ($($top_hint_div).height() + parseInt($($top_hint_div).css('padding-top')) + parseInt($($top_hint_div).css('padding-bottom')));
+
+            $($cursor_bar).css({
+                'top': pos_wrt_time_divisions
+            });
+            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
+            $($cursor_bar_hint).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
+        }
+        // fetch stubs
+        function render_stubs_on(date) {
+            // Loading On Progress
+            $($loading).fadeIn(0);
+            var data = {
+                LB: date,
+                UB: moment(date, Std.d_format).add(1, 'd').format(Std.d_format)
+            };
+            $.ajax(
+                {
+                    url: '/errands/fetch_stubs/',
+                    data: data,
+                    error: function () {
+                        alert('Stubs could not be fetched')
+                    },
+                    success: function (result) {
+                        if (result == -1)return;
+                        // Change the Context
+                        Context.Time_Table.Range.LB = function () {
+                            return moment(date, Std.d_format);
+                        };
+                        Context.Time_Table.Range.UB = function () {
+                            return Context.Time_Table.Range.LB().add(1, 'd');
+                        };
+                        Context.Time_Table.Reload_Top_Fixed_Hint();
+                        // reload using the stubs data
+                        var json = JSON.parse(result);
+                        //noinspection JSUnresolvedVariable
+                        Context.Stubs.Event.Lanes = json.Lanes;
+                        //noinspection JSUnresolvedVariable
+                        Context.Stubs.Task.Def = json.Task_Stubs;
+                        console.log(json);
+                        reload();
+                    }
+                }
+            );
+
+        }
+
+        $(document).ready(function () {
+            // references
+            $time_table_div = $('#time-table-div');
+            $time_divisions_div = $('#time-divisions-div');
+            $time_hints_div = $('#time-hints-div');
+            $event_stubs_div = $('#event-stubs-div');
+            $task_stubs_div = $('#task-stubs-div');
+            $scale_select = $('#scale-select');
+            $date_select = $('#date-select');
+            $date_select_div = $('#date-select-div');
+            $cursor_bar = $('#cursor-bar');
+            $cursor_bar_hint = $('#cursor-bar-hint');
+            $top_hint = $('#top-hint');
+            $top_hint_div = $('#top-hint-div');
+            $loading = $('#loading');
+            $detail_div = $('#detail-div');
+            $yesterday = $('#yesterday');
+            $tomorrow = $('#tomorrow');
+            {% comment %}Event Listeners {% endcomment %}
+            /**
+             * Time Table
+             * */
+            $($event_stubs_div)
+            // Scroll Sync for Time Divisions and Time Stubs
+                .on(
+                    'scroll',
+                    function () {
+                        $($time_divisions_div).scrollTop($(this).scrollTop());
+                        /**
+                         * Un Comment Below if Timed Repr of Task Stubs is Used
+                         * */
+                        //$($task_stubs_div).scrollTop($(this).scrollTop());
+                        $($time_hints_div).scrollTop($(this).scrollTop());
+                        Context.Time_Table.Scroll_Top = $(this).scrollTop();
+                        Context.Time_Table.Reload_Top_Fixed_Hint();
+                    }
+                );
+            $($time_table_div)
+            // Cursor - Cursor Bar Listener
+                .on(
+                    'mousemove',
+                    function (e) {
+                        cursor_hint_bar(e)
+                    }
+                )
+                .on(
+                    'click',
+                    function (e) {
+                        cursor_hint_bar(e)
+                    }
+                );
+            /**
+             * Date Hint
+             * */
+            $($top_hint)
+                .on(
+                    'click',
+                    function () {
+                        $($date_select_div).fadeToggle(0);
+                    }
+                );
+            /**
+             * Date Select
+             * */
+            $($date_select)
+                .on(
+                    'change',
+                    function () {
+                        render_stubs_on($(this).val());
+                    }
+                );
+            /**
+             * Yesterday Tomorrow Listeners
+             * */
+            $($yesterday).on(
+                'click',
+                function () {
+                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.d_format));
+                }
+            );
+            $($tomorrow).on(
+                'click',
+                function () {
+                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.d_format));
+                }
+            );
+
+            /**
+             * Scale.Min_To_Px
+             * */
+            // Initializing
+            $($scale_select).val(Context.Time_Table.Scale.Px_To_Min * 60); // hour px selection
+            // Listening
+            $($scale_select)
+                .on(
+                    'change',
+                    function () {
+                        Context.Time_Table.Scale.Px_To_Min = $(this).val() / 60;
+                        reload();
+                    }
+                );
+            /**
+             * Detail Div
+             * */
+            $($time_table_div)
+                .on(
+                    'click',
+                    '.rectangle',
+                    function () {
+                        $($detail_div).modal('open')
+                    }
+                );
+            {% comment %}Initializing With Today{% endcomment %}
+
+            // Showing today's time table
+            render_stubs_on(moment().format(Std.d_format));
+        });
+    </script>
+
+    <div id="loading" class="loading" style="display: none">
+        <div class="progress" style="position: absolute;top: 50%;width: 50%;left: 25%">
+            <div class="indeterminate"></div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col m0 l1">
+            <div id="date-select-div" class="card hoverable waves-effect"
+                 style="z-index: 11;position: fixed;display: none">
+                <div class="card-content">
+                    <label>
+                        Jump To
+                        <input id="date-select" type="date">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col m12 l10" id="middle">
+            <!-- Time Table -->
+            <div id="time-table-div"
+                 style="height: 100%;
+                        position: relative;
+                        padding: 0;
+                        margin: 0"
+                 class="row">
+
+                <!-- Top Hint -->
+                <div id="fixed-top">
+                    <div class="row" style="margin: 0">
+                        <div id="top-hint-div" class="col l6 m6 waves-effect waves-yellow teal-text flow-text"
+                             style="padding-top: 10px;padding-bottom: 10px;">
+                            <span id="yesterday" class="waves-effect waves-yellow">
+                                <i class="material-icons">undo</i></span>
+                            <span id="top-hint">Today</span>
+                            <span id="tomorrow" class="waves-effect waves-yellow">
+                                <i class="material-icons">redo</i></span>
+                        </div>
+                        <div class="col l6 m6 waves-effect waves-light teal white-text flow-text"
+                             style="padding-top: 10px;padding-bottom: 10px;">
+                            <span id="stubs_count">0</span>
+                            Stubs
+                        </div>
+                    </div>
+                    <div class="divider"></div>
+                </div>
+
+                <!-- Time Divisions -->
+                <div id="time-divisions-div"
+                     style="position: absolute;height: 100%;width: 100%;overflow: hidden;">
+
+                    <div id="cursor-bar"
+                         style="position: absolute;
+                                width: 100%;">
+
+                        <hr style="background-color: deeppink;
+                               height: 2px;
+                               margin: 0">
+                        <div id="cursor-bar-hint"
+                             style="position:relative;"
+                             class="right-align flow-text white"></div>
+                    </div>
+                </div>
+
+                <!-- Event Stubs -->
+                <div id="event-stubs-div"
+                     style="position: absolute;height: 100%;width: 80%;overflow: auto"
+                     class="row">
+
+                    <hr class="clipper">
+                </div>
+
+                <!-- Task Stubs -->
+                <div id="task-stubs-div"
+                     style="position: absolute;height: 100%;width: 20%;left: 80%;overflow-y:hidden;overflow-x: auto;background-color: rgba(0,0,255,0.1)"
+                     class="row">
+
+                    <hr class="clipper">
+                </div>
+
+                <!-- Time Divisions -->
+                <div id="time-hints-div"
+                     style="position: absolute;height: 100%;width: 50px;overflow: hidden;">
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="col m0 l1">
+
+            <div class="fixed-action-btn vertical">
+                <a href="#settings-div" class="btn-floating btn-large blue z-depth-5"><i
+                        class="material-icons">settings</i>
+                </a>
+            </div>
+
+            <!-- Settings Div -->
+            <div id="settings-div" class="modal bottom-sheet">
+                <script>
+                    $(document).ready(function () {
+                        $(".modal").modal({
+                                in_duration: 300, // Transition in duration
+                                out_duration: 200 // Transition out duration
+                            }
+                        );
+                    });
+                </script>
+                <div class="modal-content row">
+
+                    <div class="col l3 m3">
+                        <label>
+                            Scale
+                            <p class="range-field">
+                                <input type="range" id="scale-select" min="30" max="120"/>
+                            </p>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    Footer
+                </div>
+            </div>
+
+            <!-- Detail Div -->
+            <div id="detail-div" class="modal modal-fixed-footer">
+                <div class="modal-content">
+                    <div class="row">
+                        <div class="col l4 m4">
+                            <p class="flow-text truncate tag">
+                                jda;lfsdsk
+                            </p>
+                            <p class="grey-text flow-text truncate comment">
+                                sdkfal;ds
+                            </p>
+                        </div>
+                        <div class="col l8 m8 figure" style="overflow: auto">
+                            <div class="progress">
+                                <div class="indeterminate"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="modal-action modal-close waves-effect waves-green btn-flat "><i
+                            class="material-icons">close</i></a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

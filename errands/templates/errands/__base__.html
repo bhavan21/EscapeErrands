@@ -12,6 +12,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <script src="{% static 'errands/js/base.js' %}"></script>
         <script src="{% static 'errands/js/moment.js' %}"></script>
+        <script src="{% static 'errands/js/std.js' %}"></script>
     {% endblock %}
     <title>{% block title %}{% endblock %}</title>
     {% block script %}{% endblock %}
@@ -25,7 +26,6 @@
                     draggable: true // Choose whether you can drag to open on touch screens
                 }
             );
-
         });
     </script>
 </head>
@@ -43,13 +43,14 @@
         </div>
     </li>
     <li><a href="{% url 'errands:all' %}" class="waves-effect"><i class="material-icons">code</i>Manage</a></li>
-    <li><a href="{% url 'time_table:home' %}" class="waves-effect"><i class="material-icons">view_week</i>TimeTable</a></li>
+    <li><a href="{% url 'time_table:scrolling_stubs' %}" class="waves-effect"><i class="material-icons">view_week</i>TimeTable</a>
+    </li>
 </ul>
 
 <a href="#"
    data-activates="slide-out"
    class="btn-floating btn-large button-collapse z-depth-5"
-   style="position: fixed;bottom: 0;left: 0;margin: 20px">
+   style="position: fixed;bottom: 0;left: 0;margin: 20px;z-index: 200">
     <i class="material-icons">library_books</i>
 </a>
 

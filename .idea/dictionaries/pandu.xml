@@ -4,9 +4,13 @@
       <w>autoresize</w>
       <w>cdnjs</w>
       <w>cloudflare</w>
+      <w>darkblue</w>
+      <w>darkred</w>
+      <w>dblclick</w>
       <w>deeppink</w>
       <w>highcharts</w>
       <w>hoverable</w>
+      <w>mmmm</w>
       <w>mousemove</w>
       <w>onreadystatechange</w>
       <w>preloader</w>
@@ -14,6 +18,7 @@
       <w>subhea</w>
       <w>subheader</w>
       <w>textarea</w>
+      <w>tooltipped</w>
       <w>valign</w>
       <w>vert</w>
       <w>yashasvi</w>

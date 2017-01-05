@@ -1,0 +1,650 @@
+[
+  {
+    "model": "errands.errand",
+    "pk": 17,
+    "fields": {
+      "description": "{\"comment\": \"Economics\", \"tag\": \"HS 101\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 18,
+    "fields": {
+      "description": "{\"comment\": \"Design And Analysis of Algorithms\", \"tag\": \"CS 218\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 19,
+    "fields": {
+      "description": "{\"comment\": \"Networks\", \"tag\": \"CS 224\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 20,
+    "fields": {
+      "description": "{\"comment\": \"Digital Logic Design\", \"tag\": \"CS 226\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 21,
+    "fields": {
+      "description": "{\"comment\": \"Elements Of Design\", \"tag\": \"DE 408\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 22,
+    "fields": {
+      "description": "{\"comment\": \"Logic For Computer Science\", \"tag\": \"CS 228\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 23,
+    "fields": {
+      "description": "{\"comment\": \"Digital Logic Design Lab\", \"tag\": \"CS 254\"}"
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 16,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 17,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 18,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 19,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 20,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 21,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 22,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 19
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 23,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 19
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 24,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 20
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 25,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 20
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 26,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 21
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 27,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 21
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 28,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 22
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 29,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 22
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 30,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"LH101\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 10800, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 23
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 1,
+    "fields": {
+      "app_label": "time_table",
+      "model": "errands"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 2,
+    "fields": {
+      "app_label": "errands",
+      "model": "errand"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 3,
+    "fields": {
+      "app_label": "errands",
+      "model": "piece"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 4,
+    "fields": {
+      "app_label": "admin",
+      "model": "logentry"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 5,
+    "fields": {
+      "app_label": "auth",
+      "model": "permission"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 6,
+    "fields": {
+      "app_label": "auth",
+      "model": "user"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 7,
+    "fields": {
+      "app_label": "auth",
+      "model": "group"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 8,
+    "fields": {
+      "app_label": "contenttypes",
+      "model": "contenttype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 9,
+    "fields": {
+      "app_label": "sessions",
+      "model": "session"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "tbfb7e197219qx5zae9ybl59jce89smr",
+    "fields": {
+      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
+      "expire_date": "2017-01-10T07:36:17.673Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "yhloom5au8kvltzxl0wfnneflcd5g5rt",
+    "fields": {
+      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
+      "expire_date": "2017-01-09T09:57:06.320Z"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+      "name": "Can add errands",
+      "content_type": 1,
+      "codename": "add_errands"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+      "name": "Can change errands",
+      "content_type": 1,
+      "codename": "change_errands"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+      "name": "Can delete errands",
+      "content_type": 1,
+      "codename": "delete_errands"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+      "name": "Can add errand",
+      "content_type": 2,
+      "codename": "add_errand"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+      "name": "Can change errand",
+      "content_type": 2,
+      "codename": "change_errand"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+      "name": "Can delete errand",
+      "content_type": 2,
+      "codename": "delete_errand"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 7,
+    "fields": {
+      "name": "Can add piece",
+      "content_type": 3,
+      "codename": "add_piece"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 8,
+    "fields": {
+      "name": "Can change piece",
+      "content_type": 3,
+      "codename": "change_piece"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 9,
+    "fields": {
+      "name": "Can delete piece",
+      "content_type": 3,
+      "codename": "delete_piece"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 10,
+    "fields": {
+      "name": "Can add log entry",
+      "content_type": 4,
+      "codename": "add_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 11,
+    "fields": {
+      "name": "Can change log entry",
+      "content_type": 4,
+      "codename": "change_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 12,
+    "fields": {
+      "name": "Can delete log entry",
+      "content_type": 4,
+      "codename": "delete_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 13,
+    "fields": {
+      "name": "Can add permission",
+      "content_type": 5,
+      "codename": "add_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 14,
+    "fields": {
+      "name": "Can change permission",
+      "content_type": 5,
+      "codename": "change_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 15,
+    "fields": {
+      "name": "Can delete permission",
+      "content_type": 5,
+      "codename": "delete_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 16,
+    "fields": {
+      "name": "Can add user",
+      "content_type": 6,
+      "codename": "add_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 17,
+    "fields": {
+      "name": "Can change user",
+      "content_type": 6,
+      "codename": "change_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 18,
+    "fields": {
+      "name": "Can delete user",
+      "content_type": 6,
+      "codename": "delete_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 19,
+    "fields": {
+      "name": "Can add group",
+      "content_type": 7,
+      "codename": "add_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 20,
+    "fields": {
+      "name": "Can change group",
+      "content_type": 7,
+      "codename": "change_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 21,
+    "fields": {
+      "name": "Can delete group",
+      "content_type": 7,
+      "codename": "delete_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 22,
+    "fields": {
+      "name": "Can add content type",
+      "content_type": 8,
+      "codename": "add_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 23,
+    "fields": {
+      "name": "Can change content type",
+      "content_type": 8,
+      "codename": "change_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 24,
+    "fields": {
+      "name": "Can delete content type",
+      "content_type": 8,
+      "codename": "delete_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 25,
+    "fields": {
+      "name": "Can add session",
+      "content_type": 9,
+      "codename": "add_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 26,
+    "fields": {
+      "name": "Can change session",
+      "content_type": 9,
+      "codename": "change_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 27,
+    "fields": {
+      "name": "Can delete session",
+      "content_type": 9,
+      "codename": "delete_session"
+    }
+  },
+  {
+    "model": "auth.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$30000$4clJnTQ3yMmN$OyMda+803XuIffqDrCmN8SbHlnwgMSrfUf+DYzw4vTQ=",
+      "last_login": "2016-12-27T07:36:17.659Z",
+      "is_superuser": true,
+      "username": "pandu",
+      "first_name": "",
+      "last_name": "",
+      "email": "yash.3997@gmail.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2016-12-26T09:56:15.252Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+      "action_time": "2016-12-26T11:17:57.446Z",
+      "user": 1,
+      "content_type": 2,
+      "object_id": "1",
+      "object_repr": "{\"comment\": \"\", \"tag\": \"\"}",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+      "action_time": "2016-12-26T12:47:44.908Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "1",
+      "object_repr": "{\"comment\": \"jkalf;dsf\", \"epoch_time\": \"00:00:00\", \"tag\": \"jlakf;dsf\", \"epoch_date\": \"22/12/2016\", \"duration\": {\"seconds\": 4, \"days\": 3}, \"time_period\": {\"seconds\": 2, \"days\": 1}}",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"errand\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 3,
+    "fields": {
+      "action_time": "2016-12-26T13:16:25.470Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "6",
+      "object_repr": "{\"comment\": \"kfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjfkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsj",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"description\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 4,
+    "fields": {
+      "action_time": "2016-12-26T13:17:10.073Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "6",
+      "object_repr": "{\"comment\": \"kfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjfkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsj",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"description\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 5,
+    "fields": {
+      "action_time": "2016-12-26T13:17:27.408Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "6",
+      "object_repr": "{\"comment\": \"kfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjfkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsj",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"description\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 6,
+    "fields": {
+      "action_time": "2016-12-26T13:17:56.831Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "6",
+      "object_repr": "{\"comment\": \"kfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjfkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsjf\\nkfadljs;fsjkldfja;dsj",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 7,
+    "fields": {
+      "action_time": "2016-12-26T13:22:10.242Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "7",
+      "object_repr": "{\"comment\": \"ajfdksklas;klfjkas;dfklasdjkflasdkfksal\\n\", \"epoch_time\": \"02:02:00\", \"tag\": \"kjadl;fdsfd\", \"epoch_date\": \"07/12/2016\", \"duration\": {\"seconds\": 3, \"days\": 2}, \"time_period\": {\"seconds\": 0",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"description\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 8,
+    "fields": {
+      "action_time": "2016-12-26T13:22:23.205Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "7",
+      "object_repr": "{\"comment\": \"ajfdksklas;klfjkas;dfklasdjkflasdkfksal\\n\", \"epoch_time\": \"02:02:00\", \"tag\": \"kjadl;fdsfd\", \"epoch_date\": \"07/12/2016\", \"duration\": {\"seconds\": 3, \"days\": 2}, \"time_period\": {\"seconds\": 0",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"description\"]}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 9,
+    "fields": {
+      "action_time": "2016-12-26T13:23:07.486Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "7",
+      "object_repr": "{\"comment\": \"ajfdksklas;klfjkas;dfklasdjkflasdkfksal\\n\", \"epoch_time\": \"02:02:00\", \"tag\": \"kjadl;fdsfd\", \"epoch_date\": \"07/12/2016\", \"duration\": {\"seconds\": 3, \"days\": 2}, \"time_period\": {\"seconds\": 0",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 10,
+    "fields": {
+      "action_time": "2016-12-27T07:37:00.864Z",
+      "user": 1,
+      "content_type": 3,
+      "object_id": "2",
+      "object_repr": "{\"comment\": \"\", \"epoch_time\": \"00:00:00\", \"tag\": \"jgslk;kfadsf\", \"epoch_date\": \"29/12/2016\", \"duration\": {\"seconds\": 6, \"days\": 5}, \"time_period\": {\"seconds\": 4, \"days\": 3}}",
+      "action_flag": 3,
+      "change_message": ""
+    }
+  }
+]

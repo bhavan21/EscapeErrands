@@ -8,11 +8,13 @@
       <w>darkred</w>
       <w>dblclick</w>
       <w>deeppink</w>
+      <w>gunicorn</w>
       <w>highcharts</w>
       <w>hoverable</w>
       <w>mmmm</w>
       <w>mousemove</w>
       <w>onreadystatechange</w>
+      <w>postgresql</w>
       <w>preloader</w>
       <w>sriram</w>
       <w>subhea</w>
@@ -21,6 +23,7 @@
       <w>tooltipped</w>
       <w>valign</w>
       <w>vert</w>
+      <w>whitenoise</w>
       <w>yashasvi</w>
     </words>
   </dictionary>

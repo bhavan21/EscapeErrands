@@ -2,7 +2,7 @@
 {% block title %}Time Table{% endblock %}
 {% block style %}
     <style>
-        .loading {
+        .block-screen {
             position: fixed;
             z-index: 999;
             width: 100vw;
@@ -45,6 +45,7 @@
         var $top_hint;
         var $top_hint_div;
         var $loading;
+        var $error;
         var $detail_div;
         var $yesterday;
         var $tomorrow;
@@ -321,7 +322,8 @@
                     url: '/errands/fetch_stubs/',
                     data: data,
                     error: function () {
-                        alert('Stubs could not be fetched')
+                        $($error).find('.message').html('Stubs could not be fetched');
+                        $($error).fadeIn(0);
                     },
                     success: function (result) {
                         if (result == -1)return;
@@ -362,6 +364,7 @@
             $top_hint = $('#top-hint');
             $top_hint_div = $('#top-hint-div');
             $loading = $('#loading');
+            $error = $('#error');
             $detail_div = $('#detail-div');
             $yesterday = $('#yesterday');
             $tomorrow = $('#tomorrow');
@@ -466,9 +469,18 @@
         });
     </script>
 
-    <div id="loading" class="loading" style="display: none">
+    <div id="loading" class="block-screen" style="display: none">
         <div class="progress" style="position: absolute;top: 50%;width: 50%;left: 25%">
             <div class="indeterminate"></div>
+        </div>
+    </div>
+
+    <div id="error" class="block-screen row" style="display: none">
+        <div class="center align">
+            <h2 class="flow-text red-text">Snap! Error!</h2>
+            <p class="teal-text message"></p>
+            <a href="{% url 'time_table:scrolling_stubs' %}" class="btn-floating btn-large waves-effect waves-teal red white-text">
+                <i class="material-icons">replay</i></a>
         </div>
     </div>
 

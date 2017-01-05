@@ -4,6 +4,9 @@ from django.contrib import admin
 urlpatterns = [
     # host/admin/
     url(r'^admin/', admin.site.urls),
+
+    # host
+    url(r'^', include('home.urls')),
     # host/errands/
     url(r'^errands/', include("errands.urls")),
     # host/time_table/

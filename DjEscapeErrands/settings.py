@@ -22,8 +22,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'time_table',
+    'home',
     'errands',
+    'time_table',
     'stats',
 ]
 

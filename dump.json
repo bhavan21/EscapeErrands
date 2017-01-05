@@ -1,262 +1,5 @@
 [
   {
-    "model": "errands.errand",
-    "pk": 17,
-    "fields": {
-      "description": "{\"comment\": \"Economics\", \"tag\": \"HS 101\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 18,
-    "fields": {
-      "description": "{\"comment\": \"Design And Analysis of Algorithms\", \"tag\": \"CS 218\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 19,
-    "fields": {
-      "description": "{\"comment\": \"Networks\", \"tag\": \"CS 224\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 20,
-    "fields": {
-      "description": "{\"comment\": \"Digital Logic Design\", \"tag\": \"CS 226\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 21,
-    "fields": {
-      "description": "{\"comment\": \"Elements Of Design\", \"tag\": \"DE 408\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 22,
-    "fields": {
-      "description": "{\"comment\": \"Logic For Computer Science\", \"tag\": \"CS 228\"}"
-    }
-  },
-  {
-    "model": "errands.errand",
-    "pk": 23,
-    "fields": {
-      "description": "{\"comment\": \"Digital Logic Design Lab\", \"tag\": \"CS 254\"}"
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 16,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 17
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 17,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 17
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 18,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 17
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 19,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 18
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 20,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"11:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 18
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 21,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 18
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 22,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 19
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 23,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 19
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 24,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 20
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 25,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 20
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 26,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 21
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 27,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 21
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 28,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 22
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 29,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 22
-    }
-  },
-  {
-    "model": "errands.piece",
-    "pk": 30,
-    "fields": {
-      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"LH101\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 10800, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
-      "errand": 23
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 1,
-    "fields": {
-      "app_label": "time_table",
-      "model": "errands"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 2,
-    "fields": {
-      "app_label": "errands",
-      "model": "errand"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 3,
-    "fields": {
-      "app_label": "errands",
-      "model": "piece"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 4,
-    "fields": {
-      "app_label": "admin",
-      "model": "logentry"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 5,
-    "fields": {
-      "app_label": "auth",
-      "model": "permission"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 6,
-    "fields": {
-      "app_label": "auth",
-      "model": "user"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 7,
-    "fields": {
-      "app_label": "auth",
-      "model": "group"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 8,
-    "fields": {
-      "app_label": "contenttypes",
-      "model": "contenttype"
-    }
-  },
-  {
-    "model": "contenttypes.contenttype",
-    "pk": 9,
-    "fields": {
-      "app_label": "sessions",
-      "model": "session"
-    }
-  },
-  {
-    "model": "sessions.session",
-    "pk": "tbfb7e197219qx5zae9ybl59jce89smr",
-    "fields": {
-      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
-      "expire_date": "2017-01-10T07:36:17.673Z"
-    }
-  },
-  {
-    "model": "sessions.session",
-    "pk": "yhloom5au8kvltzxl0wfnneflcd5g5rt",
-    "fields": {
-      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
-      "expire_date": "2017-01-09T09:57:06.320Z"
-    }
-  },
-  {
     "model": "auth.permission",
     "pk": 1,
     "fields": {
@@ -515,6 +258,191 @@
       "date_joined": "2016-12-26T09:56:15.252Z",
       "groups": [],
       "user_permissions": []
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "tbfb7e197219qx5zae9ybl59jce89smr",
+    "fields": {
+      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
+      "expire_date": "2017-01-10T07:36:17.673Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "yhloom5au8kvltzxl0wfnneflcd5g5rt",
+    "fields": {
+      "session_data": "MzkxMGI4M2MyNGUxZWZlNmRlNzE4N2Y5NDJlMjBlMDA3Njk2NWUwNjp7Il9hdXRoX3VzZXJfaGFzaCI6ImU2NzM0MzdkMjUxODYzNTA3YjFjMjMxYzhmODE1ZjYxNzk5ZjA0YTIiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIxIn0=",
+      "expire_date": "2017-01-09T09:57:06.320Z"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 17,
+    "fields": {
+      "description": "{\"comment\": \"Economics\", \"tag\": \"HS 101\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 18,
+    "fields": {
+      "description": "{\"comment\": \"Design And Analysis of Algorithms\", \"tag\": \"CS 218\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 19,
+    "fields": {
+      "description": "{\"comment\": \"Networks\", \"tag\": \"CS 224\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 20,
+    "fields": {
+      "description": "{\"comment\": \"Digital Logic Design\", \"tag\": \"CS 226\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 21,
+    "fields": {
+      "description": "{\"comment\": \"Elements Of Design\", \"tag\": \"DE 408\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 22,
+    "fields": {
+      "description": "{\"comment\": \"Logic For Computer Science\", \"tag\": \"CS 228\"}"
+    }
+  },
+  {
+    "model": "errands.errand",
+    "pk": 23,
+    "fields": {
+      "description": "{\"comment\": \"Digital Logic Design Lab\", \"tag\": \"CS 254\"}"
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 16,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 17,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 18,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LA302\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 17
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 19,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"10:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"02/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 20,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 21,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"08:30:00\", \"tag\": \"LC202\", \"epoch_date\": \"05/01/2017\", \"duration\": {\"seconds\": 3600, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 18
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 22,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 19
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 23,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 19
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 24,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"03/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 20
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 25,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"15:30:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 20
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 26,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 21
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 27,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"09:30:00\", \"tag\": \"LT205\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 21
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 28,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 22
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 29,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"11:00:00\", \"tag\": \"CC103\", \"epoch_date\": \"06/01/2017\", \"duration\": {\"seconds\": 5400, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 22
+    }
+  },
+  {
+    "model": "errands.piece",
+    "pk": 30,
+    "fields": {
+      "description": "{\"comment\": \"\", \"epoch_time\": \"14:00:00\", \"tag\": \"LH101\", \"epoch_date\": \"04/01/2017\", \"duration\": {\"seconds\": 10800, \"days\": 0}, \"time_period\": {\"seconds\": 0, \"days\": 7}}",
+      "errand": 23
     }
   },
   {

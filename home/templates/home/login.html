@@ -1,0 +1,20 @@
+{% extends 'errands/__base__.html' %}
+{% block body %}
+    <div class="row">
+        <div class="col l3 m3"></div>
+        <div class="col l6 m6 center-align">
+            <div style="position: relative;top: 30vh;">
+                <h3>Who are you?</h3>
+                <p class="blue-text flow-text">The content you requested is private. Please Identify Yourself</p>
+                <form action="{% url 'home:login' %}" method="post">
+                    {% csrf_token %}
+                    <div class="input-field">
+                        <i class="material-icons prefix">account_circle</i>
+                        <input name="Identity" type="password" placeholder="Identity">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col l3 m3"></div>
+    </div>
+{% endblock %}

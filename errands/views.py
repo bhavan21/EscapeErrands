@@ -9,11 +9,19 @@ import json
 
 
 def all_(request):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     errands = Errand.objects.all()
     return render(request=request, template_name='errands/all.html', context={'errands': errands})
 
 
 def touch(request, pk):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     # pk >= 0 from regex
     int__pk = int(pk)
 
@@ -39,11 +47,15 @@ def touch(request, pk):
                                                           'old_pieces': old_pieces,
                                                           })
     else:
-        return httpR('Invalid Access')
+        return render(request, 'home/invalid_access.html')
 
 
 # TODO: validate the inputs for more security
 def process_touch(request):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     # pk >= 0 from regex
     if request.method == 'POST':
 
@@ -145,23 +157,31 @@ def process_touch(request):
             return httpRPR(reverse('errands:touch', kwargs={'pk': errand.pk}))
 
     else:
-        return httpR('Invalid Access')
+        return render(request, 'home/invalid_access.html')
 
 
 def delete(request):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     if request.method == 'POST':
         if 'pk' in request.POST:
             try:
                 delete_errand = Errand.objects.get(pk=request.POST['pk'])
                 delete_errand.delete()
+                return httpRPR(reverse('errands:all'))
             except ObjectDoesNotExist:
-                pass
-        return httpRPR(reverse('errands:all'))
+                return render(request, 'home/invalid_access.html')
     else:
-        return httpR('Invalid Access')
+        return render(request, 'home/invalid_access.html')
 
 
 def ajax_read(request, pk):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     try:
         errand = Errand.objects.get(pk=pk)
         piece_descriptions = []
@@ -212,6 +232,10 @@ def color_map(pk):
 
 
 def fetch_stubs(request):
+    # User Logged In Check
+    if not request.session.get(Std.Keys.user_logged_in, False):
+        return render(request, 'home/login.html')
+
     if 'LB' in request.GET and 'UB' in request.GET:
         try:
             lb = dt.strptime(request.GET['LB'], Std.input_d_format)

@@ -1,7 +1,7 @@
 templates,
 mobile optimization,
 range select,
-password,
++password,
 analysis,
 ordering,
 gmail,

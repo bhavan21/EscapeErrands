@@ -1,14 +1,15 @@
 {% extends 'errands/__base__.html' %}
+{% block title %}Invalid Access{% endblock %}
 {% block body %}
     {% load staticfiles %}
     <div class="row">
-        <div class="col l3 m3"></div>
-        <div class="col l6 m6 center-align">
+        <div class="col l3 m0 s0"></div>
+        <div class="col l6 m12 s12 center-align">
             <div>
                 <h1 class="red-text">Invalid Access</h1>
-                <img src="{% static "home/images/invalid_access.gif" %}">
+                <img style="width: 100%" src="{% static "home/images/invalid_access.gif" %}">
             </div>
         </div>
-        <div class="col l3 m3"></div>
+        <div class="col l3 m0 s0"></div>
     </div>
 {% endblock %}

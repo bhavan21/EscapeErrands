@@ -5,6 +5,29 @@ from datetime import datetime as dt, timedelta as td
 import json
 
 
+def color_map(pk):
+    if pk % 10 == 0:
+        return '#01579b'
+    elif pk % 10 == 1:
+        return '#e65100'
+    elif pk % 10 == 2:
+        return '#2e7d32'
+    elif pk % 10 == 3:
+        return '#6200ea'
+    elif pk % 10 == 4:
+        return '#4e342e'
+    elif pk % 10 == 5:
+        return '#827717'
+    elif pk % 10 == 6:
+        return '#455a64'
+    elif pk % 10 == 7:
+        return '#f50057'
+    elif pk % 10 == 8:
+        return '#ffd600'
+    elif pk % 10 == 9:
+        return '#212121'
+
+
 class Std:
     std_d_format = '%d/%m/%Y'
     input_d_format = '%Y-%m-%d'
@@ -229,3 +252,75 @@ class Piece(models.Model):
 
     def __str__(self):
         return self.description
+
+    def is_non_repeating(self):
+        """
+        :return: True if non-repeating , False if repeating
+                and -1 if exception occurs
+        """
+        try:
+            # time_period
+            if self.time_period.days == 0 and self.time_period.seconds == 0:
+                return True
+            else:
+                return False
+        except ValueError:
+            return -1
+        except KeyError:
+            return -1
+        except AttributeError:
+            return -1
+
+    def is_task(self):
+        """
+        :return: True if task , False if event
+                and -1 if exception occurs
+        """
+        try:
+            # time_period
+            if self.duration.days == 0 and self.duration.seconds == 0:
+                return True
+            else:
+                return False
+        except ValueError:
+            return -1
+        except KeyError:
+            return -1
+        except AttributeError:
+            return -1
+
+    def get_stub_which_intersects(self, epoch, lb, ub):
+        """
+        Assumes proper params are given
+        :param epoch datetime
+        :param lb datetime
+        :param ub datetime
+        :return: Stub Dictionary if the given stub of this piece intersects with the [range],
+                 None if not
+                 -1 if exception occurs
+        """
+        try:
+            stub = None
+            # Epoch End of Stub are determined
+            end = epoch + self.duration
+            # If Stub Intersects With Range
+            if lb <= epoch <= ub or lb <= end <= ub:
+                stub_epoch = max([lb, epoch])
+                stub_end = min([end, ub])
+                stub_tag = self.tag
+                stub_pk = self.pk
+                stub = {
+                    'epoch': stub_epoch,
+                    'end': stub_end,
+                    'tag': stub_tag,
+                    'pk': stub_pk,
+                    'errand_pk': self.errand_id,
+                    'color': color_map(self.errand_id)
+                }
+            return stub
+        except ValueError:
+            return -1
+        except KeyError:
+            return -1
+        except AttributeError:
+            return -1

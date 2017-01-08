@@ -196,39 +196,12 @@ def ajax_read(request, pk):
     return httpR(json_string)
 
 
-def lies_in(lb, flag, ub):
-    return lb <= flag <= ub
-
-
 def intersect(e1, e2):
     e1_epoch = e1['epoch']
     e2_epoch = e2['epoch']
     e1_end = e1['end']
     e2_end = e2['end']
     return e1_epoch < e2_epoch < e1_end or e1_epoch < e2_end < e1_end or e2_epoch < e1_epoch < e2_end or e2_epoch < e1_end < e2_end
-
-
-def color_map(pk):
-    if pk % 10 == 0:
-        return '#01579b'
-    elif pk % 10 == 1:
-        return '#e65100'
-    elif pk % 10 == 2:
-        return '#2e7d32'
-    elif pk % 10 == 3:
-        return '#6200ea'
-    elif pk % 10 == 4:
-        return '#4e342e'
-    elif pk % 10 == 5:
-        return '#827717'
-    elif pk % 10 == 6:
-        return '#455a64'
-    elif pk % 10 == 7:
-        return '#f50057'
-    elif pk % 10 == 8:
-        return '#ffd600'
-    elif pk % 10 == 9:
-        return '#212121'
 
 
 def fetch_stubs(request):
@@ -248,30 +221,17 @@ def fetch_stubs(request):
         task_stubs = []
 
         all_pieces = Piece.objects.all()
-        # Get Stubs within the given Time Range
+        # Creating Stubs within the given Time Range
         for piece in all_pieces:
             # Non Repeating
-            if piece.time_period.days == 0 and piece.time_period.seconds == 0:
+            if piece.is_non_repeating():
                 epoch = dt.combine(piece.epoch_date, piece.epoch_time)
-                end = epoch + piece.duration
-                if lies_in(lb, epoch, ub) or lies_in(lb, end, ub):
-                    # intersection
-                    stub_epoch = max([lb, epoch])
-                    stub_end = min([end, ub])
-                    stub_tag = piece.tag
-                    stub_pk = piece.pk
-                    stub = {
-                        'epoch': stub_epoch,
-                        'end': stub_end,
-                        'tag': stub_tag,
-                        'pk': stub_pk,
-                        'errand_pk': piece.errand_id,
-                        'color': color_map(piece.errand_id)
-                    }
-                    # Event Stub
-                    if piece.duration.days == 0 and piece.duration.seconds == 0:
-                        task_stubs.append(stub)
+                stub = piece.get_stub_which_intersects(epoch, lb, ub)
+                if stub is not None:
                     # Task Stub
+                    if piece.is_task():
+                        task_stubs.append(stub)
+                    # Event Stub
                     else:
                         event_stubs.append(stub)
             # Repeating
@@ -288,56 +248,27 @@ def fetch_stubs(request):
                     i_end += time_period
                 i_epoch = i_end - duration
 
-                # Event Stubs
-                if piece.duration.days == 0 and piece.duration.seconds == 0:
-                    # Adding stubs
+                # Adding stubs
+                # Task Stubs (Once a task piece always a task piece)
+                if piece.is_task():
                     # Until epoch goes above the upper bound
                     while i_epoch < ub:
-                        # Non Repeating
-                        epoch = i_epoch
-                        end = epoch + duration
-                        if lies_in(lb, epoch, ub) or lies_in(lb, end, ub):
-                            # intersection
-                            stub_epoch = max([lb, epoch])
-                            stub_end = min([end, ub])
-                            stub_tag = piece.tag
-                            stub_pk = piece.pk
-                            stub = {
-                                'epoch': stub_epoch,
-                                'end': stub_end,
-                                'tag': stub_tag,
-                                'pk': stub_pk,
-                                'errand_pk': piece.errand_id,
-                                'color': color_map(piece.errand_id)
-                            }
+                        # Adding Stubs one by one
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
                             task_stubs.append(stub)
                         i_epoch += time_period
-                # Task Stubs
+                # Event Stubs (Once a event piece always a event piece)
                 else:
-                    # Adding stubs
                     # Until epoch goes above the upper bound
                     while i_epoch < ub:
                         # Non Repeating
-                        epoch = i_epoch
-                        end = epoch + duration
-                        if lies_in(lb, epoch, ub) or lies_in(lb, end, ub):
-                            # intersection
-                            stub_epoch = max([lb, epoch])
-                            stub_end = min([end, ub])
-                            stub_tag = piece.tag
-                            stub_pk = piece.pk
-                            stub = {
-                                'epoch': stub_epoch,
-                                'end': stub_end,
-                                'tag': stub_tag,
-                                'pk': stub_pk,
-                                'errand_pk': piece.errand_id,
-                                'color': color_map(piece.errand_id)
-                            }
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
                             event_stubs.append(stub)
                         i_epoch += time_period
 
-        # Analysing stubs , Creating lanes
+        # Ordering stubs , Creating lanes
         for stub in event_stubs:
 
             in_some_lane = False
@@ -370,7 +301,7 @@ def fetch_stubs(request):
             task_stub['epoch'] = task_stub['epoch'].strftime(Std.output_dt_format),
             task_stub['end'] = task_stub['end'].strftime(Std.output_dt_format),
 
-        j_s_o_n = json.dumps({'Lanes': lanes, 'Task_Stubs': task_stubs})
-        return httpR(j_s_o_n)
+        json_string = json.dumps({'Lanes': lanes, 'Task_Stubs': task_stubs})
+        return httpR(json_string)
     else:
         return httpR(-1)

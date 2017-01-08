@@ -49,7 +49,7 @@ var HTML_STRINGS = {
             'Repeat' +
             '</label>' +
             '</div>' +
-            '<div class="col l8 m8 s12 time-period-select row" style="' + time_period_display + '">' +
+            '<div class="col l8 m8 s8 time-period-select row" style="' + time_period_display + '">' +
             '<label class="col l6 m6 s6">' +
             'Days' +
             '<input class="days validate" type="number" value="' + time_period_days + '">' +
@@ -72,7 +72,7 @@ var HTML_STRINGS = {
             'Event' +
             '</label>' +
             '</div>' +
-            '<div class="col l8 m8 s12 duration-select" style="' + duration_display + '">' +
+            '<div class="col l8 m8 s8 duration-select" style="' + duration_display + '">' +
             '<label class="col l6 m6 s6">' +
             'Days' +
             '<input class="days validate" type="number" value="' + duration_days + '">' +

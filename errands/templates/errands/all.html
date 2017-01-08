@@ -80,9 +80,9 @@
         })
     </script>
     <div class="row">
-        <div class="col l2 m0"></div>
+        <div class="col l2 m0 s0"></div>
 
-        <div class="col l8 m12">
+        <div class="col l8 m12 s12">
             <div>
                 <h4 class="teal-text">{{ errands|length }} Errand{% if errands|length > 1 %}s{% endif %}</h4>
                 <ul id="errands_list" class="collapsible" data-collapsible="accordion">
@@ -112,24 +112,14 @@
                                     <input hidden name="pk" value="{{ i.pk }}">
                                 </form>
                                 <div class="row">
-                                    <div class="col l4 m4">
+                                    <div class="col l4 m4 s4">
                                         <p class="grey-text flow-text truncate">
                                             {{ i.comment }}
                                         </p>
                                     </div>
-                                    <div class="col l8 m8 figure">
-                                        <div class="preloader-wrapper active">
-                                            <div class="spinner-layer spinner-red-only">
-                                                <div class="circle-clipper left">
-                                                    <div class="circle"></div>
-                                                </div>
-                                                <div class="gap-patch">
-                                                    <div class="circle"></div>
-                                                </div>
-                                                <div class="circle-clipper right">
-                                                    <div class="circle"></div>
-                                                </div>
-                                            </div>
+                                    <div class="col l8 m8 s8 figure">
+                                        <div class="progress">
+                                            <div class="indeterminate"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -141,7 +131,7 @@
             </div>
         </div>
 
-        <div class="col l2 m0">
+        <div class="col l2 m0 s0">
             <div class="fixed-action-btn">
                 <a href="{% url 'errands:touch' 0 %}"
                    class="btn-floating btn-large waves-effect waves-light pink z-depth-5">

@@ -88,18 +88,16 @@
                     Padding: 5, // px
                     Initial_Left: 50 // px
                 },
-                No: 0
+                No: 0,
+                Duration: 0 // minutes
             }
         };
 
-        // number - color
         // time divisions
         function render_time_divisions(scale, no_days) {
             // defaults
             scale = scale === undefined ? 1 : scale;
             no_days = no_days === undefined ? 1 : no_days;
-
-            var $time_divisions_div = $('#time-divisions-div');
 
             for (var i = 0; i <= 24 * no_days; ++i) {
                 // div for every 60 minutes
@@ -204,8 +202,11 @@
             // Top
             var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
                 * Context.Time_Table.Scale.Px_To_Min;
+            // Duration
+            var duration = moment.duration(end.diff(epoch)).asMinutes();
+            Context.Stubs.Duration += duration;
             // Height
-            var height = moment.duration(end.diff(epoch)).asMinutes() * Context.Time_Table.Scale.Px_To_Min;
+            var height = duration * Context.Time_Table.Scale.Px_To_Min;
             // Display Name
             /* Full Vertical Display */
             var display_name = '';
@@ -310,43 +311,56 @@
             $($cursor_bar_hint).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
         }
         // fetch stubs
-        function render_stubs_on(date) {
-            // Loading On Progress
-            $($loading).fadeIn(0);
-            var data = {
-                LB: date,
-                UB: moment(date, Std.d_format).add(1, 'd').format(Std.d_format)
-            };
+        function fetch_stubs_and(range, error_callback, success_callback) {
+            //noinspection JSUnresolvedVariable
             $.ajax(
                 {
                     url: '/errands/fetch_stubs/',
-                    data: data,
-                    error: function () {
-                        $($error).find('.message').html('Stubs could not be fetched');
-                        $($error).fadeIn(0);
-                    },
-                    success: function (result) {
-                        if (result == -1)return;
-                        // Change the Context
-                        Context.Time_Table.Range.LB = function () {
-                            return moment(date, Std.d_format);
-                        };
-                        Context.Time_Table.Range.UB = function () {
-                            return Context.Time_Table.Range.LB().add(1, 'd');
-                        };
-                        Context.Time_Table.Reload_Top_Fixed_Hint();
-                        // reload using the stubs data
-                        var json = JSON.parse(result);
-                        //noinspection JSUnresolvedVariable
-                        Context.Stubs.Event.Lanes = json.Lanes;
-                        //noinspection JSUnresolvedVariable
-                        Context.Stubs.Task.Def = json.Task_Stubs;
-                        console.log(json);
-                        reload();
-                    }
+                    data: range,
+                    error: error_callback,
+                    success: success_callback
                 }
             );
+        }
 
+        // render date
+        function render_stubs_on(date) {
+            // Loading On Progress
+            $($loading).fadeIn(0);
+            var error_call_back = function () {
+                $($error).find('.message').html('Stubs could not be fetched');
+                $($error).fadeIn(0);
+            };
+            var success_callback = function (result) {
+                if (result == -1) {
+                    error_call_back();
+                    return;
+                }
+                // Change the Context
+                Context.Time_Table.Range.LB = function () {
+                    return moment(date, Std.dt_format);
+                };
+                Context.Time_Table.Range.UB = function () {
+                    return Context.Time_Table.Range.LB().add(1, 'd');
+                };
+                Context.Time_Table.Reload_Top_Fixed_Hint();
+                // reload using the stubs data
+                var json = JSON.parse(result);
+                //noinspection JSUnresolvedVariable
+                Context.Stubs.Event.Lanes = json.Lanes;
+                //noinspection JSUnresolvedVariable
+                Context.Stubs.Task.Def = json.Task_Stubs;
+                console.log(json);
+                reload();
+            };
+            fetch_stubs_and(
+                {
+                    LB: date,
+                    UB: moment(date, Std.dt_format).add(1, 'd').format(Std.dt_format)
+                },
+                error_call_back,
+                success_callback
+            );
         }
 
         $(document).ready(function () {
@@ -427,13 +441,13 @@
             $($yesterday).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.d_format));
+                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.dt_format));
                 }
             );
             $($tomorrow).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.d_format));
+                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.dt_format));
                 }
             );
 
@@ -465,7 +479,7 @@
             {% comment %}Initializing With Today{% endcomment %}
 
             // Showing today's time table
-            render_stubs_on(moment().format(Std.d_format));
+            render_stubs_on(Context.Time_Table.Range.LB().format(Std.dt_format));
         });
     </script>
 
@@ -479,7 +493,8 @@
         <div class="center align">
             <h2 class="flow-text red-text">Snap! Error!</h2>
             <p class="teal-text message"></p>
-            <a href="{% url 'time_table:scrolling_stubs' %}" class="btn-floating btn-large waves-effect waves-teal red white-text">
+            <a href="{% url 'time_table:scrolling_stubs' %}"
+               class="btn-floating btn-large waves-effect waves-teal red white-text">
                 <i class="material-icons">replay</i></a>
         </div>
     </div>

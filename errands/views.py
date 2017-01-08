@@ -177,22 +177,17 @@ def delete(request):
         return render(request, 'home/invalid_access.html')
 
 
-def ajax_read(request, pk):
+def fetch_piece(request, pk):
     # User Logged In Check
     if not request.session.get(Std.Keys.user_logged_in, False):
         return render(request, 'home/login.html')
 
     try:
-        errand = Errand.objects.get(pk=pk)
-        piece_descriptions = []
-        pieces = errand.piece_set.all()
-        for piece in pieces:
-            piece_descriptions.append(piece.description)
-
+        piece = Piece.objects.get(pk=pk)
     except ObjectDoesNotExist:
         return httpR(-1)
 
-    json_string = json.dumps({'pieces': piece_descriptions})
+    json_string = json.dumps({'piece': piece.description})
     return httpR(json_string)
 
 
@@ -211,8 +206,8 @@ def fetch_stubs(request):
 
     if 'LB' in request.GET and 'UB' in request.GET:
         try:
-            lb = dt.strptime(request.GET['LB'], Std.input_d_format)
-            ub = dt.strptime(request.GET['UB'], Std.input_d_format)
+            lb = dt.strptime(request.GET['LB'], Std.input_dt_format)
+            ub = dt.strptime(request.GET['UB'], Std.input_dt_format)
         except ValueError:
             return httpR(-1)
 

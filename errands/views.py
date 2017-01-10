@@ -9,12 +9,8 @@ import json
 
 
 def all_(request):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
-
     errands = Errand.objects.all()
-    return render(request=request, template_name='errands/all.html', context={'errands': errands})
+    return render(request, 'errands/all.html', {'errands': errands})
 
 
 def touch(request, pk):
@@ -177,17 +173,35 @@ def delete(request):
         return render(request, 'home/invalid_access.html')
 
 
-def fetch_piece(request, pk):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
+def fetch_errand(request, pk):
+    try:
+        errand = Errand.objects.get(pk=pk)
+        piece_descriptions = []
+        pieces = errand.piece_set.all()
+        for piece in pieces:
+            piece_description = json.loads(piece.description)
+            piece_description['pk'] = piece.pk
+            piece_descriptions.append(piece_description)
 
+    except ObjectDoesNotExist:
+        return httpR(-1)
+
+    errand_description = json.loads(errand.description)
+    errand_description['pk'] = errand.pk
+
+    json_string = json.dumps({'errand': errand_description, 'pieces': piece_descriptions})
+    return httpR(json_string)
+
+
+def fetch_piece(request, pk):
     try:
         piece = Piece.objects.get(pk=pk)
     except ObjectDoesNotExist:
         return httpR(-1)
 
-    json_string = json.dumps({'piece': piece.description})
+    desc = json.loads(piece.description)
+    desc['pk'] = piece.pk
+    json_string = json.dumps({'piece': desc})
     return httpR(json_string)
 
 
@@ -200,10 +214,6 @@ def intersect(e1, e2):
 
 
 def fetch_stubs(request):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
-
     if 'LB' in request.GET and 'UB' in request.GET:
         try:
             lb = dt.strptime(request.GET['LB'], Std.input_dt_format)

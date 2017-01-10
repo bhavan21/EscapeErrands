@@ -29,16 +29,29 @@
             background-color: rgba(0, 0, 0, 0.02);
         }
 
+        .pieces-list li:hover {
+            border: 1px solid black;
+        }
 
     </style>
 {% endblock %}
 {% block body %}
+    <!--suppress JSUnresolvedVariable -->
+    {% load staticfiles %}
+    <script src="{% static "errands/js/html_build_strings.js" %}"></script>
     <script>
+
+        function to_hrs(obj) {
+            return obj.days * 24 + obj.seconds / 3600;
+        }
+
+        function to_days(obj) {
+            return obj.days;
+        }
+
         $(document).ready(function () {
-            {# Material Initalizations #}
 
             {# Listeners #}
-
             {# Remove btn #}
             $('.remove-btn')
                 .on(
@@ -49,33 +62,89 @@
                             $(that).find('.delete_fm').submit();
                         });
                     }
-                )
-            ;
+                );
 
-            {# Ajax Read #}
+            {# Fetch and Render Errand #}
             $('#errands_list')
                 .on(
                     'click',
                     '.errand-def',
                     function () {
-                        var that = $(this);
-                        var id = $(this).attr('id');
-                        {#                        $.ajax(#}
-                        {#                            {#}
-                        {#                                url: '/errands/ajax_read/' + id + '/',#}
-                        {#                                error: function () {#}
-                        {#                                    alert('action could not be done')#}
-                        {#                                },#}
-                        {#                                success: function (result) {#}
-                        {#                                    $(that).find('.figure').html(result);#}
-                        {#                                }#}
-                        {#                            }#}
-                        {#                        )#}
+                        if ($(this).hasClass('closed')) {
+                            // opening
+                            var that = $(this).parent();
+                            var id = $(that).attr('id');
+                            $(that).find('.progress').fadeIn(
+                                0,
+                                function () {
+                                    $.ajax(
+                                        {
+                                            url: '/errands/fetch_errand/' + id + '/',
+                                            error: function () {
+                                                alert('Errand could not be fetched!')
+                                            },
+                                            success: function (result) {
+                                                // fetched
+                                                var errand = JSON.parse(result);
+                                                // console.log(errand);
+                                                // rendering
+                                                var pieces_list = $(that).find('.pieces-list');
+                                                $(pieces_list).empty();
+                                                for (var i = 0; i < errand.pieces.length; ++i) {
+                                                    var piece = errand.pieces[i];
+                                                    var piece_id = 'p' + piece.pk;
+                                                    var piece_duration = to_hrs(piece.duration);
+                                                    var piece_time_period = to_days(piece.time_period);
+                                                    $(pieces_list).append(HTML_STRINGS.ALL.PIECE(piece_id));
+                                                    Highcharts.chart(piece_id, {
+                                                        chart: {
+                                                            type: 'column'
+                                                        },
+                                                        title: {
+                                                            text: piece.tag
+                                                        },
+                                                        subtitle: {
+                                                            text: piece.comment
+                                                        },
+                                                        xAxis: {
+                                                            min: 0,
+                                                            tickInterval: 1,
+                                                            title: {
+                                                                text: 'Time Period (Days)'
+                                                            }
+                                                        },
+                                                        yAxis: {
+                                                            min: 0,
+                                                            title: {
+                                                                text: 'Duration (Hr)'
+                                                            }
+                                                        },
+                                                        plotOptions: {
+                                                            column: {
+                                                                pointPadding: 0.2,
+                                                                borderWidth: 0
+                                                            }
+                                                        },
+                                                        legend: {
+                                                            enabled: false
+                                                        },
+                                                        series: [{
+                                                            name: piece.tag,
+                                                            data: [[0, piece_duration], [piece_time_period, piece_duration]]
+                                                        }]
+                                                    });
+                                                }
+                                            }
 
+                                        }
+                                    );
+                                    $(that).find('.progress').fadeOut(0);
+                                }
+                            );
+                        }
+                        $(this).toggleClass('closed')
                     }
-                )
-            ;
-
+                );
 
         })
     </script>
@@ -86,16 +155,24 @@
             <div>
                 <h4 class="teal-text">{{ errands|length }} Errand{% if errands|length > 1 %}s{% endif %}</h4>
                 <ul id="errands_list" class="collapsible" data-collapsible="accordion">
+
                     {% for i in errands %}
 
-                        <li id="{{ i.pk }}" class="errand-def">
-                            <div class="collapsible-header head">
+                        <li id="{{ i.pk }}">
+
+                            <div class="collapsible-header head errand-def closed">
                                 <span class="badge">
                                     {{ forloop.counter }}
                                 </span>
                                 <a class="waves-effect waves-red remove-btn">
                                     <i class="material-icons">delete</i>
                                 </a>
+                                <form class="delete_fm" method="post" action="{% url 'errands:delete' %}"
+                                      style="display: none">
+                                    {% csrf_token %}
+                                    {# Delete Form Btn #}
+                                    <input hidden name="pk" value="{{ i.pk }}">
+                                </form>
                                 <a href="{% url 'errands:touch' i.pk %}"
                                    class="waves-effect waves-yellow edit-btn">
                                     <i class="material-icons">mode_edit</i>
@@ -104,29 +181,27 @@
                                     {{ i.tag }}
                                 </span>
                             </div>
-                            <div class="collapsible-body waves-effect waves-yellow">
-                                <form class="delete_fm" method="post" action="{% url 'errands:delete' %}"
-                                      style="display: none">
-                                    {% csrf_token %}
-                                    {# Delete Form Btn #}
-                                    <input hidden name="pk" value="{{ i.pk }}">
-                                </form>
+
+                            <div class="collapsible-body">
+                                <div>
+                                    <p class="grey-text flow-text truncate comment">
+                                        {{ i.comment }}
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <div class="progress" style="display: none">
+                                        <div class="indeterminate"></div>
+                                    </div>
+                                </div>
+
                                 <div class="row">
-                                    <div class="col l4 m4 s4">
-                                        <p class="grey-text flow-text truncate">
-                                            {{ i.comment }}
-                                        </p>
-                                    </div>
-                                    <div class="col l8 m8 s8 figure">
-                                        <div class="progress">
-                                            <div class="indeterminate"></div>
-                                        </div>
-                                    </div>
+                                    <ul class="pieces-list">
+                                    </ul>
                                 </div>
                             </div>
                         </li>
                     {% endfor %}
-
                 </ul>
             </div>
         </div>
@@ -139,8 +214,5 @@
                 </a>
             </div>
         </div>
-    </div>
-    <div id="graph">
-
     </div>
 {% endblock %}

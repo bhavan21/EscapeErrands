@@ -5,10 +5,6 @@ from errands.models import Std
 
 
 def scrolling_stubs(request):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
-
     return render(request=request, template_name='time_table/scrolling_stubs.html')
 
 

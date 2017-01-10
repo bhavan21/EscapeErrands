@@ -14,6 +14,8 @@ urlpatterns = [
     # host/errands/delete/ -- pk is sent through POST method for security
     url(r'^delete/$', views.delete, name='delete'),
 
+    # host/errands/fetch_errand/pk/
+    url(r'^fetch_errand/(?P<pk>[0-9]+)/$', views.fetch_errand, name='fetch_errand'),
     # host/errands/fetch_piece/pk/
     url(r'^fetch_piece/(?P<pk>[0-9]+)/$', views.fetch_piece, name='fetch_piece'),
     # host/errands/fetch_stubs/

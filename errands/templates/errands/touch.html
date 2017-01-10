@@ -92,7 +92,7 @@
             for (var i = 0; i < Context.Old_Pieces.length; ++i) {
                 //noinspection JSUnresolvedVariable
                 $($pieces_list).append(
-                    HTML_STRINGS.PIECE(
+                    HTML_STRINGS.TOUCH.PIECE(
                         ('o' + Context.Old_Pieces[i].pk),
                         Context.Old_Pieces[i].epoch_date,
                         Context.Old_Pieces[i].epoch_time,
@@ -146,7 +146,7 @@
                 .on(
                     'click',
                     function () {
-                        $($pieces_list).append(HTML_STRINGS.PIECE('n' + (New_Pieces_Pk + 1)));
+                        $($pieces_list).append(HTML_STRINGS.TOUCH.PIECE('n' + (New_Pieces_Pk + 1)));
                         New_Pieces_Pk++;
                         update_pieces_count();
                     }

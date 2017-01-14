@@ -201,7 +201,9 @@ def fetch_piece(request, pk):
 
     desc = json.loads(piece.description)
     desc['pk'] = piece.pk
-    json_string = json.dumps({'piece': desc})
+    desc['errand_pk'] = piece.errand_id
+    desc['errand_tag'] = piece.errand.tag
+    json_string = json.dumps(desc)
     return httpR(json_string)
 
 

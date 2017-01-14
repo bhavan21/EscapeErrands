@@ -3,10 +3,10 @@
 {% block style %}
     <style>
         .block-screen {
-            position: fixed;
+            position: absolute;
             z-index: 999;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background-color: white;
         }
 
@@ -27,9 +27,26 @@
             background-color: transparent;
             margin: 0
         }
+
+        #detail-div textarea {
+            padding: 5px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+            overflow: auto;
+        }
+
+        #detail-div .divider {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        #detail-div .tag {
+            margin-top: 10px;
+        }
     </style>
 {% endblock %}
 {% block body %}
+    <!--suppress JSUnresolvedVariable -->
     <script>
         // references
         var $time_table_div;
@@ -44,8 +61,10 @@
         var $cursor_bar_hint;
         var $top_hint;
         var $top_hint_div;
-        var $loading;
-        var $error;
+        var $loading_timetable;
+        var $loading_detail;
+        var $error_timetable;
+        var $error_detail;
         var $detail_div;
         var $yesterday;
         var $tomorrow;
@@ -79,7 +98,7 @@
                 Task: {
                     Def: [],
                     Breadth: '90%',
-                    Height: '30px',
+                    Height: '50', //px
                     Left: '5%'
                 },
                 Event: {
@@ -197,8 +216,8 @@
         function render_event_stub(stub, lane) {
             // Geometry
             //noinspection JSUnresolvedVariable
-            var epoch = moment(stub.epoch[0], Std.dt_format);
-            var end = moment(stub.end[0], Std.dt_format);
+            var epoch = moment(stub.epoch[0], Std.std_dt_format);
+            var end = moment(stub.end[0], Std.std_dt_format);
             // Top
             var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
                 * Context.Time_Table.Scale.Px_To_Min;
@@ -232,7 +251,7 @@
                 $($event_stubs_div),
                 {
                     tag: display_name,
-                    title: stub.tag,
+                    title: stub.comment,
                     pk: stub.pk,
                     bg: stub.color
                 });
@@ -258,17 +277,17 @@
             // Height
             var height = Context.Stubs.Task.Height;
             // Top
-            var top = i * height;
+            var top = i * height + i * 10 + 10;
             // Rendering
             render_rectangle(
                 top + 'px',
                 Context.Stubs.Task.Left,
-                height,
+                height + 'px',
                 Context.Stubs.Task.Breadth,
                 $($task_stubs_div),
                 {
                     tag: stub.tag,
-                    title: stub.tag,
+                    title: stub.comment,
                     pk: stub.pk,
                     bg: stub.color
                 });
@@ -295,7 +314,7 @@
             // Stubs Count Hint
             $('#stubs_count').html(Context.Stubs.No);
             // Loading Complete
-            $($loading).fadeOut(0);
+            $($loading_timetable).fadeOut(0);
         }
 
 
@@ -326,10 +345,10 @@
         // render date
         function render_stubs_on(date) {
             // Loading On Progress
-            $($loading).fadeIn(0);
+            $($loading_timetable).fadeIn(0);
             var error_call_back = function () {
-                $($error).find('.message').html('Stubs could not be fetched');
-                $($error).fadeIn(0);
+                $($error_timetable).find('.message').html('Stubs could not be fetched');
+                $($error_timetable).fadeIn(0);
             };
             var success_callback = function (result) {
                 if (result == -1) {
@@ -338,7 +357,7 @@
                 }
                 // Change the Context
                 Context.Time_Table.Range.LB = function () {
-                    return moment(date, Std.dt_format);
+                    return moment(date, Std.std_dt_format);
                 };
                 Context.Time_Table.Range.UB = function () {
                     return Context.Time_Table.Range.LB().add(1, 'd');
@@ -348,15 +367,14 @@
                 var json = JSON.parse(result);
                 //noinspection JSUnresolvedVariable
                 Context.Stubs.Event.Lanes = json.Lanes;
-                //noinspection JSUnresolvedVariable
                 Context.Stubs.Task.Def = json.Task_Stubs;
-                console.log(json);
+                //console.log(json);
                 reload();
             };
             fetch_stubs_and(
                 {
                     LB: date,
-                    UB: moment(date, Std.dt_format).add(1, 'd').format(Std.dt_format)
+                    UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
                 },
                 error_call_back,
                 success_callback
@@ -377,8 +395,10 @@
             $cursor_bar_hint = $('#cursor-bar-hint');
             $top_hint = $('#top-hint');
             $top_hint_div = $('#top-hint-div');
-            $loading = $('#loading');
-            $error = $('#error');
+            $loading_timetable = $('#loading_timetable');
+            $loading_detail = $('#loading_detail');
+            $error_timetable = $('#error_timetable');
+            $error_detail = $('#error_detail');
             $detail_div = $('#detail-div');
             $yesterday = $('#yesterday');
             $tomorrow = $('#tomorrow');
@@ -441,13 +461,13 @@
             $($yesterday).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.dt_format));
+                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.std_dt_format));
                 }
             );
             $($tomorrow).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.dt_format));
+                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.std_dt_format));
                 }
             );
 
@@ -473,23 +493,80 @@
                     'click',
                     '.rectangle',
                     function () {
-                        $($detail_div).modal('open')
+                        var that = $(this);
+                        $($detail_div).modal('open');
+                        $($loading_detail).fadeIn(0);
+                        $($error_detail).fadeOut(0);
+                        $.ajax(
+                            {
+                                url: '/errands/fetch_piece/' + $(that).attr('pk') + '/',
+                                error: function () {
+                                    $($error_detail).fadeIn(0);
+                                    $($loading_detail).fadeOut(0);
+                                },
+                                success: function (result) {
+                                    result = JSON.parse(result);
+                                    console.log(result);
+                                    $($detail_div).find('.touch-link').attr('href', '/errands/touch/' + result.errand_pk + '/');
+                                    $($detail_div).find('.tag').html(result.tag);
+                                    $($detail_div).find('.errand-tag').html(result.errand_tag);
+                                    $($detail_div).find('.comment').html(result.comment);
+                                    var epoch_date = result.epoch_date;
+                                    var epoch_time = result.epoch_time;
+                                    var duration = result.duration;
+                                    var time_period = result.time_period;
+                                    var head = "";
+                                    if (duration.days == 0 && duration.seconds == 0) {
+                                        if (time_period.days == 0 && time_period.seconds == 0) {
+                                            head = "Non-Repeating Task"
+                                        }
+                                        else {
+                                            head = "Repeating Task";
+                                            $($detail_div).find('.time_period').find('.days').html(time_period.days + ' days');
+                                            $($detail_div).find('.time_period').find('.seconds').html(time_period.seconds + ' seconds');
+                                            $($detail_div).find('.time_period').fadeIn(0);
+                                        }
+                                    }
+                                    else {
+                                        if (time_period.days == 0 && time_period.seconds == 0) {
+                                            head = "Non-Repeating Event";
+                                            $($detail_div).find('.duration').find('.days').html(duration.days + ' days');
+                                            $($detail_div).find('.duration').find('.seconds').html(duration.seconds + ' seconds');
+                                            $($detail_div).find('.duration').fadeIn(0);
+                                        }
+                                        else {
+                                            head = "Repeating Event";
+                                            $($detail_div).find('.duration').find('.days').html(duration.days + ' days');
+                                            $($detail_div).find('.duration').find('.seconds').html(duration.seconds + ' seconds');
+                                            $($detail_div).find('.time_period').find('.days').html(time_period.days + ' days');
+                                            $($detail_div).find('.time_period').find('.seconds').html(time_period.seconds + ' seconds');
+                                            $($detail_div).find('.duration').fadeIn(0);
+                                            $($detail_div).find('.time_period').fadeIn(0);
+                                        }
+                                    }
+                                    $($detail_div).find('.head').html(head);
+                                    $($detail_div).find('.epoch-time').html(moment(epoch_time, Std.dj_t_format).format('hh:mm A'));
+                                    $($detail_div).find('.epoch-date').html(moment(epoch_date, Std.dj_d_format).format('MMM Do ddd'));
+                                    $($loading_detail).fadeOut(0);
+                                }
+                            }
+                        )
                     }
                 );
             {% comment %}Initializing With Today{% endcomment %}
 
             // Showing today's time table
-            render_stubs_on(Context.Time_Table.Range.LB().format(Std.dt_format));
+            render_stubs_on(Context.Time_Table.Range.LB().format(Std.std_dt_format));
         });
     </script>
 
-    <div id="loading" class="block-screen" style="display: none">
+    <div id="loading_timetable" class="block-screen" style="display: none">
         <div class="progress" style="position: absolute;top: 50%;width: 50%;left: 25%">
             <div class="indeterminate"></div>
         </div>
     </div>
 
-    <div id="error" class="block-screen row" style="display: none">
+    <div id="error_timetable" class="block-screen" style="display: none">
         <div class="center align">
             <h2 class="flow-text red-text">Snap! Error!</h2>
             <p class="teal-text message"></p>
@@ -569,7 +646,7 @@
 
                 <!-- Task Stubs -->
                 <div id="task-stubs-div"
-                     style="position: absolute;height: 100%;width: 20%;left: 80%;overflow-y:hidden;overflow-x: auto;background-color: rgba(0,0,255,0.1)"
+                     style="position: absolute;height: 100%;width: 20%;left: 80%;overflow-y:auto;overflow-x: auto;background-color: rgba(0,0,255,0.1)"
                      class="row">
 
                     <hr class="clipper">
@@ -618,30 +695,67 @@
 
             <!-- Detail Div -->
             <div id="detail-div" class="modal modal-fixed-footer">
+
+                <div id="loading_detail" class="block-screen" style="display: none">
+                    <div class="progress" style="position: absolute;top: 50%;width: 50%;left: 25%">
+                        <div class="indeterminate"></div>
+                    </div>
+                </div>
+                <div id="error_detail" class="block-screen" style="display: none">
+                    <div class="center align" style="padding-top: 20%">
+                        <h2 class="flow-text red-text">Snap! Error!</h2>
+                        <p class="teal-text message"></p>
+                    </div>
+                </div>
+
                 <div class="modal-content">
                     <div class="row">
-                        <div class="col l4 m4 s4">
-                            <p class="flow-text truncate tag">
-                                Tag
-                            </p>
-                            <p class="grey-text flow-text truncate comment">
-                                Comment
-                            </p>
-                        </div>
-                        <div class="col l8 m8 s8 figure" style="overflow: auto">
-                            Content
-                            <div class="progress">
-                                <div class="indeterminate"></div>
+                        <div class="row head flow-text"></div>
+
+                        <div class="col l5 m5 s5">
+                            <div class="row">
+                                <span class="flow-text truncate tag">Tag</span>
+                                <span class="grey-text truncate errand-tag">Errand Tag</span>
                             </div>
+                            <div class="divider"></div>
+                            <div class="input-field" style="height: 100vh">
+                                <textarea class="blue-text comment"
+                                          disabled
+                                          style="height: 100%;border: none">
+                                Comment
+                                </textarea>
+                            </div>
+                        </div>
+                        <div class="col l7 m7 s7">
+                            <table class="highlight bordered" style="cursor: pointer">
+                                <tbody>
+                                <tr>
+                                    <td class=" truncate flow-text blue-text">Epoch</td>
+                                    <td class="epoch-time flow-text blue-text"></td>
+                                    <td class="epoch-date flow-text blue-text"></td>
+                                </tr>
+                                <tr class="row time_period" style="display: none">
+                                    <td class=" truncate flow-text red-text">Time Period</td>
+                                    <td class="days flow-text red-text"></td>
+                                    <td class="seconds flow-text red-text"></td>
+                                </tr>
+                                <tr class="row duration" style="display: none;">
+                                    <td class=" truncate flow-text green-text">Duration</td>
+                                    <td class="days flow-text green-text"></td>
+                                    <td class="seconds flow-text green-text"></td>
+                                </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer row" style="margin: 0">
                     <a href="#" class="modal-action modal-close waves-effect waves-green btn-flat "><i
                             class="material-icons">close</i></a>
+                    <a href="#" class="waves-effect waves-blue btn-flat touch-link orange white-text"><i
+                            class="material-icons">mode_edit</i></a>
                 </div>
             </div>
-
         </div>
     </div>
 {% endblock %}

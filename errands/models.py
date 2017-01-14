@@ -308,12 +308,14 @@ class Piece(models.Model):
                 stub_epoch = max([lb, epoch])
                 stub_end = min([end, ub])
                 stub_tag = self.tag
+                stub_comment = self.comment
                 stub_pk = self.pk
                 stub = {
                     'epoch': stub_epoch,
                     'end': stub_end,
                     'tag': stub_tag,
                     'pk': stub_pk,
+                    'comment': stub_comment,
                     'errand_pk': self.errand_id,
                     'color': color_map(self.errand_id)
                 }

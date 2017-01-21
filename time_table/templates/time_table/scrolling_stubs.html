@@ -331,12 +331,12 @@
             $($cursor_bar_hint).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
         }
         // fetch stubs
-        function fetch_stubs_and(range, error_callback, success_callback) {
+        function fetch_stubs_and(ranges, error_callback, success_callback) {
             //noinspection JSUnresolvedVariable
             $.ajax(
                 {
                     url: '/errands/fetch_stubs/',
-                    data: range,
+                    data: {ranges: JSON.stringify(ranges)},
                     error: error_callback,
                     success: success_callback
                 }
@@ -352,31 +352,34 @@
                 $($error_timetable).fadeIn(0);
             };
             var success_callback = function (result) {
+                // Problem with server ? return : continue
                 if (result == -1) {
                     error_call_back();
                     return;
                 }
+                // reload using the stubs data
+                var json = JSON.parse(result)[0];
                 // Change the Context
                 Context.Time_Table.Range.LB = function () {
-                    return moment(date, Std.std_dt_format);
+                    return moment(json.LB, Std.std_dt_format);
                 };
                 Context.Time_Table.Range.UB = function () {
-                    return Context.Time_Table.Range.LB().add(1, 'd');
+                    return moment(json.UB, Std.std_dt_format);
                 };
                 Context.Time_Table.Reload_Top_Fixed_Hint();
-                // reload using the stubs data
-                var json = JSON.parse(result);
-                //noinspection JSUnresolvedVariable
-                Context.Stubs.Event.Lanes = json.Events;
-                Context.Stubs.Task.Def = json.Tasks;
+                // Copy the context
+                Context.Stubs.Event.Lanes = json.Stubs.Events;
+                Context.Stubs.Task.Def = json.Stubs.Tasks;
                 //console.log(json);
+                // Reload
                 reload();
             };
             fetch_stubs_and(
-                {
-                    LB: date,
-                    UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
-                },
+                [
+                    {
+                        LB: date, UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
+                    }
+                ],
                 error_call_back,
                 success_callback
             );
@@ -513,7 +516,13 @@
                                     $($detail_div).find('.touch-link').attr('href', '/errands/touch/' + result.errand_pk + '/');
                                     $($detail_div).find('.tag').html(result.tag);
                                     $($detail_div).find('.errand-tag').html(result.errand_tag);
-                                    $($detail_div).find('.comment').html(result.comment);
+                                    if (result.comment != "") {
+                                        $($detail_div).find('.comment').html(result.comment);
+                                        $($detail_div).find('.comment-bq').fadeIn(0);
+                                    }
+                                    else {
+                                        $($detail_div).find('.comment-bq').fadeOut(0);
+                                    }
                                     var epoch_date = result.epoch_date;
                                     var epoch_time = result.epoch_time;
                                     var duration = result.duration;
@@ -707,7 +716,7 @@
                             <span class="flow-text truncate tag">Tag</span>
                             <span class="pink-text truncate errand-tag">Errand Tag</span>
                         </div>
-                        <blockquote class="row" style="margin: 0">
+                        <blockquote class="row comment-bq" style="margin: 0;display: none">
                             <div class="input-field">
                                 <textarea class="comment"
                                           disabled

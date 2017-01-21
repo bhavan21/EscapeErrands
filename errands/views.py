@@ -305,12 +305,16 @@ def filter_stubs_in_range(lb, ub):
 
 
 def fetch_stubs(request):
-    if 'LB' in request.GET and 'UB' in request.GET:
+    ranges = json.loads(request.GET['ranges'])
+    if 'ranges' in request.GET:
         try:
-            lb = dt.strptime(request.GET['LB'], Std.input_dt_format)
-            ub = dt.strptime(request.GET['UB'], Std.input_dt_format)
-            return httpR(json.dumps(filter_stubs_in_range(lb, ub)))
-        except ValueError:
+            for range_i in ranges:
+                lb = dt.strptime(range_i['LB'], Std.input_dt_format)
+                ub = dt.strptime(range_i['UB'], Std.input_dt_format)
+                range_i['Stubs'] = filter_stubs_in_range(lb, ub)
+
+            return httpR(json.dumps(ranges))
+        except ValueError or TypeError:
             return httpR(-1)
     else:
         return httpR(-1)

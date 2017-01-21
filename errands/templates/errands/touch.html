@@ -10,6 +10,7 @@
             position: fixed;
             z-index: 100;
             width: inherit;
+            cursor: pointer;
         }
 
         #fixed_left {
@@ -18,16 +19,26 @@
         {#            width: inherit;#}
         }
 
-        #fixed_right {
-            z-index: 102;
-        }
-
         #pieces_table {
             margin-top: 100px;
         }
 
+        #pieces_table input {
+            color: black;
+        }
+
         #pieces_table .card-content {
             margin: 0;
+        }
+
+        #piece_add_div li {
+            display: inline-block;
+        }
+
+        #piece_add_div .btn, .btn-flat {
+            text-transform: none;
+            margin-left: 20px;
+            margin-right: 20px;
         }
     </style>
 {% endblock %}
@@ -37,39 +48,42 @@
     <script>
         {#  Get data  #}
         var Context = {
-                Errand: {
-                    pk: Number("{{ errand.pk }}"),
-                    tag: "{{ errand.tag }}",
-                    comment: "{{ errand.comment }}"
-                },
-                Old_Pieces: [
-                    {% for i in old_pieces %}
-                        {
-                            pk:{{ i.pk }},
-                            time_period: {
-                                days:{{ i.time_period.days }},
-                                seconds:{{ i.time_period.seconds }}
-                            },
-                            duration: {
-                                days:{{ i.duration.days }},
-                                seconds:{{ i.duration.seconds }}
-                            },
-                            epoch_date: "{{ i.epoch_date }}",
-                            epoch_time: "{{ i.epoch_time }}",
-                            tag: "{{ i.tag }}",
-                            comment: "{{ i.comment }}"
+            Errand: {
+                pk: Number("{{ errand.pk }}"),
+                tag: "{{ errand.tag }}",
+                comment: "{{ errand.comment }}"
+            },
+            Old_Pieces: [
+                {% for i in old_pieces %}
+                    {
+                        pk:{{ i.pk }},
+                        time_period: {
+                            days:{{ i.time_period.days }},
+                            seconds:{{ i.time_period.seconds }}
                         },
-                        {# insert old pieces descritpions #}
-                    {% endfor %}
-                ]
-            }
-            ;
+                        duration: {
+                            days:{{ i.duration.days }},
+                            seconds:{{ i.duration.seconds }}
+                        },
+                        epoch_date: "{{ i.epoch_date }}",
+                        epoch_time: "{{ i.epoch_time }}",
+                        tag: "{{ i.tag }}",
+                        comment: "{{ i.comment }}"
+                    },
+                    {# insert old pieces descritpions #}
+                {% endfor %}
+            ]
+        };
 
         var New_Pieces_Pk = 0;
         $(document).ready(function () {
             {# references #}
             var $pieces_count = $('#pieces_count');
-            var $piece_add_btn = $('#piece_add_btn');
+            var $piece_add_empty = $('#piece_add_empty');
+            var $piece_add_tt = $('#piece_add_tt');
+            var $piece_add_te = $('#piece_add_te');
+            var $piece_add_class = $('#piece_add_class');
+            var $piece_add_rme = $('#piece_add_rme');
             var $pieces_list = $('#pieces_list');
 
             var $errand_inputs = $('#errand_inputs');
@@ -78,7 +92,6 @@
             var $errand_tag_hint = $('#errand_tag_hint');
             var $errand_comment = $('#errand_comment');
             var $errand_comment_hint = $('#errand_comment_hint');
-            {# references #}
 
             {#  Initialize the UI using data  #}
             {# errand inputs #}
@@ -112,8 +125,6 @@
                 $($pieces_count).html(pieces_count);
             }
 
-            {# update functions #}
-
             {# Errands Inputs FadeToggle #}
             $($errand_hints)
                 .on(
@@ -121,8 +132,7 @@
                     function () {
                         $($errand_inputs).fadeToggle(0);
                     }
-                )
-            ;
+                );
             {# Errands Tag Hint #}
             $($errand_tag)
                 .on(
@@ -130,8 +140,7 @@
                     function () {
                         $($errand_tag_hint).html($(this).val());
                     }
-                )
-            ;
+                );
             {# Errands Comment Hint #}
             $($errand_comment)
                 .on(
@@ -139,19 +148,97 @@
                     function () {
                         $($errand_comment_hint).html($(this).val());
                     }
-                )
-            ;
-            {# Add New Piece #}
-            $($piece_add_btn)
+                );
+
+            function new_piece_add(toast, id, ed, et, tp, dr, tg, cm) {
+                $($pieces_list).append(
+                    HTML_STRINGS.TOUCH.PIECE(
+                        id,
+                        ed,
+                        et,
+                        tp,
+                        dr,
+                        tg,
+                        cm
+                    )
+                );
+                New_Pieces_Pk++;
+                update_pieces_count();
+                toast = toast === undefined ? "Piece" : toast;
+                Materialize.toast(toast + " Added", 1000);
+            }
+
+            {# Add Empty #}
+            $($piece_add_empty)
                 .on(
                     'click',
                     function () {
-                        $($pieces_list).append(HTML_STRINGS.TOUCH.PIECE('n' + (New_Pieces_Pk + 1)));
-                        New_Pieces_Pk++;
-                        update_pieces_count();
+                        new_piece_add(
+                            "Empty Piece",
+                            'n' + (New_Pieces_Pk + 1)
+                        );
                     }
-                )
-            ;
+                );
+            {# Add Todays Task #}
+            $($piece_add_tt)
+                .on(
+                    'click',
+                    function () {
+                        new_piece_add(
+                            "A Task Piece",
+                            'n' + (New_Pieces_Pk + 1),
+                            moment().format(Std.std_d_format),
+                            moment().format(Std.std_t_format)
+                        );
+                    }
+                );
+            {# Add Todays Event #}
+            $($piece_add_te)
+                .on(
+                    'click',
+                    function () {
+                        new_piece_add(
+                            "An Event Piece",
+                            'n' + (New_Pieces_Pk + 1),
+                            moment().format(Std.std_d_format),
+                            moment().format(Std.std_t_format),
+                            undefined,
+                            {days: 0, seconds: 3600}
+                        );
+                    }
+                );
+            {# Add Class #}
+            $($piece_add_class)
+                .on(
+                    'click',
+                    function () {
+                        new_piece_add(
+                            "Class Piece",
+                            'n' + (New_Pieces_Pk + 1),
+                            moment().format(Std.std_d_format),
+                            moment().format(Std.std_t_format),
+                            {days: 7, seconds: 0},
+                            {days: 0, seconds: 3600}
+                        );
+                    }
+                );
+
+            {# Add Remind Me Everyday #}
+            $($piece_add_rme)
+                .on(
+                    'click',
+                    function () {
+                        new_piece_add(
+                            "Everyday Remainder",
+                            'n' + (New_Pieces_Pk + 1),
+                            moment().format(Std.std_d_format),
+                            moment().format(Std.std_t_format),
+                            {days: 1, seconds: 0}
+                        );
+                    }
+                );
+
+
             {# Piece List Listeners #}
             {# Remove Listener #}
             {# option-select (switch) Listeners #}
@@ -358,18 +445,17 @@
 
         <div class="col l8 m12 s12">
             {# Fixed Top #}
-            <div id="fixed_top" class="white">
+            <div id="fixed_top" class="white waves-effect">
                 <div id="errand_hints" class="row" style="margin:0">
-                    <div class="col l3 m3 s3 flow-text">
-                        <p id="errand_tag_hint" class="truncate">
-                        </p>
+                    <div class="col l8 m8 s8" style="padding-top: 1%">
+                        <span id="errand_tag_hint"
+                              class="flow-text truncate">
+                        </span>
+                        <span id="errand_comment_hint"
+                              class="truncate grey-text">
+                        </span>
                     </div>
-                    <div class="col l4 m4 s4">
-                        <p id="errand_comment_hint"
-                           class="truncate grey-text">
-                        </p>
-                    </div>
-                    <div class="col l3 m3 s3 offset-l2 offset-m2 offset-s2">
+                    <div class="col l4 m4 s4 ">
                         <p class="flow-text"><span id="pieces_count">{{ old_pieces|length }}</span> Pieces</p>
                     </div>
                 </div>
@@ -385,13 +471,12 @@
                     </tbody>
                 </table>
             </div>
-
         </div>
 
         <div class="col l2 m0 s0">
 
             <div class="fixed-action-btn vertical">
-                <a class="btn-floating waves-effect waves-light btn-large pink">
+                <a class="btn-floating waves-effect waves-light btn-large pink z-depth-4">
                     <i class=" material-icons">menu</i>
                 </a>
                 <ul>
@@ -426,17 +511,31 @@
                             <i class="material-icons">close</i>
                         </a>
                     </li>
-                    <li>
-                        {# Pieces Add Btn #}
-                        <a id="piece_add_btn"
-                           class="waves-effect waves-light btn-floating btn-large teal z-depth-5">
-                            <i class="material-icons">add</i>
-                        </a>
-                    </li>
                 </ul>
             </div>
 
-            <div id="fixed_right"></div>
+            {# Pieces Add Btn #}
+            <a class="waves-effect waves-light btn-floating btn-large green z-depth-4"
+               style="position:fixed;bottom: 20px;right: 100px;z-index: 102"
+               href="#piece_add_div">
+                <i class="material-icons">add</i>
+            </a>
+
+            <!-- Modal Structure -->
+            <div id="piece_add_div" class="modal bottom-sheet">
+                <div class="modal-content">
+                    <span class="flow-text">Templates</span>
+                    <div style="background-color: rgba(0,0,0,0.1);padding: 1px">
+                        <ul style="overflow-x: auto;white-space: nowrap">
+                            <li id="piece_add_empty"><a class="btn waves-effect white black-text">Empty</a></li>
+                            <li id="piece_add_tt"><a class="btn waves-effect blue white-text">Today's Task</a></li>
+                            <li id="piece_add_te"><a class="btn waves-effect green white-text">Today's Event</a></li>
+                            <li id="piece_add_class"><a class="btn waves-effect pink">Class</a></li>
+                            <li id="piece_add_rme"><a class="btn waves-effect">Remind Me Everyday</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
         </div>
     </div>

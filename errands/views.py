@@ -207,7 +207,7 @@ def fetch_piece(request, pk):
     return httpR(json_string)
 
 
-def intersect(e1, e2):
+def stubs_do_intersect(e1, e2):
     e1_epoch = e1['epoch']
     e2_epoch = e2['epoch']
     e1_end = e1['end']
@@ -215,100 +215,102 @@ def intersect(e1, e2):
     return e1_epoch < e2_epoch < e1_end or e1_epoch < e2_end < e1_end or e2_epoch < e1_epoch < e2_end or e2_epoch < e1_end < e2_end
 
 
+def filter_stubs_in_range(lb, ub):
+    event_stubs = []
+    lanes = []
+    task_stubs = []
+
+    all_pieces = Piece.objects.all()
+    # Creating Stubs within the given Time Range
+    for piece in all_pieces:
+        # Non Repeating
+        if piece.is_non_repeating():
+            epoch = dt.combine(piece.epoch_date, piece.epoch_time)
+            stub = piece.get_stub_which_intersects(epoch, lb, ub)
+            if stub is not None:
+                # Task Stub
+                if piece.is_task():
+                    task_stubs.append(stub)
+                # Event Stub
+                else:
+                    event_stubs.append(stub)
+        # Repeating
+        else:
+            init_epoch = dt.combine(piece.epoch_date, piece.epoch_time)
+            duration = piece.duration
+            # Non - Zero Time Period
+            time_period = piece.time_period
+            # Starting from init_epoch
+            i_epoch = init_epoch
+            i_end = i_epoch + duration
+            # Travelling from init_epoch to the first possible intersection
+            while i_end <= lb:
+                i_end += time_period
+            i_epoch = i_end - duration
+
+            # Adding stubs
+            # Task Stubs (Once a task piece always a task piece)
+            if piece.is_task():
+                # Until epoch goes above the upper bound
+                while i_epoch < ub:
+                    # Adding Stubs one by one
+                    stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                    if stub is not None:
+                        task_stubs.append(stub)
+                    i_epoch += time_period
+            # Event Stubs (Once a event piece always a event piece)
+            else:
+                # Until epoch goes above the upper bound
+                while i_epoch < ub:
+                    # Non Repeating
+                    stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                    if stub is not None:
+                        event_stubs.append(stub)
+                    i_epoch += time_period
+
+    # Ordering stubs , Creating lanes
+    for stub in event_stubs:
+
+        in_some_lane = False
+        for lane in lanes:
+            in_this_lane = True
+            for car in lane:
+                if stubs_do_intersect(stub, car):
+                    in_this_lane = False
+                    break
+            # If intersect with no car in this lane
+            # Then add the stub in this lane
+            if in_this_lane:
+                lane.append(stub)
+                in_some_lane = True
+                break
+
+        # If not in some lane
+        # Add a lane
+        # Add this stub in that lane
+        if not in_some_lane:
+            lanes.append([stub])
+
+    # Serializing datetime to json format
+    for lane in lanes:
+        for stub in lane:
+            stub['epoch'] = stub['epoch'].strftime(Std.output_dt_format),
+            stub['end'] = stub['end'].strftime(Std.output_dt_format),
+
+    for task_stub in task_stubs:
+        task_stub['epoch'] = task_stub['epoch'].strftime(Std.output_dt_format),
+        task_stub['end'] = task_stub['end'].strftime(Std.output_dt_format),
+
+    return {'Events': lanes, 'Tasks': task_stubs}
+
+
 def fetch_stubs(request):
     if 'LB' in request.GET and 'UB' in request.GET:
         try:
             lb = dt.strptime(request.GET['LB'], Std.input_dt_format)
             ub = dt.strptime(request.GET['UB'], Std.input_dt_format)
+            return httpR(json.dumps(filter_stubs_in_range(lb, ub)))
         except ValueError:
             return httpR(-1)
-
-        event_stubs = []
-        lanes = []
-        task_stubs = []
-
-        all_pieces = Piece.objects.all()
-        # Creating Stubs within the given Time Range
-        for piece in all_pieces:
-            # Non Repeating
-            if piece.is_non_repeating():
-                epoch = dt.combine(piece.epoch_date, piece.epoch_time)
-                stub = piece.get_stub_which_intersects(epoch, lb, ub)
-                if stub is not None:
-                    # Task Stub
-                    if piece.is_task():
-                        task_stubs.append(stub)
-                    # Event Stub
-                    else:
-                        event_stubs.append(stub)
-            # Repeating
-            else:
-                init_epoch = dt.combine(piece.epoch_date, piece.epoch_time)
-                duration = piece.duration
-                # Non - Zero Time Period
-                time_period = piece.time_period
-                # Starting from init_epoch
-                i_epoch = init_epoch
-                i_end = i_epoch + duration
-                # Travelling from init_epoch to the first possible intersection
-                while i_end <= lb:
-                    i_end += time_period
-                i_epoch = i_end - duration
-
-                # Adding stubs
-                # Task Stubs (Once a task piece always a task piece)
-                if piece.is_task():
-                    # Until epoch goes above the upper bound
-                    while i_epoch < ub:
-                        # Adding Stubs one by one
-                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
-                        if stub is not None:
-                            task_stubs.append(stub)
-                        i_epoch += time_period
-                # Event Stubs (Once a event piece always a event piece)
-                else:
-                    # Until epoch goes above the upper bound
-                    while i_epoch < ub:
-                        # Non Repeating
-                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
-                        if stub is not None:
-                            event_stubs.append(stub)
-                        i_epoch += time_period
-
-        # Ordering stubs , Creating lanes
-        for stub in event_stubs:
-
-            in_some_lane = False
-            for lane in lanes:
-                in_this_lane = True
-                for car in lane:
-                    if intersect(stub, car):
-                        in_this_lane = False
-                        break
-                # If intersect with no car in this lane
-                # Then add the stub in this lane
-                if in_this_lane:
-                    lane.append(stub)
-                    in_some_lane = True
-                    break
-
-            # If not in some lane
-            # Add a lane
-            # Add this stub in that lane
-            if not in_some_lane:
-                lanes.append([stub])
-
-        # Serializing datetime to json format
-        for lane in lanes:
-            for stub in lane:
-                stub['epoch'] = stub['epoch'].strftime(Std.output_dt_format),
-                stub['end'] = stub['end'].strftime(Std.output_dt_format),
-
-        for task_stub in task_stubs:
-            task_stub['epoch'] = task_stub['epoch'].strftime(Std.output_dt_format),
-            task_stub['end'] = task_stub['end'].strftime(Std.output_dt_format),
-
-        json_string = json.dumps({'Lanes': lanes, 'Task_Stubs': task_stubs})
-        return httpR(json_string)
     else:
         return httpR(-1)

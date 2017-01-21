@@ -60,6 +60,7 @@
         var $cursor_bar;
         var $cursor_bar_hint;
         var $top_hint;
+        var $stub_count;
         var $top_hint_div;
         var $loading_timetable;
         var $loading_detail;
@@ -312,7 +313,7 @@
             // Render Task Stubs
             render_task_stubs();
             // Stubs Count Hint
-            $('#stubs_count').html(Context.Stubs.No);
+            $($stub_count).html(Context.Stubs.No);
             // Loading Complete
             $($loading_timetable).fadeOut(0);
         }
@@ -366,8 +367,8 @@
                 // reload using the stubs data
                 var json = JSON.parse(result);
                 //noinspection JSUnresolvedVariable
-                Context.Stubs.Event.Lanes = json.Lanes;
-                Context.Stubs.Task.Def = json.Task_Stubs;
+                Context.Stubs.Event.Lanes = json.Events;
+                Context.Stubs.Task.Def = json.Tasks;
                 //console.log(json);
                 reload();
             };
@@ -382,6 +383,7 @@
         }
 
         $(document).ready(function () {
+
             // references
             $time_table_div = $('#time-table-div');
             $time_divisions_div = $('#time-divisions-div');
@@ -393,6 +395,7 @@
             $date_select_div = $('#date-select-div');
             $cursor_bar = $('#cursor-bar');
             $cursor_bar_hint = $('#cursor-bar-hint');
+            $stub_count = $('#stubs_count');
             $top_hint = $('#top-hint');
             $top_hint_div = $('#top-hint-div');
             $loading_timetable = $('#loading_timetable');
@@ -602,7 +605,7 @@
                 <!-- Top Hint -->
                 <div id="fixed-top">
                     <div class="row" style="margin: 0">
-                        <div id="top-hint-div" class="col l6 m6 s6 waves-effect waves-yellow teal-text flow-text"
+                        <div id="top-hint-div" class="col l8 m8 s8 waves-effect waves-yellow teal-text flow-text"
                              style="padding-top: 10px;padding-bottom: 10px;">
                             <span id="yesterday" class="waves-effect waves-yellow">
                                 <i class="material-icons">undo</i></span>
@@ -610,7 +613,7 @@
                             <span id="tomorrow" class="waves-effect waves-yellow">
                                 <i class="material-icons">redo</i></span>
                         </div>
-                        <div class="col l6 m6 s6 waves-effect waves-light teal white-text flow-text"
+                        <div class="col l4 m4 s4 waves-effect waves-light teal white-text flow-text"
                              style="padding-top: 10px;padding-bottom: 10px;">
                             <span id="stubs_count">0</span>
                             Stubs
@@ -671,15 +674,6 @@
 
             <!-- Settings Div -->
             <div id="settings-div" class="modal bottom-sheet">
-                <script>
-                    $(document).ready(function () {
-                        $(".modal").modal({
-                                in_duration: 300, // Transition in duration
-                                out_duration: 200 // Transition out duration
-                            }
-                        );
-                    });
-                </script>
                 <div class="modal-content row">
                     <div class="col l6 m6 s6">
                         <label>
@@ -690,12 +684,10 @@
                         </label>
                     </div>
                 </div>
-                <div class="modal-footer"></div>
             </div>
 
             <!-- Detail Div -->
             <div id="detail-div" class="modal modal-fixed-footer">
-
                 <div id="loading_detail" class="block-screen" style="display: none">
                     <div class="progress" style="position: absolute;top: 50%;width: 50%;left: 25%">
                         <div class="indeterminate"></div>
@@ -710,29 +702,29 @@
 
                 <div class="modal-content">
                     <div class="row">
-                        <div class="row head flow-text"></div>
-
-                        <div class="col l5 m5 s5">
-                            <div class="row">
-                                <span class="flow-text truncate tag">Tag</span>
-                                <span class="grey-text truncate errand-tag">Errand Tag</span>
-                            </div>
-                            <div class="divider"></div>
-                            <div class="input-field" style="height: 100vh">
-                                <textarea class="blue-text comment"
+                        <div class="row head flow-text waves-effect"></div>
+                        <div class="row">
+                            <span class="flow-text truncate tag">Tag</span>
+                            <span class="pink-text truncate errand-tag">Errand Tag</span>
+                        </div>
+                        <blockquote class="row" style="margin: 0">
+                            <div class="input-field">
+                                <textarea class="comment"
                                           disabled
                                           style="height: 100%;border: none">
                                 Comment
                                 </textarea>
                             </div>
-                        </div>
-                        <div class="col l7 m7 s7">
+                        </blockquote>
+                        <br>
+                        <br>
+                        <div class="row">
                             <table class="highlight bordered" style="cursor: pointer">
                                 <tbody>
                                 <tr>
-                                    <td class=" truncate flow-text blue-text">Epoch</td>
-                                    <td class="epoch-time flow-text blue-text"></td>
-                                    <td class="epoch-date flow-text blue-text"></td>
+                                    <td class=" truncate flow-text teal-text">Epoch</td>
+                                    <td class="epoch-time flow-text teal-text"></td>
+                                    <td class="epoch-date flow-text teal-text"></td>
                                 </tr>
                                 <tr class="row time_period" style="display: none">
                                     <td class=" truncate flow-text red-text">Time Period</td>
@@ -740,9 +732,9 @@
                                     <td class="seconds flow-text red-text"></td>
                                 </tr>
                                 <tr class="row duration" style="display: none;">
-                                    <td class=" truncate flow-text green-text">Duration</td>
-                                    <td class="days flow-text green-text"></td>
-                                    <td class="seconds flow-text green-text"></td>
+                                    <td class=" truncate flow-text blue-text">Duration</td>
+                                    <td class="days flow-text blue-text"></td>
+                                    <td class="seconds flow-text blue-text"></td>
                                 </tr>
                                 </tbody>
                             </table>

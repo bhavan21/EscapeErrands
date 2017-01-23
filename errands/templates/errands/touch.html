@@ -1,4 +1,4 @@
-{% extends 'errands/__base__.html' %}
+{% extends 'home/__base__.html' %}
 {% block title %}{% if errand %}{{ errand.tag }}{% else %}New Errand{% endif %}{% endblock %}
 {% block style %}
     <style>
@@ -16,7 +16,7 @@
         #fixed_left {
             position: fixed;
             z-index: 101;
-        {#            width: inherit;#}
+        {# width: inherit;#}
         }
 
         #pieces_table {
@@ -31,8 +31,17 @@
             margin: 0;
         }
 
+        #piece_add_div {
+            padding-bottom: 100px;
+        }
+
         #piece_add_div li {
             display: inline-block;
+        }
+
+        #piece_add_div a {
+            border-radius: 20px;
+            box-shadow: none;
         }
 
         #piece_add_div .btn, .btn-flat {

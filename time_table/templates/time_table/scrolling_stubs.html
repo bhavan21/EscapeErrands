@@ -1,4 +1,4 @@
-{% extends 'errands/__base__.html' %}
+{% extends 'home/__base__.html' %}
 {% block title %}Time Table{% endblock %}
 {% block style %}
     <style>
@@ -14,12 +14,24 @@
             z-index: 10;
         }
 
+        #event-stubs-div {
+            font-size: xx-small;
+        }
+
+        #task-stubs-div {
+            font-size: small;
+        }
+
         button {
             border: ButtonShadow;
         }
 
-        .rectangle:hover {
+        .rectangle {
             opacity: 0.9;
+        }
+
+        .rectangle:hover {
+            opacity: 1;
         }
 
         .clipper {
@@ -195,10 +207,10 @@
                 ['button'],
                 [
                     {
-                        'class': 'rectangle white-text waves-light waves-effect hoverable remove-on-reload',
+                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload rectangle',
                         'title': details.title,
                         'pk': details.pk,
-                        'style': 'position:absolute;font-size:xx-small;' +
+                        'style': 'position:absolute;' +
                         'top: ' + top + ';' +
                         'left: ' + left + ';' +
                         'width:' + breadth + ';' +

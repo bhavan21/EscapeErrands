@@ -1,4 +1,4 @@
-{% extends 'errands/__base__.html' %}
+{% extends 'home/__base__.html' %}
 {% block title %}Statistics{% endblock %}
 {% block style %}
     <style>
@@ -19,6 +19,10 @@
         var $command_div;
         var $command_read;
         var $command_print;
+
+        var $db = {
+
+        };
 
         // fetch stubs
         function fetch_stubs_and(ranges, error_callback, success_callback) {
@@ -61,7 +65,6 @@
                         },
                         function (result) {
                             console.log(result);
-                            
                         }
                     );
                 }

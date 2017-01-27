@@ -37,6 +37,19 @@ def touch(request, pk):
             for piece in errand.piece_set.all():
                 piece.epoch_date = piece.epoch_date.strftime(Std.output_d_format)
                 piece.epoch_time = piece.epoch_time.strftime(Std.output_t_format)
+
+                try:
+                    if piece.end_date is not None:
+                        piece.end_date = piece.end_date.strftime(Std.output_d_format)
+                    else:
+                        piece.end_date = ''
+
+                    if piece.end_time is not None:
+                        piece.end_time = piece.end_time.strftime(Std.output_t_format)
+                    else:
+                        piece.end_time = ''
+                except AttributeError:
+                    pass
                 old_pieces.append(piece)
 
             return render(request, 'errands/touch.html', {'errand': errand,
@@ -82,6 +95,8 @@ def process_touch(request):
                               duration=td(days=int(input_new_piece[Std.Keys.duration][Std.Keys.days]),
                                           seconds=int(input_new_piece[Std.Keys.duration][Std.Keys.seconds])
                                           ),
+                              end_date=input_new_piece[Std.Keys.end_date],
+                              end_time=input_new_piece[Std.Keys.end_time],
                               )
                 new_piece.save()
                 errand.piece_set.add(new_piece)
@@ -114,6 +129,8 @@ def process_touch(request):
                               duration=td(days=int(input_old_piece[Std.Keys.duration][Std.Keys.days]),
                                           seconds=int(input_old_piece[Std.Keys.duration][Std.Keys.seconds])
                                           ),
+                              end_date=input_old_piece[Std.Keys.end_date],
+                              end_time=input_old_piece[Std.Keys.end_time],
                               )
                 old_piece.save()
 
@@ -143,6 +160,8 @@ def process_touch(request):
                               duration=td(days=int(input_new_piece[Std.Keys.duration][Std.Keys.days]),
                                           seconds=int(input_new_piece[Std.Keys.duration][Std.Keys.seconds])
                                           ),
+                              end_date=input_new_piece[Std.Keys.end_date],
+                              end_time=input_new_piece[Std.Keys.end_time],
                               )
                 new_piece.save()
                 errand.piece_set.add(new_piece)
@@ -221,6 +240,7 @@ def filter_stubs_in_range(lb, ub):
     task_stubs = []
 
     all_pieces = Piece.objects.all()
+
     # Creating Stubs within the given Time Range
     for piece in all_pieces:
         # Non Repeating
@@ -248,25 +268,54 @@ def filter_stubs_in_range(lb, ub):
                 i_end += time_period
             i_epoch = i_end - duration
 
-            # Adding stubs
+            # Adding Stubs
             # Task Stubs (Once a task piece always a task piece)
             if piece.is_task():
-                # Until epoch goes above the upper bound
-                while i_epoch < ub:
-                    # Adding Stubs one by one
-                    stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
-                    if stub is not None:
-                        task_stubs.append(stub)
-                    i_epoch += time_period
+
+                # End not Specified
+                if piece.get_end_datetime() is None:
+                    # Until epoch is equal to or below the upper bound
+                    while i_epoch <= ub:
+                        # Adding Stubs one by one
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
+                            task_stubs.append(stub)
+                        i_epoch += time_period
+
+                # End Specified
+                else:
+                    end = dt.combine(piece.end_date, piece.end_time)
+                    # Until epoch is equal to or below the upper bound and end
+                    while i_epoch <= ub and i_epoch <= end:
+                        # Adding Stubs one by one
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
+                            task_stubs.append(stub)
+                        i_epoch += time_period
+
             # Event Stubs (Once a event piece always a event piece)
             else:
-                # Until epoch goes above the upper bound
-                while i_epoch < ub:
-                    # Non Repeating
-                    stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
-                    if stub is not None:
-                        event_stubs.append(stub)
-                    i_epoch += time_period
+
+                # End not Specified
+                if piece.get_end_datetime() is None:
+                    # Until epoch is equal to or below the upper bound
+                    while i_epoch <= ub:
+                        # Non Repeating
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
+                            event_stubs.append(stub)
+                        i_epoch += time_period
+
+                # End Specified
+                else:
+                    end = dt.combine(piece.end_date, piece.end_time)
+                    # Until epoch is equal to or below the upper bound and end
+                    while i_epoch <= ub and i_epoch <= end:
+                        # Non Repeating
+                        stub = piece.get_stub_which_intersects(i_epoch, lb, ub)
+                        if stub is not None:
+                            event_stubs.append(stub)
+                        i_epoch += time_period
 
     # Ordering stubs , Creating lanes
     for stub in event_stubs:

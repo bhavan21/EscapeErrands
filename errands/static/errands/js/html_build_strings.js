@@ -3,13 +3,14 @@ var HTML_STRINGS = {
         /**
          * @return {string}
          */
-        PIECE: function (id, epoch_date, epoch_time, time_period, duration, tag, comment) {
-
+        PIECE: function (id, epoch_date, epoch_time, end_date, end_time, time_period, duration, tag, comment) {
             //defaults
             tag = tag === undefined ? "" : tag;
             comment = comment === undefined ? "" : comment;
             epoch_date = epoch_date === undefined ? "" : epoch_date;
             epoch_time = epoch_time === undefined ? "00:00" : epoch_time;
+            end_date = end_date === undefined ? "" : end_date;
+            end_time = end_time === undefined ? "" : end_time;
             var duration_days = duration === undefined ? 0 : duration.days;
             var duration_seconds = duration === undefined ? 0 : duration.seconds;
             var time_period_days = time_period === undefined ? 0 : time_period.days;
@@ -108,6 +109,22 @@ var HTML_STRINGS = {
                 '</label>' +
                 '</div>' +
                 '</div>' +
+                '<div class="card-content row">' +
+                '<div class="col l8 m8 s8 waves-effect waves-yellow end-div" style="' + time_period_display + '">' +
+                '<div class="card-title">End</div>' +
+                '<div class="row">' +
+                '<label class="col l6 m6 s6 ">' +
+                'End Date' +
+                '<input class="end-date" type="date" value="' + end_date + '">' +
+                '</label>' +
+                '<div class="col l1 m1 s1"></div>' +
+                '<label class="col l6 m6 s6 ">' +
+                'End Time' +
+                '<input class="end-time" type="time" value="' + end_time + '">' +
+                '</label>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
                 '<div class="card-reveal">' +
                 '<span class="card-title grey-text text-darken-4">' +
                 '<i class="material-icons right waves-effect">close</i></span>' +
@@ -134,7 +151,7 @@ var HTML_STRINGS = {
         PIECE: function (id) {
             //defaults
             id = id === undefined ? "" : id;
-            return '<li id="' + id + '"></li>'
+            return '<tr id="' + id + '"><td>' + id + '</td></tr>'
         }
     }
 };

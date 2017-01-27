@@ -54,9 +54,25 @@
 {% block body %}
     {% load staticfiles %}
     <script src="{% static 'errands/js/html_build_strings.js' %}"></script>
+    <!--suppress JSUnresolvedVariable -->
     <script>
+        var $pieces_count;
+        var $piece_add_empty;
+        var $piece_add_tt;
+        var $piece_add_te;
+        var $piece_add_class;
+        var $piece_add_rme;
+        var $pieces_list;
+
+        var $errand_inputs;
+        var $errand_hints;
+        var $errand_tag;
+        var $errand_tag_hint;
+        var $errand_comment;
+        var $errand_comment_hint;
+
         {#  Get data  #}
-        var Context = {
+        var SavedInstanceState = {
             Errand: {
                 pk: Number("{{ errand.pk }}"),
                 tag: "{{ errand.tag }}",
@@ -76,64 +92,70 @@
                         },
                         epoch_date: "{{ i.epoch_date }}",
                         epoch_time: "{{ i.epoch_time }}",
+                        end_date: "{{ i.end_date }}",
+                        end_time: "{{ i.end_time }}",
                         tag: "{{ i.tag }}",
                         comment: "{{ i.comment }}"
                     },
                     {# insert old pieces descritpions #}
                 {% endfor %}
-            ]
+            ],
+            Render_Saved_State: function () {
+                {# errand inputs #}
+                $($errand_tag).val(SavedInstanceState.Errand.tag);
+                $($errand_comment).val(SavedInstanceState.Errand.comment).trigger('autoresize');
+                {# errand hints #}
+                $($errand_tag_hint).html(SavedInstanceState.Errand.tag);
+                $($errand_comment_hint).html(SavedInstanceState.Errand.comment);
+
+                {# Old Pieces #}
+                for (var i = 0; i < SavedInstanceState.Old_Pieces.length; ++i) {
+                    $($pieces_list).append(
+                        HTML_STRINGS.TOUCH.PIECE(
+                            ('o' + SavedInstanceState.Old_Pieces[i].pk),
+                            SavedInstanceState.Old_Pieces[i].epoch_date,
+                            SavedInstanceState.Old_Pieces[i].epoch_time,
+                            SavedInstanceState.Old_Pieces[i].end_date,
+                            SavedInstanceState.Old_Pieces[i].end_time,
+                            SavedInstanceState.Old_Pieces[i].time_period,
+                            SavedInstanceState.Old_Pieces[i].duration,
+                            SavedInstanceState.Old_Pieces[i].tag,
+                            SavedInstanceState.Old_Pieces[i].comment
+                        )
+                    );
+                }
+                update_pieces_count();
+            }
         };
+
+        {# update functions #}
+        function update_pieces_count() {
+            var pieces_count = $($pieces_list).children().length;
+            $($pieces_count).html(pieces_count);
+        }
 
         var New_Pieces_Pk = 0;
         $(document).ready(function () {
             {# references #}
-            var $pieces_count = $('#pieces_count');
-            var $piece_add_empty = $('#piece_add_empty');
-            var $piece_add_tt = $('#piece_add_tt');
-            var $piece_add_te = $('#piece_add_te');
-            var $piece_add_class = $('#piece_add_class');
-            var $piece_add_rme = $('#piece_add_rme');
-            var $pieces_list = $('#pieces_list');
+            $pieces_count = $('#pieces_count');
+            $piece_add_empty = $('#piece_add_empty');
+            $piece_add_tt = $('#piece_add_tt');
+            $piece_add_te = $('#piece_add_te');
+            $piece_add_class = $('#piece_add_class');
+            $piece_add_rme = $('#piece_add_rme');
+            $pieces_list = $('#pieces_list');
 
-            var $errand_inputs = $('#errand_inputs');
-            var $errand_hints = $('#errand_hints');
-            var $errand_tag = $('#errand_tag');
-            var $errand_tag_hint = $('#errand_tag_hint');
-            var $errand_comment = $('#errand_comment');
-            var $errand_comment_hint = $('#errand_comment_hint');
+            $errand_inputs = $('#errand_inputs');
+            $errand_hints = $('#errand_hints');
+            $errand_tag = $('#errand_tag');
+            $errand_tag_hint = $('#errand_tag_hint');
+            $errand_comment = $('#errand_comment');
+            $errand_comment_hint = $('#errand_comment_hint');
 
             {#  Initialize the UI using data  #}
-            {# errand inputs #}
-            $($errand_tag).val(Context.Errand.tag);
-            $($errand_comment).val(Context.Errand.comment).trigger('autoresize');
-            {# errand hints #}
-            $($errand_tag_hint).html(Context.Errand.tag);
-            $($errand_comment_hint).html(Context.Errand.comment);
-
-            {# Old Pieces #}
-            for (var i = 0; i < Context.Old_Pieces.length; ++i) {
-                //noinspection JSUnresolvedVariable
-                $($pieces_list).append(
-                    HTML_STRINGS.TOUCH.PIECE(
-                        ('o' + Context.Old_Pieces[i].pk),
-                        Context.Old_Pieces[i].epoch_date,
-                        Context.Old_Pieces[i].epoch_time,
-                        Context.Old_Pieces[i].time_period,
-                        Context.Old_Pieces[i].duration,
-                        Context.Old_Pieces[i].tag,
-                        Context.Old_Pieces[i].comment
-                    )
-                );
-            }
-            update_pieces_count();
+            SavedInstanceState.Render_Saved_State();
 
             {#  Set listeners for events and change Errand Object correspondingly #}
-            {# update functions #}
-            function update_pieces_count() {
-                var pieces_count = $($pieces_list).children().length;
-                $($pieces_count).html(pieces_count);
-            }
-
             {# Errands Inputs FadeToggle #}
             $($errand_hints)
                 .on(
@@ -159,12 +181,14 @@
                     }
                 );
 
-            function new_piece_add(toast, id, ed, et, tp, dr, tg, cm) {
+            function new_piece_add(toast, id, ed, et, ld, lt, tp, dr, tg, cm) {
                 $($pieces_list).append(
                     HTML_STRINGS.TOUCH.PIECE(
                         id,
                         ed,
                         et,
+                        ld,
+                        lt,
                         tp,
                         dr,
                         tg,
@@ -212,6 +236,8 @@
                             moment().format(Std.std_d_format),
                             moment().format(Std.std_t_format),
                             undefined,
+                            undefined,
+                            undefined,
                             {days: 0, seconds: 3600}
                         );
                     }
@@ -226,6 +252,8 @@
                             'n' + (New_Pieces_Pk + 1),
                             moment().format(Std.std_d_format),
                             moment().format(Std.std_t_format),
+                            undefined,
+                            undefined,
                             {days: 7, seconds: 0},
                             {days: 0, seconds: 3600}
                         );
@@ -242,6 +270,8 @@
                             'n' + (New_Pieces_Pk + 1),
                             moment().format(Std.std_d_format),
                             moment().format(Std.std_t_format),
+                            undefined,
+                            undefined,
                             {days: 1, seconds: 0}
                         );
                     }
@@ -270,16 +300,25 @@
                     function () {
                         var on = $(this).prop('checked');
                         var $time_period_select = $(this).parent().parent().parent().find('.time-period-select');
+                        var $end_div = $(this).parent().parent().parent().parent().parent().parent().find('.end-div');
+                        var $end_date = $($end_div).find('.end-date');
+                        var $end_time = $($end_div).find('.end-time');
                         var $days = $($time_period_select).find('.days');
                         var $seconds = $($time_period_select).find('.seconds');
 
                         if (!on) {
                             $time_period_select.fadeOut();
+                            $end_div.fadeOut();
                             $($days).val(0);
                             $($seconds).val(0);
+                            $($end_date).val("");
+                            $($end_time).val("");
                         }
                         else {
-                            $time_period_select.fadeIn()
+                            $($days).val(1);
+                            $($end_time).val("23:59");
+                            $time_period_select.fadeIn();
+                            $end_div.fadeIn();
                         }
                     }
                 )
@@ -299,6 +338,7 @@
                             $($seconds).val(0);
                         }
                         else {
+                            $($days).val(1);
                             $duration_select.fadeIn()
                         }
                     }
@@ -308,9 +348,10 @@
             function touch(Flag) {
                 var SUBMIT = true;
                 var Errand = {
-                    pk: Context.Errand.pk,
+                    // pk cannot change ever for a given errand
+                    pk: SavedInstanceState.Errand.pk,
                     tag: $($errand_tag).val(),
-                    comment: $($errand_comment).val().replace(/(?:\r\n|\r|\n)/g, ' ')
+                    comment: $($errand_comment).val()
                 };
 
                 var New_Pieces = [];
@@ -322,6 +363,8 @@
                         var id = $(this).attr('id');
                         var length = id.length;
                         var pk = id.substr(1, length - 1);
+
+
                         {# epoch #}
                         var epoch_date = $(this).find('.epoch-date').val();
                         {# validation #}
@@ -337,14 +380,64 @@
                             alert('Some Pieces have invalid epoch');
                             return;
                         }
-                        {# replacing \n with '' #}
-                        var comment = $(this).find('.comment').val();
-                        comment = comment.replace(/(?:\r\n|\r|\n)/g, ' ');
 
+
+                        {# end #}
+                        /**
+                         * Invariant : No partially filled end
+                         *             Either completely empty or completely filled
+                         * if zero tp => end is empty string(date and time)
+                         * if non-zero tp and full filled end(date and time) => end must be after epoch
+                         * if non-zero tp and partially filled end => end is made empty
+                         *                                                    (i.e repeating piece with no end specified)
+                         * */
+                        var $time_period_div = $(this).find('.time-period-div');
+                        var time_period = {
+                            days: $($time_period_div).find('.days').val(),
+                            seconds: $($time_period_div).find('.seconds').val()
+                        };
+
+                        var $end_date = $(this).find('.end-date');
+                        var $end_time = $(this).find('.end-time');
+
+                        var end_date = $($end_date).val();
+                        var end_time = $($end_time).val();
+                        // If zero time period
+                        if (time_period.days == 0 && time_period.seconds == 0) {
+                            $end_date.val("");
+                            $end_time.val("");
+                        }
+                        // If non-zero time period
+                        else {
+                            if (end_date != '' && end_time != '') {
+                                var end_after_epoch =
+                                    moment(end_date + " " + end_time, Std.std_dt_format)
+                                        .isSameOrAfter(epoch_date + " " + epoch_time, Std.std_dt_format);
+                                {# validation #}
+                                if (!end_after_epoch) {
+                                    SUBMIT = false;
+                                    alert('Some Pieces end before epoch');
+                                    return;
+                                }
+                            }
+                            else {
+                                $end_date.val("");
+                                $end_time.val("");
+                            }
+                        }
+                        // putting the validated values back into the var
+                        end_date = $($end_date).val();
+                        end_time = $($end_time).val();
+
+                        var comment = $(this).find('.comment').val();
+
+                        {# Creating Piece #}
                         var Piece = {
                             pk: pk,
                             epoch_date: epoch_date,
                             epoch_time: epoch_time,
+                            end_date: end_date,
+                            end_time: end_time,
                             time_period: {
                                 {# default is 0 #}
                                 days: $(this).find('.time-period-div .days').val(),
@@ -378,9 +471,9 @@
                     $('#process_touch_fm').submit();
                 }
 
-                console.log(JSON.stringify(Errand));
-                console.log(JSON.stringify(Old_Pieces));
-                console.log(JSON.stringify(New_Pieces));
+                //console.log(JSON.stringify(Errand));
+                //console.log(JSON.stringify(Old_Pieces));
+                //console.log(JSON.stringify(New_Pieces));
             }
 
             {# Sync #}
@@ -408,7 +501,7 @@
                 .on(
                     'click',
                     function () {
-                        $('#__pk__').val(Context.Errand.pk);
+                        $('#__pk__').val(SavedInstanceState.Errand.pk);
                         $('#delete_fm').submit()
                     }
                 )
@@ -465,7 +558,7 @@
                         </span>
                     </div>
                     <div class="col l4 m4 s4 ">
-                        <p class="flow-text"><span id="pieces_count">{{ old_pieces|length }}</span> Pieces</p>
+                        <p class="flow-text"><span id="pieces_count">{{ old_pieces|length }}</span> Piece{% if old_pieces|length > 1 %}s{% endif %}</p>
                     </div>
                 </div>
                 <div class="row" style="margin: 0">

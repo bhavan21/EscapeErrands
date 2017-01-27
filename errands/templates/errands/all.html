@@ -3,7 +3,7 @@
 {% block style %}
     <style>
 
-        #errands_list .remove-btn i {
+        #errands_list .delete-btn i {
             margin-left: 10px;
             margin-right: 10px;
         }
@@ -17,28 +17,24 @@
             margin-left: 10px;
         }
 
-        #errands_list .remove-btn:hover {
-            background-color: rgba(255, 0, 0, 0.6);
+        #errands_list .delete-btn:hover {
+            background-color: rgba(255, 0, 0, 0.4);
         }
 
         #errands_list .edit-btn:hover {
-            background-color: rgba(0, 255, 128, 0.6);
+            background-color: rgba(0, 255, 128, 0.4);
         }
 
-        #errands_list .head:hover {
-            background-color: rgba(0, 0, 0, 0.02);
+        #errands_list .collapsible-header:hover {
+            background-color: rgba(0, 0, 0, 0.05);
         }
-
-        .pieces-list li:hover {
-            border: 1px solid black;
-        }
-
     </style>
 {% endblock %}
 {% block body %}
     <!--suppress JSUnresolvedVariable -->
     {% load staticfiles %}
     <script src="{% static "errands/js/html_build_strings.js" %}"></script>
+    <!--suppress JSUnresolvedVariable -->
     <script>
 
         function to_hrs(obj) {
@@ -53,7 +49,7 @@
 
             {# Listeners #}
             {# Remove btn #}
-            $('.remove-btn')
+            $('.delete-btn')
                 .on(
                     'click',
                     function () {
@@ -68,81 +64,37 @@
             $('#errands_list')
                 .on(
                     'click',
-                    '.errand-def',
+                    '.expand',
                     function () {
-                        if ($(this).hasClass('closed')) {
-                            // opening
-                            var that = $(this).parent();
-                            var id = $(that).attr('id');
-                            $(that).find('.progress').fadeIn(
-                                0,
-                                function () {
-                                    $.ajax(
-                                        {
-                                            url: '/errands/fetch_errand/' + id + '/',
-                                            error: function () {
-                                                alert('Errand could not be fetched!')
-                                            },
-                                            success: function (result) {
-                                                // fetched
-                                                var errand = JSON.parse(result);
-                                                // console.log(errand);
-                                                // rendering
-                                                var pieces_list = $(that).find('.pieces-list');
-                                                $(pieces_list).empty();
-                                                for (var i = 0; i < errand.pieces.length; ++i) {
-                                                    var piece = errand.pieces[i];
-                                                    var piece_id = 'p' + piece.pk;
-                                                    var piece_duration = to_hrs(piece.duration);
-                                                    var piece_time_period = to_days(piece.time_period);
-                                                    $(pieces_list).append(HTML_STRINGS.ALL.PIECE(piece_id));
-                                                    Highcharts.chart(piece_id, {
-                                                        chart: {
-                                                            type: 'column'
-                                                        },
-                                                        title: {
-                                                            text: piece.tag
-                                                        },
-                                                        subtitle: {
-                                                            text: piece.comment
-                                                        },
-                                                        xAxis: {
-                                                            min: 0,
-                                                            tickInterval: 1,
-                                                            title: {
-                                                                text: 'Time Period (Days)'
-                                                            }
-                                                        },
-                                                        yAxis: {
-                                                            min: 0,
-                                                            title: {
-                                                                text: 'Duration (Hr)'
-                                                            }
-                                                        },
-                                                        plotOptions: {
-                                                            column: {
-                                                                pointPadding: 0.2,
-                                                                borderWidth: 0
-                                                            }
-                                                        },
-                                                        legend: {
-                                                            enabled: false
-                                                        },
-                                                        series: [{
-                                                            name: piece.tag,
-                                                            data: [[0, piece_duration], [piece_time_period, piece_duration]]
-                                                        }]
-                                                    });
-                                                }
-                                            }
+                        var $li_parent = $(this).parent().parent().parent().parent();
+                        // opening
+                        var id = $($li_parent).attr('id');
 
+                        $($li_parent).find('.preloader').fadeIn(0, function () {
+                                $.ajax({
+                                    url: '/errands/fetch_errand/' + id + '/',
+                                    error: function () {
+                                        alert('Errand could not be fetched!');
+                                    },
+                                    success: function (result) {
+                                        // fetched
+                                        var errand = JSON.parse(result);
+                                        console.log(errand);
+                                        // rendering
+                                        var pieces_list = $($li_parent).find('.pieces');
+                                        $(pieces_list).empty();
+                                        for (var i = 0; i < errand.pieces.length; ++i) {
+                                            var piece = errand.pieces[i];
+                                            var piece_id = 'p' + piece.pk;
+                                            var piece_duration = to_hrs(piece.duration);
+                                            var piece_time_period = to_days(piece.time_period);
+                                            $(pieces_list).append(HTML_STRINGS.ALL.PIECE(piece_id));
                                         }
-                                    );
-                                    $(that).find('.progress').fadeOut(0);
-                                }
-                            );
-                        }
-                        $(this).toggleClass('closed')
+                                        $($li_parent).find('.preloader').fadeOut(1000);
+                                    }
+                                });
+                            }
+                        );
                     }
                 );
 
@@ -160,11 +112,11 @@
 
                         <li id="{{ i.pk }}">
 
-                            <div class="collapsible-header head errand-def closed">
+                            <div class="collapsible-header">
                                 <span class="badge">
                                     {{ forloop.counter }}
                                 </span>
-                                <a class="waves-effect waves-red remove-btn">
+                                <a class="waves-effect waves-red delete-btn">
                                     <i class="material-icons">delete</i>
                                 </a>
                                 <form class="delete_fm" method="post" action="{% url 'errands:delete' %}"
@@ -177,27 +129,46 @@
                                    class="waves-effect waves-yellow edit-btn">
                                     <i class="material-icons">mode_edit</i>
                                 </a>
-                                <span class="blue-text tag">
-                                    {{ i.tag }}
+
+                                <span class="blue-text">
+                                    <span class="tag">{{ i.tag }}</span>
                                 </span>
                             </div>
 
                             <div class="collapsible-body">
-                                <div>
-                                    <p class="grey-text flow-text truncate comment">
+                                <div class="row" style="margin: 0;position:relative;">
+                                    {# Comment #}
+                                    <code class="truncate comment"
+                                          style="padding: 20px;min-height: 60px">
                                         {{ i.comment }}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <div class="progress" style="display: none">
-                                        <div class="indeterminate"></div>
+                                    </code>
+                                    {# Import Pieces Button #}
+                                    <span style="position: absolute;right: 0;top: 0;padding: 10px;z-index: 10">
+                                        <a href="#" class="btn-floating waves-effect z-depth-1 white expand"><i
+                                                class="material-icons blue-text">sync</i></a>
+                                    </span>
+                                    {# Preloader #}
+                                    <div class="preloader" style="position: absolute;right: 0;top: 0;padding: 12px;z-index: 11;display: none">
+                                        <div class="preloader-wrapper active small">
+                                            <div class="spinner-layer spinner-blue-only">
+                                                <div class="circle-clipper left">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="gap-patch">
+                                                    <div class="circle"></div>
+                                                </div>
+                                                <div class="circle-clipper right">
+                                                    <div class="circle"></div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                    {# Pieces Table #}
+                                    <table class="centered highlight" style="max-height: 500px">
+                                        <tbody class="pieces">
 
-                                <div class="row">
-                                    <ul class="pieces-list">
-                                    </ul>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </li>

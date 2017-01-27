@@ -14,7 +14,7 @@ def color_map(pk):
     elif pk % 10 == 6:
         return '#455a64'
     elif pk % 10 == 7:
-        return '#f50057'
+        return '#1b5e20'
     elif pk % 10 == 8:
         return '#e65100'
     elif pk % 10 == 9:

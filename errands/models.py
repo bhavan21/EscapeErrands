@@ -25,6 +25,8 @@ class Std:
         time_period = 'time_period'
         epoch_date = 'epoch_date'
         epoch_time = 'epoch_time'
+        end_date = 'end_date'
+        end_time = 'end_time'
         duration = 'duration'
 
         tag = 'tag'
@@ -128,6 +130,17 @@ class Piece(models.Model):
      for repeating pieces
         epoch_date must be the day first time the piece would start
         epoch_time is (obviously) the time in day where the piece would start after every time period
+
+     end (Limiting datetime for a piece)
+        Piece cannot have stubs which epoch after end (if end is specified).
+
+        Assumption: while initializing end_date and end_time either both are complete and valid
+                                                                or both are empty strings
+
+        Non-repeating pieces: Always both empty strings
+        Repeating pieces:     Both empty strings (never ending)
+                            Or Both fully filled
+
      """
     description = models.TextField(blank=True)
     errand = models.ForeignKey(Errand, on_delete=models.CASCADE, null=True)
@@ -143,14 +156,26 @@ class Piece(models.Model):
             super(Piece, self).save(force_insert=force_insert, force_update=force_update, using=using,
                                     update_fields=update_fields)
 
-    def set(self, tag, comment, misc, epoch_date, epoch_time, time_period, duration):
+    def set(self, tag, comment, misc, epoch_date, epoch_time, end_date, end_time, time_period, duration):
         self.tag = tag
         self.comment = comment
         self.misc = misc
-        self.epoch_time = epoch_time
-        self.epoch_date = epoch_date
         self.time_period = time_period
         self.duration = duration
+        # Epoch
+        self.epoch_date = epoch_date
+        self.epoch_time = epoch_time
+        # End
+        # Date
+        if end_date == '':
+            self.end_date = None
+        else:
+            self.end_date = dt.strptime(end_date, Std.input_d_format).date()
+        # Time
+        if end_time == '':
+            self.end_time = None
+        else:
+            self.end_time = dt.strptime(end_time, Std.input_t_format).time()
 
     def deserialize(self):
         """
@@ -179,6 +204,24 @@ class Piece(models.Model):
             # epoch date
             self.epoch_date = dt.strptime(json_obj[Std.Keys.epoch_date], Std.std_d_format).date()
             del json_obj[Std.Keys.epoch_date]
+
+            if Std.Keys.end_date in json_obj and Std.Keys.end_time in json_obj:
+                # end date
+                if json_obj[Std.Keys.end_date] is not '':
+                    self.end_date = dt.strptime(json_obj[Std.Keys.end_date], Std.std_d_format).date()
+                    del json_obj[Std.Keys.end_date]
+                else:
+                    self.end_date = None
+                    del json_obj[Std.Keys.end_date]
+
+                # end time
+                if json_obj[Std.Keys.end_time] is not '':
+                    self.end_time = dt.strptime(json_obj[Std.Keys.end_time], Std.std_t_format).time()
+                    del json_obj[Std.Keys.end_time]
+                else:
+                    self.end_time = None
+                    del json_obj[Std.Keys.end_time]
+
             # miscellaneous
             self.misc = {}
             for arg in json_obj:
@@ -205,7 +248,7 @@ class Piece(models.Model):
                 Std.Keys.comment: self.comment,
                 # epoch_date
                 Std.Keys.epoch_date: self.epoch_date.strftime(Std.std_d_format),
-                # epoch_date
+                # epoch_time
                 Std.Keys.epoch_time: self.epoch_time.strftime(Std.std_t_format),
                 # time_period
                 Std.Keys.time_period: {
@@ -218,6 +261,19 @@ class Piece(models.Model):
                     Std.Keys.seconds: self.duration.seconds,
                 },
             }
+
+            # end_date
+            if self.end_date is not None:
+                description[Std.Keys.end_date] = self.end_date.strftime(Std.std_d_format)
+            else:
+                description[Std.Keys.end_date] = ''
+
+            # end_time
+            if self.end_time is not None:
+                description[Std.Keys.end_time] = self.end_time.strftime(Std.std_t_format)
+            else:
+                description[Std.Keys.end_time] = ''
+
             # misc
             for key in self.misc:
                 description[key] = self.misc[key]
@@ -266,6 +322,21 @@ class Piece(models.Model):
             return -1
         except AttributeError:
             return -1
+
+    def get_end_datetime(self):
+        """
+        :return:
+            Non-Repeating Piece : None
+            Repeating Piece : None if end not specified
+                            End datetime if specified
+        """
+        if self.is_non_repeating():
+            return None
+        else:
+            if self.end_date is not None and self.end_time is not None:
+                return dt.combine(self.end_date, self.end_time)
+            else:
+                return None
 
     def get_stub_which_intersects(self, epoch, lb, ub):
         """

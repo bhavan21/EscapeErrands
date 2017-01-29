@@ -14,7 +14,7 @@
             z-index: 10;
         }
 
-        #event-stubs-div .rectangle {
+        #event-stubs-div .stub {
             font-size: x-small;
         }
 
@@ -26,11 +26,11 @@
             border: ButtonShadow;
         }
 
-        .rectangle {
+        .stub {
             opacity: 0.9;
         }
 
-        .rectangle:hover {
+        .stub:hover {
             opacity: 1;
         }
 
@@ -81,6 +81,8 @@
         var $detail_div;
         var $yesterday;
         var $tomorrow;
+        var $hues_div;
+        var $hues_toggle;
 
         var Context = {
             Time_Table: {
@@ -122,10 +124,37 @@
                 },
                 No: 0,
                 Duration: 0 // minutes
+            },
+            Hue: {
+                Render_by_default: false,
+                Hues: [
+                    // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
+                    // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
+                    {
+                        bg: "rgba(128,128,128,0.5)",
+                        lb: "00:00",
+                        ub: "05:00"
+                    },
+                    {
+                        bg: "rgba(255,186,11,0.6)",
+                        lb: "05:00",
+                        ub: "08:00"
+                    },
+                    {
+                        bg: "rgba(255,186,11,0.6)",
+                        lb: "17:00",
+                        ub: "19:00"
+                    },
+                    {
+                        bg: "rgba(128,128,128,0.5)",
+                        lb: "19:00",
+                        ub: "23:59"
+                    }
+                ]
             }
         };
 
-        // time divisions
+        // Time divisions
         function render_time_divisions(scale, no_days) {
             // defaults
             scale = scale === undefined ? 1 : scale;
@@ -201,13 +230,13 @@
                 'top': total_height + 'px'
             })
         }
-        // rectangle
-        function render_rectangle(top, left, height, breadth, container, details) {
-            var rectangle = element(
+        // Render stub
+        function render_stub(top, left, height, breadth, container, details) {
+            var stub = element(
                 ['button'],
                 [
                     {
-                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload rectangle',
+                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload stub',
                         'title': details.title,
                         'pk': details.pk,
                         'style': 'position:absolute;' +
@@ -221,11 +250,11 @@
                 [details.tag],
                 [true]
             );
-            //console.log(rectangle);
+            //console.log(stub);
 
-            $(container).append(rectangle);
+            $(container).append(stub);
         }
-        // event stub
+        // Event stub
         function render_event_stub(stub, lane) {
             // Geometry
             //noinspection JSUnresolvedVariable
@@ -256,7 +285,7 @@
             {#                else display_name = split[0].charAt(0);#}
             {#            }#}
             // Rendering
-            render_rectangle(
+            render_stub(
                 top + 'px',
                 lane * (Context.Stubs.Event.Breadth + Context.Stubs.Event.Padding) + Context.Stubs.Event.Initial_Left + 'px',
                 height + 'px',
@@ -269,7 +298,7 @@
                     bg: stub.color
                 });
         }
-        // event stubs
+        // Event stubs
         function render_event_stubs() {
             Context.Stubs.No = 0;
             for (var i = 0; i < Context.Stubs.Event.Lanes.length; ++i) {
@@ -279,7 +308,7 @@
                 }
             }
         }
-        // task stub
+        // Task stub
         function render_task_stub(stub, i) {
             {% comment %} Timed Form {% endcomment %}
             //noinspection JSUnresolvedVariable
@@ -292,7 +321,7 @@
             // Top
             var top = i * height + i * 10 + 10;
             // Rendering
-            render_rectangle(
+            render_stub(
                 top + 'px',
                 Context.Stubs.Task.Left,
                 height + 'px',
@@ -305,14 +334,14 @@
                     bg: stub.color
                 });
         }
-        // task stub
+        // Task stub
         function render_task_stubs() {
             for (var i = 0; i < Context.Stubs.Task.Def.length; ++i) {
                 render_task_stub(Context.Stubs.Task.Def[i], i);
                 Context.Stubs.No++;
             }
         }
-        // reload UI
+        // Reload UI
         function reload() {
             // Remove all removable objects
             $('.remove-on-reload').remove();
@@ -320,6 +349,10 @@
             $('#middle').height(Context.Time_Table.Height);
             // Render Time Divisions and Time Hints
             render_time_divisions(Context.Time_Table.Scale.Px_To_Min);
+            if (Context.Hue.Render_by_default) {
+                // Render Hues
+                render_hues();
+            }
             // Render Event Stubs
             render_event_stubs();
             // Render Task Stubs
@@ -330,19 +363,7 @@
             $($loading_timetable).fadeOut(0);
         }
 
-
-        // Cursor Bar Render
-        function cursor_hint_bar(e) {
-            var pos_wrt_time_divisions =
-                e.clientY + Context.Time_Table.Scroll_Top - ($($top_hint_div).height() + parseInt($($top_hint_div).css('padding-top')) + parseInt($($top_hint_div).css('padding-bottom')));
-
-            $($cursor_bar).css({
-                'top': pos_wrt_time_divisions
-            });
-            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
-            $($cursor_bar_hint).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
-        }
-        // fetch stubs
+        // Fetch stubs
         function fetch_stubs_and(ranges, error_callback, success_callback) {
             //noinspection JSUnresolvedVariable
             $.ajax(
@@ -354,8 +375,7 @@
                 }
             );
         }
-
-        // render date
+        // Render date
         function render_stubs_on(date) {
             // Loading On Progress
             $($loading_timetable).fadeIn(0);
@@ -397,6 +417,61 @@
             );
         }
 
+        // Cursor Bar Render
+        function cursor_hint_bar(e) {
+            var pos_wrt_time_divisions =
+                e.clientY
+                + Context.Time_Table.Scroll_Top
+                - ($($top_hint_div).height()
+                    + parseInt($($top_hint_div).css('padding-top'))
+                    + parseInt($($top_hint_div).css('padding-bottom'))
+                    + parseInt($($top_hint_div).css('margin-top'))
+                    + parseInt($($top_hint_div).css('margin-bottom'))
+                    + 3 // slight adjustment
+                );
+
+            $($cursor_bar).css({
+                top: pos_wrt_time_divisions
+            });
+            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
+            $($cursor_bar_hint).css({
+                left: e.clientX,
+                top: e.clientY - $($cursor_bar_hint).height() - 3 // slight adjustment
+            }).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
+        }
+        // Render hues
+        function render_hues() {
+            // todo : generalize to any timetable range
+            for (var i = 0; i < Context.Hue.Hues.length; ++i) {
+                // for each hue
+                var bg = Context.Hue.Hues[i].bg;
+                var lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
+                var ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
+                if (ub.isBefore(lb)) {
+                    ub.add(1, 'd');
+                }
+                // console.log(lb, ub);
+                var height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                var top = moment.duration(lb.diff(Context.Time_Table.Range.LB())).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                var hue = element(
+                    ['div'],
+                    [
+                        {
+                            'class': 'remove-on-reload hue',
+                            'style': 'position:absolute;width: 100%;' +
+                            'top: ' + top + ';' +
+                            'height:' + height + ';' +
+                            'background-color:' + bg
+                        }
+                    ],
+                    [''],
+                    [true]
+                );
+                {#                console.log(hue);#}
+                $($hues_div).append(hue);
+            }
+        }
+
         $(document).ready(function () {
 
             // references
@@ -420,7 +495,10 @@
             $detail_div = $('#detail-div');
             $yesterday = $('#yesterday');
             $tomorrow = $('#tomorrow');
-            {% comment %}Event Listeners {% endcomment %}
+            $hues_div = $('#hues-div');
+            $hues_toggle = $('#hues-toggle');
+
+            // Event Listeners
             /**
              * Time Table
              * */
@@ -495,6 +573,7 @@
             // Initializing
             $($scale_select).val(Context.Time_Table.Scale.Px_To_Min * 60); // hour px selection
             // Listening
+            // Listening
             $($scale_select)
                 .on(
                     'change',
@@ -504,12 +583,27 @@
                     }
                 );
             /**
+             * Hues Toggle
+             * */
+            // Initializing
+            $($hues_toggle).prop('checked', Context.Hue.Render_by_default); // hour px selection
+            // Listening
+            $($hues_toggle).click(function () {
+                var hues_on = $(this).prop('checked');
+                if (hues_on) {
+                    $($time_divisions_div).find('.hue').fadeIn();
+                }
+                else {
+                    $($time_divisions_div).find('.hue').fadeOut();
+                }
+            });
+            /**
              * Detail Div
              * */
             $($time_table_div)
                 .on(
                     'click',
-                    '.rectangle',
+                    '.stub',
                     function () {
                         var that = $(this);
                         $($detail_div).modal('open');
@@ -646,17 +740,17 @@
                 <!-- Time Divisions -->
                 <div id="time-divisions-div"
                      style="position: absolute;height: 100%;width: 100%;overflow: hidden;">
+                    <!-- Hues -->
+                    <div id="hues-div"></div>
 
                     <div id="cursor-bar"
                          style="position: absolute;
                                 width: 100%;">
 
-                        <hr style="background-color: deeppink;
-                               height: 2px;
-                               margin: 0">
-                        <div id="cursor-bar-hint"
-                             style="position:relative;"
-                             class="right-align flow-text white"></div>
+                        <hr style="background-color: deeppink;height: 2px;margin: 0;border: none">
+                        <span id="cursor-bar-hint"
+                              style="position:fixed;"
+                              class="right-align flow-text white"></span>
                     </div>
                 </div>
 
@@ -703,6 +797,16 @@
                                 <input type="range" id="scale-select" min="30" max="120"/>
                             </p>
                         </label>
+                    </div>
+                    <div class="col l3 m3 s3"></div>
+                    <div class="col l3 m3 s3">
+                        <div class="switch">
+                            Hues
+                            <label>
+                                <input id="hues-toggle" type="checkbox">
+                                <span class="lever"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>

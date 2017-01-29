@@ -37,19 +37,16 @@ def touch(request, pk):
             for piece in errand.piece_set.all():
                 piece.epoch_date = piece.epoch_date.strftime(Std.output_d_format)
                 piece.epoch_time = piece.epoch_time.strftime(Std.output_t_format)
+                if piece.end_date is not None:
+                    piece.end_date = piece.end_date.strftime(Std.output_d_format)
+                else:
+                    piece.end_date = ''
 
-                try:
-                    if piece.end_date is not None:
-                        piece.end_date = piece.end_date.strftime(Std.output_d_format)
-                    else:
-                        piece.end_date = ''
+                if piece.end_time is not None:
+                    piece.end_time = piece.end_time.strftime(Std.output_t_format)
+                else:
+                    piece.end_time = ''
 
-                    if piece.end_time is not None:
-                        piece.end_time = piece.end_time.strftime(Std.output_t_format)
-                    else:
-                        piece.end_time = ''
-                except AttributeError:
-                    pass
                 old_pieces.append(piece)
 
             return render(request, 'errands/touch.html', {'errand': errand,

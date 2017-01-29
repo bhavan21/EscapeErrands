@@ -204,23 +204,20 @@ class Piece(models.Model):
             # epoch date
             self.epoch_date = dt.strptime(json_obj[Std.Keys.epoch_date], Std.std_d_format).date()
             del json_obj[Std.Keys.epoch_date]
-
-            if Std.Keys.end_date in json_obj and Std.Keys.end_time in json_obj:
-                # end date
-                if json_obj[Std.Keys.end_date] is not '':
-                    self.end_date = dt.strptime(json_obj[Std.Keys.end_date], Std.std_d_format).date()
-                    del json_obj[Std.Keys.end_date]
-                else:
-                    self.end_date = None
-                    del json_obj[Std.Keys.end_date]
-
-                # end time
-                if json_obj[Std.Keys.end_time] is not '':
-                    self.end_time = dt.strptime(json_obj[Std.Keys.end_time], Std.std_t_format).time()
-                    del json_obj[Std.Keys.end_time]
-                else:
-                    self.end_time = None
-                    del json_obj[Std.Keys.end_time]
+            # end date
+            if json_obj[Std.Keys.end_date] is not '':
+                self.end_date = dt.strptime(json_obj[Std.Keys.end_date], Std.std_d_format).date()
+                del json_obj[Std.Keys.end_date]
+            else:
+                self.end_date = None
+                del json_obj[Std.Keys.end_date]
+            # end time
+            if json_obj[Std.Keys.end_time] is not '':
+                self.end_time = dt.strptime(json_obj[Std.Keys.end_time], Std.std_t_format).time()
+                del json_obj[Std.Keys.end_time]
+            else:
+                self.end_time = None
+                del json_obj[Std.Keys.end_time]
 
             # miscellaneous
             self.misc = {}

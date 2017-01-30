@@ -223,7 +223,7 @@ def fetch_piece(request, pk):
     return httpR(json_string)
 
 
-def stubs_do_intersect(e1, e2):
+def do_stubs_intersect(e1, e2):
     e1_epoch = e1['epoch']
     e2_epoch = e2['epoch']
     e1_end = e1['end']
@@ -302,7 +302,7 @@ def filter_stubs_in_range(lb, ub):
                         if stub is not None:
                             event_stubs.append(stub)
                         i_epoch += time_period
-
+                #
                 # End Specified
                 else:
                     end = dt.combine(piece.end_date, piece.end_time)
@@ -321,7 +321,7 @@ def filter_stubs_in_range(lb, ub):
         for lane in lanes:
             in_this_lane = True
             for car in lane:
-                if stubs_do_intersect(stub, car):
+                if do_stubs_intersect(stub, car):
                     in_this_lane = False
                     break
             # If intersect with no car in this lane

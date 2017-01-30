@@ -350,7 +350,7 @@ class Piece(models.Model):
             # Epoch End of Stub are determined
             end = epoch + self.duration
             # If Stub Intersects With Range
-            if lb <= epoch <= ub or lb <= end <= ub:
+            if lb <= epoch <= ub or lb <= end <= ub or epoch <= lb <= end or epoch <= ub <= end:
                 stub_epoch = max([lb, epoch])
                 stub_end = min([end, ub])
                 stub_tag = self.tag

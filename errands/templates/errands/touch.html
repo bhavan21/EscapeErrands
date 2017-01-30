@@ -338,7 +338,7 @@
                             $($seconds).val(0);
                         }
                         else {
-                            $($days).val(1);
+                            $($seconds).val(3600);
                             $duration_select.fadeIn()
                         }
                     }
@@ -624,7 +624,7 @@
             </a>
 
             <!-- Modal Structure -->
-            <div id="piece_add_div" class="modal bottom-sheet">
+            <div id="piece_add_div" class="modal bottom-sheet" style="min-height: 50vh">
                 <div class="modal-content">
                     <span class="flow-text">Templates</span>
                     <div style="background-color: rgba(0,0,0,0.1);padding: 1px">

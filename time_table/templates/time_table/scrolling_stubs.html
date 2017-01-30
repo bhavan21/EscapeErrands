@@ -1,7 +1,9 @@
 {% extends 'home/__base__.html' %}
+{% load staticfiles %}
 {% block title %}Time Table{% endblock %}
 {% block style %}
     <style>
+
         .block-screen {
             position: absolute;
             z-index: 999;
@@ -10,8 +12,13 @@
             background-color: white;
         }
 
+        #time-divisions-div {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
         #time-hints-div {
             z-index: 10;
+            background-color: rgba(255, 255, 255, 0.5);
         }
 
         #event-stubs-div .stub {
@@ -28,16 +35,25 @@
 
         .stub {
             opacity: 0.9;
+            border: 1px solid white;
         }
 
         .stub:hover {
             opacity: 1;
         }
 
+        #hues-div .hue {
+            background-size: contain;
+        }
+
         .clipper {
             position: absolute;
             background-color: transparent;
             margin: 0
+        }
+
+        #settings-div label {
+            color: black;
         }
 
         #detail-div textarea {
@@ -61,6 +77,7 @@
     <!--suppress JSUnresolvedVariable -->
     <script>
         // references
+        var $middle;
         var $time_table_div;
         var $time_divisions_div;
         var $time_hints_div;
@@ -126,29 +143,56 @@
                 Duration: 0 // minutes
             },
             Hue: {
-                Render_by_default: false,
+                Render_by_default: true,
                 Hues: [
                     // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
                     // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
                     {
-                        bg: "rgba(128,128,128,0.5)",
+                        bg: "background-image:url(\"{% static 'time_table/images/night.jpg' %}\");",
                         lb: "00:00",
-                        ub: "05:00"
+                        ub: "05:30"
                     },
                     {
-                        bg: "rgba(255,186,11,0.6)",
-                        lb: "05:00",
-                        ub: "08:00"
+                        bg: "background: black;" +
+                        "background: -webkit-linear-gradient(black, white);" +
+                        "background: -o-linear-gradient(black, white);" +
+                        "background: -moz-linear-gradient(black, white);" +
+                        "background: linear-gradient(black, white);",
+                        lb: "05:30",
+                        ub: "06:30"
                     },
                     {
-                        bg: "rgba(255,186,11,0.6)",
-                        lb: "17:00",
-                        ub: "19:00"
+                        bg: "background-image:url(\"{% static 'time_table/images/day.jpg' %}\");",
+                        lb: "06:30",
+                        ub: "16:30"
                     },
                     {
-                        bg: "rgba(128,128,128,0.5)",
-                        lb: "19:00",
-                        ub: "23:59"
+                        bg: "background: white;" +
+                        "background: -webkit-linear-gradient(white, #ffc107);" +
+                        "background: -o-linear-gradient(white, #ffc107);" +
+                        "background: -moz-linear-gradient(white, #ffc107);" +
+                        "background: linear-gradient(white, #ffc107);",
+                        lb: "16:30",
+                        ub: "17:30"
+                    },
+                    {
+                        bg: "background-image:url(\"{% static 'time_table/images/evening.jpg' %}\");",
+                        lb: "17:30",
+                        ub: "20:30"
+                    },
+                    {
+                        bg: "background: #ffc107;" +
+                        "background: -webkit-linear-gradient(#ffc107, black);" +
+                        "background: -o-linear-gradient(#ffc107, black);" +
+                        "background: -moz-linear-gradient(#ffc107, black);" +
+                        "background: linear-gradient(#ffc107, black);",
+                        lb: "20:30",
+                        ub: "21:30"
+                    },
+                    {
+                        bg: "background-image:url(\"{% static 'time_table/images/before_sleep.jpg' %}\");",
+                        lb: "21:30",
+                        ub: "00:00"
                     }
                 ]
             }
@@ -346,13 +390,12 @@
             // Remove all removable objects
             $('.remove-on-reload').remove();
             // Initializing Height
-            $('#middle').height(Context.Time_Table.Height);
+            $($middle).height(Context.Time_Table.Height);
             // Render Time Divisions and Time Hints
-            render_time_divisions(Context.Time_Table.Scale.Px_To_Min);
-            if (Context.Hue.Render_by_default) {
-                // Render Hues
-                render_hues();
-            }
+            render_time_divisions(Context.Time_Table.Scale.Px_To_Min,
+                moment.duration(Context.Time_Table.Range.UB().diff(Context.Time_Table.Range.LB())).asDays());
+            // Render Hues
+            render_hues();
             // Render Event Stubs
             render_event_stubs();
             // Render Task Stubs
@@ -442,39 +485,52 @@
         // Render hues
         function render_hues() {
             // todo : generalize to any timetable range
+            var default_render_style = Context.Hue.Render_by_default == false ? 'display:none;' : '';
             for (var i = 0; i < Context.Hue.Hues.length; ++i) {
                 // for each hue
+                const LB = Context.Time_Table.Range.LB();
+                const UB = Context.Time_Table.Range.UB();
                 var bg = Context.Hue.Hues[i].bg;
-                var lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
-                var ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
+                // Hue bounds
+                var lb, ub, height, top;
+                lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
+                ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
+                // First Hue-Stub
+                lb = Context.Time_Table.Range.LB().subtract(1, 'd').hour(lb.hour()).minute(lb.minute()).seconds(0);
+                ub = Context.Time_Table.Range.LB().subtract(1, 'd').hour(ub.hour()).minute(ub.minute()).seconds(0);
                 if (ub.isBefore(lb)) {
                     ub.add(1, 'd');
                 }
-                // console.log(lb, ub);
-                var height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
-                var top = moment.duration(lb.diff(Context.Time_Table.Range.LB())).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
-                var hue = element(
-                    ['div'],
-                    [
-                        {
-                            'class': 'remove-on-reload hue',
-                            'style': 'position:absolute;width: 100%;' +
-                            'top: ' + top + ';' +
-                            'height:' + height + ';' +
-                            'background-color:' + bg
-                        }
-                    ],
-                    [''],
-                    [true]
-                );
-                {#                console.log(hue);#}
-                $($hues_div).append(hue);
+                while (lb.isBefore(UB)) {
+                    height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                    top = moment.duration(lb.diff(LB)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                    var hue = element(
+                        ['div'],
+                        [
+                            {
+                                'class': 'remove-on-reload hue',
+                                'style': 'position:absolute;width: 100%;' +
+                                'top: ' + top + ';' +
+                                'height:' + height + ';' +
+                                bg +
+                                default_render_style
+                            }
+                        ],
+                        [''],
+                        [true]
+                    );
+                    // console.log(hue);
+                    $($hues_div).append(hue);
+                    lb.add(1, 'd');
+                    ub.add(1, 'd');
+                }
             }
         }
 
         $(document).ready(function () {
 
             // references
+            $middle = $('#middle');
             $time_table_div = $('#time-table-div');
             $time_divisions_div = $('#time-divisions-div');
             $time_hints_div = $('#time-hints-div');
@@ -529,16 +585,6 @@
                     'click',
                     function (e) {
                         cursor_hint_bar(e)
-                    }
-                );
-            /**
-             * Date Hint
-             * */
-            $($top_hint)
-                .on(
-                    'click',
-                    function () {
-                        $($date_select_div).fadeToggle(0);
                     }
                 );
             /**
@@ -697,15 +743,7 @@
     <div class="row">
 
         <div class="col m0 l1 s0">
-            <div id="date-select-div" class="card hoverable waves-effect"
-                 style="z-index: 11;position: fixed;display: none">
-                <div class="card-content">
-                    <label>
-                        Jump To
-                        <input id="date-select" type="date">
-                    </label>
-                </div>
-            </div>
+
         </div>
 
         <div class="col s12 m12 l10" id="middle">
@@ -788,8 +826,9 @@
             </div>
 
             <!-- Settings Div -->
-            <div id="settings-div" class="modal bottom-sheet">
-                <div class="modal-content row">
+            <div id="settings-div" class="modal bottom-sheet" style="min-height: 50vh;">
+                <div class="modal-content row" style="margin: 0">
+                    <h3>Settings</h3>
                     <div class="col l6 m6 s6">
                         <label>
                             Scale
@@ -798,11 +837,18 @@
                             </p>
                         </label>
                     </div>
-                    <div class="col l3 m3 s3"></div>
                     <div class="col l3 m3 s3">
-                        <div class="switch">
-                            Hues
+                        <div id="date-select-div">
                             <label>
+                                Jump To
+                                <input id="date-select" type="date" class="date-picker">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col l3 m3 s3">
+                        <div class="switch right-align">
+                            <label>
+                                Hues
                                 <input id="hues-toggle" type="checkbox">
                                 <span class="lever"></span>
                             </label>

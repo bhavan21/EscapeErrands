@@ -143,7 +143,7 @@
                 Duration: 0 // minutes
             },
             Hue: {
-                Render_by_default: true,
+                Render_by_default: false,
                 Hues: [
                     // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
                     // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
@@ -427,6 +427,7 @@
                 $($error_timetable).fadeIn(0);
             };
             var success_callback = function (result) {
+
                 // Problem with server ? return : continue
                 if (result == -1) {
                     error_call_back();
@@ -452,7 +453,7 @@
             fetch_stubs_and(
                 [
                     {
-                        LB: date, UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
+                        LB: moment(date, Std.std_dt_format).format(Std.std_dt_format), UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
                     }
                 ],
                 error_call_back,

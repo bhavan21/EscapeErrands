@@ -143,7 +143,7 @@
                 Duration: 0 // minutes
             },
             Hue: {
-                Render_by_default: false,
+                On: false,
                 Hues: [
                     // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
                     // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
@@ -453,7 +453,8 @@
             fetch_stubs_and(
                 [
                     {
-                        LB: moment(date, Std.std_dt_format).format(Std.std_dt_format), UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
+                        LB: moment(date, Std.std_dt_format).format(Std.std_dt_format),
+                        UB: moment(date, Std.std_dt_format).add(1, 'd').format(Std.std_dt_format)
                     }
                 ],
                 error_call_back,
@@ -486,7 +487,6 @@
         // Render hues
         function render_hues() {
             // todo : generalize to any timetable range
-            var default_render_style = Context.Hue.Render_by_default == false ? 'display:none;' : '';
             for (var i = 0; i < Context.Hue.Hues.length; ++i) {
                 // for each hue
                 const LB = Context.Time_Table.Range.LB();
@@ -513,8 +513,7 @@
                                 'style': 'position:absolute;width: 100%;' +
                                 'top: ' + top + ';' +
                                 'height:' + height + ';' +
-                                bg +
-                                default_render_style
+                                bg
                             }
                         ],
                         [''],
@@ -526,10 +525,16 @@
                     ub.add(1, 'd');
                 }
             }
+
+            if (Context.Hue.On) {
+                $($time_divisions_div).find('.hue').fadeIn(0);
+            }
+            else {
+                $($time_divisions_div).find('.hue').fadeOut(0);
+            }
         }
 
         $(document).ready(function () {
-
             // references
             $middle = $('#middle');
             $time_table_div = $('#time-table-div');
@@ -633,10 +638,11 @@
              * Hues Toggle
              * */
             // Initializing
-            $($hues_toggle).prop('checked', Context.Hue.Render_by_default); // hour px selection
+            $($hues_toggle).prop('checked', Context.Hue.On); // hour px selection
             // Listening
             $($hues_toggle).click(function () {
                 var hues_on = $(this).prop('checked');
+                Context.Hue.On = hues_on;
                 if (hues_on) {
                     $($time_divisions_div).find('.hue').fadeIn();
                 }

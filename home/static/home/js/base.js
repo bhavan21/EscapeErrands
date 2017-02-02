@@ -1,24 +1,24 @@
-function element(tag, attributes, content, closing) {
+function element(tags, attributes, contents, closings) {
     var $element = "";// returning string
     var iter;
-    for (iter = 0; iter < tag.length; ++iter) {
+    for (iter = 0; iter < tags.length; ++iter) {
 
-        $element += "<" + tag[iter];
+        $element += "<" + tags[iter];
 
         for (var key in attributes[iter]) {
             if (attributes[iter].hasOwnProperty(key)) {
-                //# adding an attribute to the tag[i]#
+                //# adding an attribute to the tags[i]#
                 $element += ( " " + key + "=\'" + attributes[iter][key] + "\'");
             }
         }
 
         $element += ">";
-        $element += content[iter];
+        $element += contents[iter];
     }
 
-    for (iter = tag.length - 1; iter > -1; --iter) {
-        if (closing[iter]) {
-            $element += "</" + tag[iter] + ">"
+    for (iter = tags.length - 1; iter > -1; --iter) {
+        if (closings[iter]) {
+            $element += "</" + tags[iter] + ">"
         }
     }
 

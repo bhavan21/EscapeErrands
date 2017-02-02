@@ -12,5 +12,5 @@ urlpatterns = [
     # host/time_table/
     url(r'^time_table/', include("time_table.urls")),
     # host/stats/
-    url(r'^stats/', include("stats.urls")),
+    url(r'^cli/', include("cli.urls")),
 ]

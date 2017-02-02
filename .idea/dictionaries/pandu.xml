@@ -2,6 +2,7 @@
   <dictionary name="pandu">
     <words>
       <w>autoresize</w>
+      <w>beforesend</w>
       <w>cdnjs</w>
       <w>cloudflare</w>
       <w>collectstatic</w>
@@ -14,6 +15,7 @@
       <w>gunicorn</w>
       <w>highcharts</w>
       <w>hoverable</w>
+      <w>lightblue</w>
       <w>mmmm</w>
       <w>monospace</w>
       <w>mousemove</w>

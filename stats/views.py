@@ -6,5 +6,3 @@ from errands.models import Std
 
 
 # Create your views here.
-def cli(request):
-    return render(request, 'stats/cli.html')

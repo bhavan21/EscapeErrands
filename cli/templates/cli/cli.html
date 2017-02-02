@@ -1,0 +1,243 @@
+{% extends 'home/__base__.html' %}
+{% block extra_headers %}
+    {% load staticfiles %}
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono|VT323" rel="stylesheet">
+{% endblock %}
+{% block title %}CLI{% endblock %}
+{% block style %}
+    <style>
+        body {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        #read {
+            font-family: 'VT323', monospace;
+            font-size: x-large;
+            color: white;
+        }
+
+        #read:focus {
+            box-shadow: 0 1px 0 0 white;
+            border-bottom: 1px solid white;
+        }
+
+        #print {
+            height: 75vh;
+            overflow: auto;
+            font-size: large;
+            font-family: 'Ubuntu Mono', monospace;;
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <!--suppress JSUnresolvedVariable, JSValidateTypes, JSUnresolvedFunction -->
+    <script>
+        var $read;
+        var $print;
+        var $db = {};
+
+        var Command = {
+            /** Distinct keywords for all command Definitions*/
+            Definitions: [
+                {
+                    keyword: "",
+                    Action: function (arg) {
+                        print("");
+                    }
+                },
+                {
+                    keyword: "clear",
+                    Action: function (arg) {
+                        clear();
+                    }
+                },
+                {
+                    keyword: "print",
+                    Action: function (arg) {
+                        print(arg)
+                    }
+                },
+                {
+                    keyword: "load",
+                    Action: function (arg) {
+                        fetch_stubs_and(
+                            [
+                                {
+                                    LB: moment().format(Std.std_dt_format),
+                                    UB: moment().add(1, 'd').format(Std.std_dt_format)
+                                }
+                            ],
+                            function (error) {
+                                print('Error in loading stubs', 'red');
+                            },
+                            function (result) {
+                                print(result);
+                            }
+                        );
+                    }
+                }
+            ],
+            /** @return {boolean} */
+            Evaluate: function (command_input) {
+                try {
+                    var def, command_index = -1;
+                    // Matching
+                    for (var i = 0; i < Command.Definitions.length; ++i) {
+                        def = Command.Definitions[i];
+                        if (def.keyword == command_input.split(" ")[0]) {
+                            if (def.keyword != "") {
+                                print(command_input, 'lightblue');
+                            }
+                            def.Action(command_input.slice(def.keyword.length + 1, command_input.length));
+                            $($read).val("");
+                            command_index = i;
+                            break;
+                        }
+                    }
+                    // Command not available
+                    if (command_index == -1) {
+                        print(command_input, 'lightblue');
+                        print(command_input + ': command not found', 'orange')
+                    }
+                }
+                catch (e) {
+                    console.log(e);
+                }
+                return false;
+            },
+            History: [],
+            Head: 0,
+            Reverse: 0
+        };
+
+        var ShellSymbol = element(
+            ['span'],
+            [{'class': 'green-text'}],
+            ['~$: '],
+            [true]
+        );
+
+        function REPL(event) {
+            var reversed, command_input;
+            switch (event.keyCode || event.which) {
+                // Enter
+                case 13:
+                    command_input = $($read).val();
+                    if (command_input != "" && Command.History[Command.Head - 1] != command_input) {
+                        // Storing input in History
+                        Command.History[Command.Head] = command_input;
+                        // Moving the history header
+                        Command.Head++;
+                    }
+                    // Reset Reverse Counter
+                    Command.Reverse = 0;
+                    /** Evaluate and Print */
+                    // Matching
+                    Command.Evaluate(command_input);
+                    break;
+                // Tab Key
+                case 9:
+                    command_input = $($read).val();
+                    if (command_input == "")return;
+                    var command_pattern, matched_keywords = [];
+                    for (var i = 0; i < Command.Definitions.length; ++i) {
+                        command_pattern = new RegExp('^' + command_input, 'i');
+                        if (command_pattern.test(Command.Definitions[i].keyword)) {
+                            matched_keywords.push(Command.Definitions[i].keyword);
+                        }
+                    }
+                    if (matched_keywords.length == 1) {
+                        $($read).val(matched_keywords[0]);
+                    } else if (matched_keywords.length > 1) {
+                        var available_commands = matched_keywords.join(" ");
+                        print(available_commands, 'blue');
+                    }
+                    break;
+                // Up Arrow
+                case 38:
+                    reversed = Command.Head - Command.Reverse - 1;
+                    if (Command.History.length > reversed && reversed >= 0) {
+                        Command.Reverse++;
+                        $($read).val(Command.History[reversed]);
+                    }
+                    break;
+                // Down Arrow
+                case 40:
+                    reversed = Command.Head - Command.Reverse + 1;
+                    if (Command.History.length > reversed && reversed >= 0) {
+                        Command.Reverse--;
+                        $($read).val(Command.History[reversed]);
+                    }
+                    break;
+                default:
+                    // Reset All Counters
+                    Command.Reverse = 0;
+                    break;
+            }
+        }
+
+        function print(string, color) {
+            color = color === undefined ? 'green' : color;
+            $($print).append(ShellSymbol);
+            $($print).append(element(
+                ['span'],
+                [{'style': 'color:' + color}],
+                [string],
+                [true]
+            ));
+            $($print).append("<br>");
+            $($print).scrollTop($($print).prop('scrollHeight'));
+        }
+
+        function clear() {
+            $($print).html("");
+            $($read).val("");
+        }
+
+        // fetch stubs
+        function fetch_stubs_and(ranges, error_callback, success_callback) {
+            //noinspection JSUnresolvedVariable
+            $.ajax(
+                {
+                    url: '/errands/fetch_stubs/',
+                    data: {ranges: JSON.stringify(ranges)},
+                    error: error_callback,
+                    success: success_callback,
+                }
+            );
+        }
+
+        $(document).ready(function () {
+            $read = $('#read');
+            $print = $('#print');
+
+            /** REPL Listener */
+            $($read).keyup(function (event) {
+                REPL(event);
+            }).keydown(function (event) {
+                if (event.keyCode == 9) {
+                    event.preventDefault();
+                }
+            });
+
+        });
+    </script>
+
+    <div id="print">
+        <div class="green-text">Mad Scientist at work</div>
+    </div>
+    <div class="divider white"></div>
+
+    <div class="container" style="padding-top: 30px;">
+        <div class="input-field">
+            <span class="prefix white-text">>_</span>
+            <label for="read"></label>
+            <input id="read"
+                   type="text"
+                   autofocus>
+        </div>
+    </div>
+
+
+{% endblock %}

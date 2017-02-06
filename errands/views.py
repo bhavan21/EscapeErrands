@@ -5,6 +5,7 @@ from models import Errand, Piece, Std
 from datetime import datetime as dt, timedelta as td
 from django.urls import reverse
 from django.http import HttpResponsePermanentRedirect as httpRPR, HttpResponse as httpR
+from home.views import in_session
 import json
 
 
@@ -14,9 +15,10 @@ def all_(request):
 
 
 def touch(request, pk):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
+    # User Session Check
+    if not in_session(request):
+        print ('Out of Session')
+        return render(request, 'home/login.html', {'Client_Site': str(request.get_raw_uri())})
 
     # pk >= 0 from regex
     int__pk = int(pk)
@@ -58,9 +60,9 @@ def touch(request, pk):
 
 # TODO: validate the inputs for more security
 def process_touch(request):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
-        return render(request, 'home/login.html')
+    # User Session Check
+    if not in_session(request):
+        return render(request, 'home/login.html', {'Client_Site': str(request.get_raw_uri())})
 
     # pk >= 0 from regex
     if request.method == 'POST':
@@ -173,8 +175,8 @@ def process_touch(request):
 
 
 def delete(request):
-    # User Logged In Check
-    if not request.session.get(Std.Keys.user_logged_in, False):
+    # User Session Check
+    if not in_session(request):
         return render(request, 'home/login.html')
 
     if request.method == 'POST':

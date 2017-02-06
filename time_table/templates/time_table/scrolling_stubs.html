@@ -142,56 +142,51 @@
                 Duration: 0 // minutes
             },
             Hue: {
-                On: false,
+                On: true,
                 Hues: [
                     // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
                     // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
                     {
-                        bg: "background-image:url(\"{% static 'time_table/images/night.jpg' %}\");",
-                        lb: "00:00",
+                        bg: "background-color: rgba(0,0,0,0.2);",
+                        lb: "20:00",
                         ub: "05:30"
                     },
                     {
-                        bg: "background: black;" +
-                        "background: -webkit-linear-gradient(black, white);" +
-                        "background: -o-linear-gradient(black, white);" +
-                        "background: -moz-linear-gradient(black, white);" +
-                        "background: linear-gradient(black, white);",
+                        bg: "background: rgba(0,0,0,0.2);" +
+                        "background: -webkit-linear-gradient(rgba(0,0,0,0.2), white);" +
+                        "background: -o-linear-gradient(rgba(0,0,0,0.2), white);" +
+                        "background: -moz-linear-gradient(rgba(0,0,0,0.2), white);" +
+                        "background: linear-gradient(rgba(0,0,0,0.2), white);",
                         lb: "05:30",
                         ub: "06:30"
                     },
                     {
-                        bg: "background-image:url(\"{% static 'time_table/images/day.jpg' %}\");",
+                        bg: "background-color:white;",
                         lb: "06:30",
-                        ub: "16:30"
+                        ub: "15:00"
                     },
                     {
                         bg: "background: white;" +
-                        "background: -webkit-linear-gradient(white, #ffc107);" +
-                        "background: -o-linear-gradient(white, #ffc107);" +
-                        "background: -moz-linear-gradient(white, #ffc107);" +
-                        "background: linear-gradient(white, #ffc107);",
-                        lb: "16:30",
-                        ub: "17:30"
+                        "background: -webkit-linear-gradient(white, #f4ff81);" +
+                        "background: -o-linear-gradient(white, #f4ff81);" +
+                        "background: -moz-linear-gradient(white, #f4ff81);" +
+                        "background: linear-gradient(white, #f4ff81);",
+                        lb: "15:00",
+                        ub: "16:00"
                     },
                     {
-                        bg: "background-image:url(\"{% static 'time_table/images/evening.jpg' %}\");",
-                        lb: "17:30",
-                        ub: "20:30"
+                        bg: "background-color: #f4ff81;",
+                        lb: "16:00",
+                        ub: "19:00"
                     },
                     {
-                        bg: "background: #ffc107;" +
-                        "background: -webkit-linear-gradient(#ffc107, black);" +
-                        "background: -o-linear-gradient(#ffc107, black);" +
-                        "background: -moz-linear-gradient(#ffc107, black);" +
-                        "background: linear-gradient(#ffc107, black);",
-                        lb: "20:30",
-                        ub: "21:30"
-                    },
-                    {
-                        bg: "background-image:url(\"{% static 'time_table/images/before_sleep.jpg' %}\");",
-                        lb: "21:30",
-                        ub: "00:00"
+                        bg: "background: #f4ff81;" +
+                        "background: -webkit-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
+                        "background: -o-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
+                        "background: -moz-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
+                        "background: linear-gradient(#f4ff81, rgba(0,0,0,0.2));",
+                        lb: "19:00",
+                        ub: "20:00"
                     }
                 ]
             }
@@ -410,7 +405,7 @@
             //noinspection JSUnresolvedVariable
             $.ajax(
                 {
-                    url: '/errands/fetch_stubs/',
+                    url: "{% url 'errands:fetch_stubs' %}",
                     data: {ranges: JSON.stringify(ranges)},
                     error: error_callback,
                     success: success_callback

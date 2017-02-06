@@ -36,6 +36,24 @@
                 in_duration: 300, // Transition in duration
                 out_duration: 200 // Transition out duration
             });
+
+            // Safe-Mode Ajax
+            $('#nav-bar').on(
+                'click',
+                '#safe-mode',
+                function () {
+                    $.ajax({
+                        url: "{% url 'home:logout' %}",
+                        error: function () {
+                            Materialize.toast('Error going into Safe Mode', 2000);
+                        },
+                        success: function (result) {
+                            result = JSON.parse(result);
+                            Materialize.toast(result.message, 1000);
+                        }
+                    });
+                }
+            );
         });
     </script>
 </head>
@@ -56,7 +74,7 @@
     <li><a href="{% url 'errands:all' %}" class="waves-effect"><i class="material-icons">receipt</i>Errands</a></li>
     <li><a href="{% url 'time_table:scrolling_stubs' %}" class="waves-effect"><i class="material-icons">view_week</i>TimeTable</a>
     <li><a href="{% url 'cli:cli' %}" class="waves-effect"><i class="material-icons">settings_ethernet</i>CLI</a>
-    <li><a href="{% url 'home:logout' %}" class="waves-effect"><i class="material-icons">verified_user</i>Safe Mode</a>
+    <li><a id="safe-mode" href="#" class="waves-effect"><i class="material-icons">verified_user</i>Safe Mode</a>
 </ul>
 
 <a href="#"

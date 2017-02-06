@@ -12,6 +12,9 @@
                     <div class="input-field">
                         <i class="material-icons prefix">account_circle</i>
                         <input name="Identity" type="password" placeholder="Identity">
+                        {% if Client_Site %}
+                        <input name="Client_Site" type="hidden" value="{{ Client_Site }}">
+                        {% endif %}
                     </div>
                 </form>
             </div>

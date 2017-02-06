@@ -71,15 +71,16 @@
                         var id = $($li_parent).attr('id');
 
                         $($li_parent).find('.preloader').fadeIn(0, function () {
+                                $($li_parent).find('.sync-fab').fadeOut(0);
                                 $.ajax({
                                     url: '/errands/fetch_errand/' + id + '/',
                                     error: function () {
-                                        alert('Errand could not be fetched!');
+                                        Materialize.toast('Details could not be fetched!', 2000);
                                     },
                                     success: function (result) {
                                         // fetched
                                         var errand = JSON.parse(result);
-                                        console.log(errand);
+                                        // console.log(errand);
                                         // rendering
                                         var pieces_list = $($li_parent).find('.pieces');
                                         $(pieces_list).empty();
@@ -90,7 +91,8 @@
                                             var piece_time_period = to_days(piece.time_period);
                                             $(pieces_list).append(HTML_STRINGS.ALL.PIECE(piece_id));
                                         }
-                                        $($li_parent).find('.preloader').fadeOut(1000);
+                                        $($li_parent).find('.preloader').fadeOut(800);
+                                        $($li_parent).find('.sync-fab').fadeIn(800);
                                     }
                                 });
                             }
@@ -143,12 +145,14 @@
                                         {{ i.comment }}
                                     </code>
                                     {# Import Pieces Button #}
-                                    <span style="position: absolute;right: 0;top: 0;padding: 10px;z-index: 10">
+                                    <span class="sync-fab"
+                                          style="position: absolute;right: 0;top: 0;padding: 10px;z-index: 10">
                                         <a href="#" class="btn-floating waves-effect z-depth-1 white expand"><i
                                                 class="material-icons blue-text">sync</i></a>
                                     </span>
                                     {# Preloader #}
-                                    <div class="preloader" style="position: absolute;right: 0;top: 0;padding: 12px;z-index: 11;display: none">
+                                    <div class="preloader"
+                                         style="position: absolute;right: 0;top: 0;padding: 12px;z-index: 11;display: none">
                                         <div class="preloader-wrapper active small">
                                             <div class="spinner-layer spinner-blue-only">
                                                 <div class="circle-clipper left">

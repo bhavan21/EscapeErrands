@@ -18,8 +18,6 @@ class Std:
     input_dt_format = '%Y-%m-%d %H:%M'
     output_dt_format = '%Y-%m-%d %H:%M'
 
-    user_identity = 'panduscientist'
-
     class Keys:
         pk = 'pk'
         time_period = 'time_period'
@@ -34,8 +32,6 @@ class Std:
 
         days = 'days'
         seconds = 'seconds'
-
-        user_logged_in = 'user_logged_in'
 
         def __init__(self):
             pass

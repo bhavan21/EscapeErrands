@@ -23,7 +23,7 @@
             margin-top: 100px;
         }
 
-        #pieces_table input {
+        input {
             color: black;
         }
 
@@ -62,6 +62,8 @@
         var $piece_add_te;
         var $piece_add_class;
         var $piece_add_rme;
+        var $piece_add_exam;
+        var $piece_add_exam_form;
         var $pieces_list;
 
         var $errand_inputs;
@@ -143,6 +145,8 @@
             $piece_add_te = $('#piece_add_te');
             $piece_add_class = $('#piece_add_class');
             $piece_add_rme = $('#piece_add_rme');
+            $piece_add_exam = $('#piece_add_exam');
+            $piece_add_exam_form = $('#piece_add_exam_form');
             $pieces_list = $('#pieces_list');
 
             $errand_inputs = $('#errand_inputs');
@@ -180,103 +184,6 @@
                         $($errand_comment_hint).html($(this).val());
                     }
                 );
-
-            function new_piece_add(toast, id, ed, et, ld, lt, tp, dr, tg, cm) {
-                $($pieces_list).append(
-                    HTML_STRINGS.TOUCH.PIECE(
-                        id,
-                        ed,
-                        et,
-                        ld,
-                        lt,
-                        tp,
-                        dr,
-                        tg,
-                        cm
-                    )
-                );
-                New_Pieces_Pk++;
-                update_pieces_count();
-                toast = toast === undefined ? "Piece" : toast;
-                Materialize.toast(toast + " Added", 1000);
-            }
-
-            {# Add Empty #}
-            $($piece_add_empty)
-                .on(
-                    'click',
-                    function () {
-                        new_piece_add(
-                            "Empty Piece",
-                            'n' + (New_Pieces_Pk + 1)
-                        );
-                    }
-                );
-            {# Add Todays Task #}
-            $($piece_add_tt)
-                .on(
-                    'click',
-                    function () {
-                        new_piece_add(
-                            "A Task Piece",
-                            'n' + (New_Pieces_Pk + 1),
-                            moment().format(Std.std_d_format),
-                            moment().format(Std.std_t_format)
-                        );
-                    }
-                );
-            {# Add Todays Event #}
-            $($piece_add_te)
-                .on(
-                    'click',
-                    function () {
-                        new_piece_add(
-                            "An Event Piece",
-                            'n' + (New_Pieces_Pk + 1),
-                            moment().format(Std.std_d_format),
-                            moment().format(Std.std_t_format),
-                            undefined,
-                            undefined,
-                            undefined,
-                            {days: 0, seconds: 3600}
-                        );
-                    }
-                );
-            {# Add Class #}
-            $($piece_add_class)
-                .on(
-                    'click',
-                    function () {
-                        new_piece_add(
-                            "Class Piece",
-                            'n' + (New_Pieces_Pk + 1),
-                            moment().format(Std.std_d_format),
-                            moment().format(Std.std_t_format),
-                            undefined,
-                            undefined,
-                            {days: 7, seconds: 0},
-                            {days: 0, seconds: 3600}
-                        );
-                    }
-                );
-
-            {# Add Remind Me Everyday #}
-            $($piece_add_rme)
-                .on(
-                    'click',
-                    function () {
-                        new_piece_add(
-                            "Everyday Remainder",
-                            'n' + (New_Pieces_Pk + 1),
-                            moment().format(Std.std_d_format),
-                            moment().format(Std.std_t_format),
-                            undefined,
-                            undefined,
-                            {days: 1, seconds: 0}
-                        );
-                    }
-                );
-
 
             {# Piece List Listeners #}
             {# Remove Listener #}
@@ -623,8 +530,147 @@
                 <i class="material-icons">add</i>
             </a>
 
-            <!-- Modal Structure -->
+            <!-- Templates -->
             <div id="piece_add_div" class="modal bottom-sheet" style="min-height: 50vh">
+                <script>
+                    $(document).ready(function () {
+                        function new_piece_add(toast, ed, et, ld, lt, tp, dr, tg, cm) {
+                            $($pieces_list).append(
+                                HTML_STRINGS.TOUCH.PIECE(
+                                    'n' + (New_Pieces_Pk + 1),
+                                    ed,
+                                    et,
+                                    ld,
+                                    lt,
+                                    tp,
+                                    dr,
+                                    tg,
+                                    cm
+                                )
+                            );
+                            New_Pieces_Pk++;
+                            update_pieces_count();
+                            toast = toast === undefined ? "Piece" : toast;
+                            Materialize.toast(toast + " Added", 1000);
+                        }
+
+                        {# Add Empty #}
+                        $($piece_add_empty)
+                            .on(
+                                'click',
+                                function () {
+                                    new_piece_add(
+                                        "Empty Piece"
+                                    );
+                                }
+                            );
+                        {# Add Todays Task #}
+                        $($piece_add_tt)
+                            .on(
+                                'click',
+                                function () {
+                                    new_piece_add(
+                                        "A Task Piece",
+                                        moment().format(Std.std_d_format),
+                                        moment().format(Std.std_t_format)
+                                    );
+                                }
+                            );
+                        {# Add Todays Event #}
+                        $($piece_add_te)
+                            .on(
+                                'click',
+                                function () {
+                                    new_piece_add(
+                                        "An Event Piece",
+                                        moment().format(Std.std_d_format),
+                                        moment().format(Std.std_t_format),
+                                        undefined,
+                                        undefined,
+                                        undefined,
+                                        {days: 0, seconds: 3600}
+                                    );
+                                }
+                            );
+                        {# Add Class #}
+                        $($piece_add_class)
+                            .on(
+                                'click',
+                                function () {
+                                    new_piece_add(
+                                        "Class Piece",
+                                        moment().format(Std.std_d_format),
+                                        moment().format(Std.std_t_format),
+                                        undefined,
+                                        undefined,
+                                        {days: 7, seconds: 0},
+                                        {days: 0, seconds: 3600}
+                                    );
+                                }
+                            );
+
+                        {# Add Remind Me Everyday #}
+                        $($piece_add_rme)
+                            .on(
+                                'click',
+                                function () {
+                                    new_piece_add(
+                                        "Everyday Remainder",
+                                        moment().format(Std.std_d_format),
+                                        moment().format(Std.std_t_format),
+                                        undefined,
+                                        undefined,
+                                        {days: 1, seconds: 0}
+                                    );
+                                }
+                            );
+
+                        {# Add Exam #}
+                        $($piece_add_exam)
+                            .on(
+                                'click',
+                                function () {
+                                    $($piece_add_exam_form).fadeToggle(0);
+                                }
+                            );
+                        $($piece_add_exam_form)
+                            .on(
+                                'change',
+                                'input[type=date]',
+                                function () {
+                                    var val = $(this).val();
+                                    if (val != "") {
+                                        var tag = $($piece_add_exam_form).find('.tag').val();
+                                        // exam task piece
+                                        new_piece_add(
+                                            "Exam",
+                                            val,
+                                            "23:59",
+                                            undefined,
+                                            undefined,
+                                            undefined,
+                                            undefined,
+                                            tag
+                                        );
+                                        // everyday reminder for exam
+                                        new_piece_add(
+                                            "Exam Remainder",
+                                            moment().format(Std.std_d_format),
+                                            moment().format(Std.std_t_format),
+                                            val,
+                                            "23:59",
+                                            {days: 1, seconds: 0},
+                                            undefined,
+                                            "Remainder for " + tag
+                                        );
+                                        // empty the value
+                                        $(this).val("");
+                                        $($piece_add_exam_form).find('.tag').val("")
+                                    }
+                                }
+                            );
+                    });
+                </script>
                 <div class="modal-content">
                     <span class="flow-text">Templates</span>
                     <div style="background-color: rgba(0,0,0,0.1);padding: 1px">
@@ -634,7 +680,22 @@
                             <li id="piece_add_te"><a class="btn waves-effect green white-text">Today's Event</a></li>
                             <li id="piece_add_class"><a class="btn waves-effect pink">Class</a></li>
                             <li id="piece_add_rme"><a class="btn waves-effect">Remind Me Everyday</a></li>
+                            <li id="piece_add_exam"><a class="btn red darken-4 waves-effect">Exam</a></li>
                         </ul>
+                    </div>
+                    <div class="row">
+                        <div id="piece_add_exam_form" class="card col l3 m6 s12" style="display: none">
+                            <div class="card-content">
+                                <label>
+                                    Which Exam?
+                                    <input class="tag" type="text">
+                                </label>
+                                <label>
+                                    Date of Exam
+                                    <input type="date">
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -17,7 +17,6 @@ def all_(request):
 def touch(request, pk):
     # User Session Check
     if not in_session(request):
-        print ('Out of Session')
         return render(request, 'home/login.html', {'Client_Site': str(request.get_raw_uri())})
 
     # pk >= 0 from regex

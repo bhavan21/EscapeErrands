@@ -33,12 +33,8 @@
             border: ButtonShadow;
         }
 
-        .stub {
-            opacity: 0.9;
-        }
-
-        .stub:hover {
-            opacity: 1;
+        #task-stubs-div .stub {
+            border-radius: 10px;
         }
 
         #hues-div .hue {
@@ -103,7 +99,7 @@
         var Context = {
             Time_Table: {
                 Scale: {
-                    Px_To_Min: 90 / 60 // 1 min = 1px
+                    Px_To_Min: 60 / 60 // 1 min = 1px
                 },
                 Range: {
                     LB: function () {
@@ -142,7 +138,7 @@
                 Duration: 0 // minutes
             },
             Hue: {
-                On: true,
+                On: false,
                 Hues: [
                     // Assumes that ub > lb : lb,ub E ["00:00" , "23:59"]
                     // i.e. lb = "14:00" ub = "01:00" then ub is next day's "01:00"
@@ -167,24 +163,10 @@
                     },
                     {
                         bg: "background: white;" +
-                        "background: -webkit-linear-gradient(white, #f4ff81);" +
-                        "background: -o-linear-gradient(white, #f4ff81);" +
-                        "background: -moz-linear-gradient(white, #f4ff81);" +
-                        "background: linear-gradient(white, #f4ff81);",
-                        lb: "15:00",
-                        ub: "16:00"
-                    },
-                    {
-                        bg: "background-color: #f4ff81;",
-                        lb: "16:00",
-                        ub: "19:00"
-                    },
-                    {
-                        bg: "background: #f4ff81;" +
-                        "background: -webkit-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
-                        "background: -o-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
-                        "background: -moz-linear-gradient(#f4ff81, rgba(0,0,0,0.2));" +
-                        "background: linear-gradient(#f4ff81, rgba(0,0,0,0.2));",
+                        "background: -webkit-linear-gradient(white, rgba(0,0,0,0.2));" +
+                        "background: -o-linear-gradient(white, rgba(0,0,0,0.2));" +
+                        "background: -moz-linear-gradient(white, rgba(0,0,0,0.2));" +
+                        "background: linear-gradient(white, rgba(0,0,0,0.2));",
                         lb: "19:00",
                         ub: "20:00"
                     }

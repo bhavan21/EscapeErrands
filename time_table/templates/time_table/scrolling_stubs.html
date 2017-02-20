@@ -640,7 +640,7 @@
                         $($error_detail).fadeOut(0);
                         $.ajax(
                             {
-                                url: '/errands/read_piece/' + $(that).attr('pk') + '/',
+                                url: '/errands/read/piece/' + $(that).attr('pk') + '/',
                                 error: function () {
                                     $($error_detail).fadeIn(0);
                                     $($loading_detail).fadeOut(0);

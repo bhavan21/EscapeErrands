@@ -70,12 +70,20 @@
                         // opening
                         var id = $($li_parent).attr('id');
 
+                        function stop_preloader() {
+                            $($li_parent).find('.preloader').fadeOut(800);
+                            $($li_parent).find('.sync-fab').fadeIn(800);
+                        }
+
                         $($li_parent).find('.preloader').fadeIn(0, function () {
+                                // hide sync button
                                 $($li_parent).find('.sync-fab').fadeOut(0);
+
                                 $.ajax({
-                                    url: '/errands/read_errand/' + id + '/',
+                                    url: '/errands/read/errand/' + id + '/',
                                     error: function () {
                                         Materialize.toast('Details could not be fetched!', 2000);
+                                        stop_preloader();
                                     },
                                     success: function (result) {
                                         // fetched
@@ -91,8 +99,7 @@
                                             var piece_time_period = to_days(piece.time_period);
                                             $(pieces_list).append(HTML_STRINGS.ALL.PIECE(piece_id));
                                         }
-                                        $($li_parent).find('.preloader').fadeOut(800);
-                                        $($li_parent).find('.sync-fab').fadeIn(800);
+                                        stop_preloader();
                                     }
                                 });
                             }

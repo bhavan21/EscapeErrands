@@ -390,18 +390,24 @@
                     function () {
                         touch(0)
                     }
-                )
-            ;
+                );
 
-            {# Submit #}
-            $('#submit_btn')
+            {# Sync and go to Errands #}
+            $('#go_errands_btn')
                 .on(
                     'click',
                     function () {
                         touch(1)
                     }
-                )
-            ;
+                );
+            {# Sync and go to Timetable #}
+            $('#go_timetable_btn')
+                .on(
+                    'click',
+                    function () {
+                        touch(2)
+                    }
+                );
 
             {# Delete #}
             $('#delete_btn')
@@ -417,14 +423,14 @@
     </script>
 
     <div style="display: none;">
-        <form id="process_touch_fm" method="post" action="{% url 'errands:process_touch' %}">
+        <form id="process_touch_fm" method="post" action="{% url 'errands:process_touch_errand' %}">
             {% csrf_token %}
             <input id="__flag__" name="Flag" type="text">
             <input id="__errand__" name="Errand" type="text">
             <input id="__old_pieces__" name="Old_Pieces" type="text">
             <input id="__new_pieces__" name="New_Pieces" type="text">
         </form>
-        <form id="delete_fm" method="post" action="{% url 'errands:delete' %}">
+        <form id="delete_fm" method="post" action="{% url 'errands:delete_errand' %}">
             {% csrf_token %}
             <input id="__pk__" name="pk" type="text">
         </form>
@@ -490,17 +496,24 @@
                 </a>
                 <ul>
                     <li>
-                        {# Submit Form Btn #}
-                        <a id="submit_btn"
+                        {# Sync and Go to Errands Btn #}
+                        <a id="go_errands_btn"
                            class="waves-effect waves-light btn-floating btn-large blue z-depth-5">
                             <i class="material-icons">send</i>
                         </a>
                     </li>
                     <li>
-                        {# Sync Form Btn #}
+                        {# Sync Btn #}
                         <a id="sync_btn"
                            class="waves-effect waves-light btn-floating btn-large green z-depth-5">
                             <i class="material-icons">sync</i>
+                        </a>
+                    </li>
+                    <li>
+                        {# Sync and Go to TimeTable Btn #}
+                        <a id="go_timetable_btn"
+                           class="waves-effect waves-light btn-floating btn-large orange z-depth-5">
+                            <i class="material-icons">view_week</i>
                         </a>
                     </li>
                     {% if errand %}
@@ -515,8 +528,8 @@
                     <li>
                         {# Cancel Btn #}
                         <a id="cancel_btn"
-                           href="{% url 'errands:all' %}"
-                           class="waves-effect waves-light btn-floating btn-large orange darken-4 z-depth-5">
+                           href="{% url 'errands:all_errands' %}"
+                           class="waves-effect waves-light btn-floating btn-large grey darken-4 z-depth-5">
                             <i class="material-icons">close</i>
                         </a>
                     </li>
@@ -650,18 +663,18 @@
                                             undefined,
                                             undefined,
                                             undefined,
-                                            tag
+                                            tag + " Exam"
                                         );
                                         // everyday reminder for exam
                                         new_piece_add(
                                             "Exam Remainder",
                                             moment().format(Std.std_d_format),
                                             moment().format(Std.std_t_format),
-                                            val,
+                                            moment(val, Std.std_d_format).add(-1, 'd').format(Std.std_d_format),
                                             "23:59",
                                             {days: 1, seconds: 0},
                                             undefined,
-                                            "Remainder for " + tag
+                                            "Remainder for " + tag + " Exam"
                                         );
                                         // empty the value
                                         $(this).val("");

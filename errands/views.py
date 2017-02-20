@@ -9,7 +9,7 @@ from home.views import in_session
 import json
 
 
-def all_(request):
+def all_errands(request):
     errands = Errand.objects.all()
     return render(request, 'errands/all.html', {'errands': errands})
 
@@ -164,16 +164,18 @@ def process_touch(request):
                 new_piece.save()
                 errand.piece_set.add(new_piece)
 
-        if int__flag == 1:
-            return httpRPR(reverse('errands:all'))
-        elif int__flag == 0:
-            return httpRPR(reverse('errands:touch', kwargs={'pk': errand.pk}))
+        if int__flag == 0:
+            return httpRPR(reverse('errands:touch_errand', kwargs={'pk': errand.pk}))
+        elif int__flag == 1:
+            return httpRPR(reverse('errands:all_errands'))
+        elif int__flag == 2:
+            return httpRPR(reverse('time_table:scrolling_stubs'))
 
     else:
         return render(request, 'home/invalid_access.html')
 
 
-def delete(request):
+def delete_errand(request):
     # User Session Check
     if not in_session(request):
         return render(request, 'home/login.html')
@@ -181,16 +183,16 @@ def delete(request):
     if request.method == 'POST':
         if 'pk' in request.POST:
             try:
-                delete_errand = Errand.objects.get(pk=request.POST['pk'])
-                delete_errand.delete()
-                return httpRPR(reverse('errands:all'))
+                del_errand = Errand.objects.get(pk=request.POST['pk'])
+                del_errand.delete()
+                return httpRPR(reverse('errands:all_errands'))
             except ObjectDoesNotExist:
                 return render(request, 'home/invalid_access.html')
     else:
         return render(request, 'home/invalid_access.html')
 
 
-def fetch_errand(request, pk):
+def read_errand(request, pk):
     try:
         errand = Errand.objects.get(pk=pk)
         piece_descriptions = []
@@ -210,7 +212,7 @@ def fetch_errand(request, pk):
     return httpR(json_string)
 
 
-def fetch_piece(request, pk):
+def read_piece(request, pk):
     try:
         piece = Piece.objects.get(pk=pk)
     except ObjectDoesNotExist:
@@ -351,7 +353,7 @@ def filter_stubs_in_range(lb, ub):
     return {'Events': lanes, 'Tasks': task_stubs}
 
 
-def fetch_stubs(request):
+def read_stubs(request):
     ranges = json.loads(request.GET['ranges'])
     if 'ranges' in request.GET:
         try:

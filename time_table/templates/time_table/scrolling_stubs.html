@@ -387,7 +387,7 @@
             //noinspection JSUnresolvedVariable
             $.ajax(
                 {
-                    url: "{% url 'errands:fetch_stubs' %}",
+                    url: "{% url 'errands:read_stubs' %}",
                     data: {ranges: JSON.stringify(ranges)},
                     error: error_callback,
                     success: success_callback
@@ -640,7 +640,7 @@
                         $($error_detail).fadeOut(0);
                         $.ajax(
                             {
-                                url: '/errands/fetch_piece/' + $(that).attr('pk') + '/',
+                                url: '/errands/read_piece/' + $(that).attr('pk') + '/',
                                 error: function () {
                                     $($error_detail).fadeIn(0);
                                     $($loading_detail).fadeOut(0);
@@ -648,7 +648,7 @@
                                 success: function (result) {
                                     result = JSON.parse(result);
                                     console.log(result);
-                                    $($detail_div).find('.touch-link').attr('href', '/errands/touch/' + result.errand_pk + '/');
+                                    $($detail_div).find('.touch-link').attr('href', '/errands/touch/errand/' + result.errand_pk + '/');
                                     $($detail_div).find('.tag').html(result.tag);
                                     $($detail_div).find('.errand-tag').html(result.errand_tag);
                                     if (result.comment != "") {

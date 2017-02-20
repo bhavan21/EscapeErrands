@@ -5,19 +5,20 @@ from . import views
 app_name = 'errands'
 
 urlpatterns = [
-    # host/errands/all/
-    url(r'^all/$', views.all_, name='all'),
-    # host/errands/touch/pk/
-    url(r'^touch/(?P<pk>[0-9]+)/$', views.touch, name='touch'),
-    # host/errands/process_touch/
-    url(r'^process_touch/$', views.process_touch, name='process_touch'),
-    # host/errands/delete/ -- pk is sent through POST method for security
-    url(r'^delete/$', views.delete, name='delete'),
+    # host/errands/all/errands/
+    url(r'^all/errands/$', views.all_errands, name='all_errands'),
+    # host/errands/touch/errand/pk/
+    url(r'^touch/errand/(?P<pk>[0-9]+)/$', views.touch, name='touch_errand'),
+    # host/errands/process_touch/errand/
+    url(r'^process_touch/errand/$', views.process_touch, name='process_touch_errand'),
+    # host/errands/delete/errand/ -- pk is sent through POST method for security
+    url(r'^delete/errand/$', views.delete_errand, name='delete_errand'),
+    # host/errands/read_errand/pk/
+    url(r'^read_errand/(?P<pk>[0-9]+)/$', views.read_errand, name='read_errand'),
 
-    # host/errands/fetch_errand/pk/
-    url(r'^fetch_errand/(?P<pk>[0-9]+)/$', views.fetch_errand, name='fetch_errand'),
-    # host/errands/fetch_piece/pk/
-    url(r'^fetch_piece/(?P<pk>[0-9]+)/$', views.fetch_piece, name='fetch_piece'),
-    # host/errands/fetch_stubs/
-    url(r'^fetch_stubs/$', views.fetch_stubs, name='fetch_stubs'),
+    # host/errands/read_piece/pk/
+    url(r'^read_piece/(?P<pk>[0-9]+)/$', views.read_piece, name='read_piece'),
+
+    # host/errands/read_stubs/
+    url(r'^read_stubs/$', views.read_stubs, name='read_stubs'),
 ]

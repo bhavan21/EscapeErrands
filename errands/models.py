@@ -359,7 +359,7 @@ class Piece(models.Model):
                     'pk': stub_pk,
                     'comment': stub_comment,
                     'errand_pk': self.errand_id,
-                    'color': color_map(self.errand_id)
+                    'color': color_map(self.errand_id, self.pk)
                 }
             return stub
         except ValueError:

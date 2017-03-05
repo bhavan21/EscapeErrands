@@ -231,7 +231,10 @@ def do_stubs_intersect(e1, e2):
     e2_epoch = e2['epoch']
     e1_end = e1['end']
     e2_end = e2['end']
-    return e1_epoch < e2_epoch < e1_end or e1_epoch < e2_end < e1_end or e2_epoch < e1_epoch < e2_end or e2_epoch < e1_end < e2_end
+    return e1_epoch <= e2_epoch <= e1_end \
+        or e1_epoch <= e2_end <= e1_end \
+        or e2_epoch <= e1_epoch <= e2_end \
+        or e2_epoch <= e1_end <= e2_end
 
 
 def filter_stubs_in_range(lb, ub):

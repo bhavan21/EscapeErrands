@@ -83,6 +83,8 @@
         var $date_select_div;
         var $cursor_bar;
         var $cursor_bar_hint;
+        var $present_bar;
+        var $present_bar_hint;
         var $top_hint;
         var $stub_count;
         var $top_hint_div;
@@ -174,6 +176,97 @@
             }
         };
 
+        // Materialize CSS init
+        function materialize_css_init() {
+            $('.tooltipped').tooltip({delay: 50});
+        }
+        // Cursor Bar Render
+        function render_cursor_hint_bar(e) {
+            var pos_wrt_time_divisions =
+                e.clientY
+                + Context.Time_Table.Scroll_Top
+                - ($($top_hint_div).height()
+                    + parseInt($($top_hint_div).css('padding-top'))
+                    + parseInt($($top_hint_div).css('padding-bottom'))
+                    + parseInt($($top_hint_div).css('margin-top'))
+                    + parseInt($($top_hint_div).css('margin-bottom'))
+                    + 3 // slight adjustment
+                );
+
+            $($cursor_bar).css({
+                top: pos_wrt_time_divisions
+            });
+            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
+            $($cursor_bar_hint).css({
+                left: e.clientX + 10,
+                top: e.clientY + 10 // slight adjustments for better repr
+            }).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
+        }
+        // Present Bar Render
+        function render_present_hint_bar() {
+            if (moment().isBefore(Context.Time_Table.Range.UB())
+                && moment().isAfter(Context.Time_Table.Range.LB())) {
+
+                var top = parseInt(moment.duration(moment().diff(Context.Time_Table.Range.LB())).asMinutes());
+                $($present_bar).css({
+                    top: top
+                }).fadeIn(0);
+                $($present_bar_hint).html("You are here!");
+            }
+            else {
+                $($present_bar).fadeOut(0);
+            }
+        }
+        // Render hues
+        function render_hues() {
+            // todo : generalize to any timetable range
+            for (var i = 0; i < Context.Hue.Hues.length; ++i) {
+                // for each hue
+                const LB = Context.Time_Table.Range.LB();
+                const UB = Context.Time_Table.Range.UB();
+                var bg = Context.Hue.Hues[i].bg;
+                // Hue bounds
+                var lb, ub, height, top;
+                lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
+                ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
+                // First Hue-Stub
+                lb = Context.Time_Table.Range.LB().subtract(1, 'd').hour(lb.hour()).minute(lb.minute()).seconds(0);
+                ub = Context.Time_Table.Range.LB().subtract(1, 'd').hour(ub.hour()).minute(ub.minute()).seconds(0);
+                if (ub.isBefore(lb)) {
+                    ub.add(1, 'd');
+                }
+                while (lb.isBefore(UB)) {
+                    height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                    top = moment.duration(lb.diff(LB)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                    var hue = element(
+                        ['div'],
+                        [
+                            {
+                                'class': 'remove-on-reload hue',
+                                'style': 'position:absolute;width: 100%;' +
+                                'top: ' + top + ';' +
+                                'height:' + height + ';' +
+                                bg
+                            }
+                        ],
+                        [''],
+                        [true]
+                    );
+                    // console.log(hue);
+                    $($hues_div).append(hue);
+                    lb.add(1, 'd');
+                    ub.add(1, 'd');
+                }
+            }
+
+            if (Context.Hue.On) {
+                $($time_divisions_div).find('.hue').fadeIn(0);
+            }
+            else {
+                $($time_divisions_div).find('.hue').fadeOut(0);
+            }
+        }
+
         // Time divisions
         function render_time_divisions(scale, no_days) {
             // defaults
@@ -256,7 +349,10 @@
                 ['button'],
                 [
                     {
-                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload stub',
+                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload stub tooltipped',
+                        'data-position': details.tooltip.position,
+                        'data-delay': "50",
+                        'data-tooltip': details.tooltip.tag,
                         'title': details.title,
                         'pk': details.pk,
                         'style': 'position:absolute;' +
@@ -312,6 +408,10 @@
                 Context.Stubs.Event.Breadth + 'px',
                 $($event_stubs_div),
                 {
+                    tooltip: {
+                        tag: stub.tag,
+                        position: 'top'
+                    },
                     tag: display_name,
                     title: stub.comment,
                     pk: stub.pk,
@@ -348,6 +448,10 @@
                 Context.Stubs.Task.Breadth,
                 $($task_stubs_div),
                 {
+                    tooltip: {
+                        tag: stub.tag,
+                        position: 'left'
+                    },
                     tag: stub.tag,
                     title: stub.comment,
                     pk: stub.pk,
@@ -370,12 +474,16 @@
             // Render Time Divisions and Time Hints
             render_time_divisions(Context.Time_Table.Scale.Px_To_Min,
                 moment.duration(Context.Time_Table.Range.UB().diff(Context.Time_Table.Range.LB())).asDays());
+            // Render Present Bar
+            render_present_hint_bar();
             // Render Hues
             render_hues();
             // Render Event Stubs
             render_event_stubs();
             // Render Task Stubs
             render_task_stubs();
+            // Materialize CSS Initializations
+            materialize_css_init();
             // Stubs Count Hint
             $($stub_count).html(Context.Stubs.No);
             // Loading Complete
@@ -438,78 +546,6 @@
             );
         }
 
-        // Cursor Bar Render
-        function cursor_hint_bar(e) {
-            var pos_wrt_time_divisions =
-                e.clientY
-                + Context.Time_Table.Scroll_Top
-                - ($($top_hint_div).height()
-                    + parseInt($($top_hint_div).css('padding-top'))
-                    + parseInt($($top_hint_div).css('padding-bottom'))
-                    + parseInt($($top_hint_div).css('margin-top'))
-                    + parseInt($($top_hint_div).css('margin-bottom'))
-                    + 3 // slight adjustment
-                );
-
-            $($cursor_bar).css({
-                top: pos_wrt_time_divisions
-            });
-            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
-            $($cursor_bar_hint).css({
-                left: e.clientX,
-                top: e.clientY - $($cursor_bar_hint).height() - 3 // slight adjustment
-            }).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
-        }
-        // Render hues
-        function render_hues() {
-            // todo : generalize to any timetable range
-            for (var i = 0; i < Context.Hue.Hues.length; ++i) {
-                // for each hue
-                const LB = Context.Time_Table.Range.LB();
-                const UB = Context.Time_Table.Range.UB();
-                var bg = Context.Hue.Hues[i].bg;
-                // Hue bounds
-                var lb, ub, height, top;
-                lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
-                ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
-                // First Hue-Stub
-                lb = Context.Time_Table.Range.LB().subtract(1, 'd').hour(lb.hour()).minute(lb.minute()).seconds(0);
-                ub = Context.Time_Table.Range.LB().subtract(1, 'd').hour(ub.hour()).minute(ub.minute()).seconds(0);
-                if (ub.isBefore(lb)) {
-                    ub.add(1, 'd');
-                }
-                while (lb.isBefore(UB)) {
-                    height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
-                    top = moment.duration(lb.diff(LB)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
-                    var hue = element(
-                        ['div'],
-                        [
-                            {
-                                'class': 'remove-on-reload hue',
-                                'style': 'position:absolute;width: 100%;' +
-                                'top: ' + top + ';' +
-                                'height:' + height + ';' +
-                                bg
-                            }
-                        ],
-                        [''],
-                        [true]
-                    );
-                    // console.log(hue);
-                    $($hues_div).append(hue);
-                    lb.add(1, 'd');
-                    ub.add(1, 'd');
-                }
-            }
-
-            if (Context.Hue.On) {
-                $($time_divisions_div).find('.hue').fadeIn(0);
-            }
-            else {
-                $($time_divisions_div).find('.hue').fadeOut(0);
-            }
-        }
-
         $(document).ready(function () {
             // references
             $middle = $('#middle');
@@ -523,6 +559,8 @@
             $date_select_div = $('#date-select-div');
             $cursor_bar = $('#cursor-bar');
             $cursor_bar_hint = $('#cursor-bar-hint');
+            $present_bar = $('#present-bar');
+            $present_bar_hint = $('#present-bar-hint');
             $stub_count = $('#stubs_count');
             $top_hint = $('#top-hint');
             $top_hint_div = $('#top-hint-div');
@@ -546,11 +584,11 @@
                     'scroll',
                     function () {
                         $($time_divisions_div).scrollTop($(this).scrollTop());
+                        $($time_hints_div).scrollTop($(this).scrollTop());
                         /**
                          * Un Comment Below if Timed Repr of Task Stubs is Used
                          * */
                         //$($task_stubs_div).scrollTop($(this).scrollTop());
-                        $($time_hints_div).scrollTop($(this).scrollTop());
                         Context.Time_Table.Scroll_Top = $(this).scrollTop();
                         Context.Time_Table.Reload_Top_Fixed_Hint();
                     }
@@ -559,14 +597,16 @@
             // Cursor - Cursor Bar Listener
                 .on(
                     'mousemove',
+                    '#event-stubs-div, #task-stubs-div',
                     function (e) {
-                        cursor_hint_bar(e)
+                        render_cursor_hint_bar(e)
                     }
                 )
                 .on(
                     'click',
+                    '#event-stubs-div, #task-stubs-div',
                     function (e) {
-                        cursor_hint_bar(e)
+                        render_cursor_hint_bar(e)
                     }
                 );
             /**
@@ -743,11 +783,13 @@
                     <div class="row" style="margin: 0">
                         <div id="top-hint-div" class="col l8 m8 s8 waves-effect waves-yellow teal-text flow-text"
                              style="padding-top: 10px;padding-bottom: 10px;">
-                            <span id="yesterday" class="waves-effect waves-yellow">
-                                <i class="material-icons">undo</i></span>
+                            <span id="yesterday" style="padding-left: 10px;padding-right: 10px"
+                                  class="waves-effect waves-yellow">
+                                <i class="material-icons">fast_rewind</i></span>
                             <span id="top-hint">Today</span>
-                            <span id="tomorrow" class="waves-effect waves-yellow">
-                                <i class="material-icons">redo</i></span>
+                            <span id="tomorrow" style="padding-left: 10px;padding-right: 10px"
+                                  class="waves-effect waves-yellow">
+                                <i class="material-icons">fast_forward</i></span>
                         </div>
                         <div class="col l4 m4 s4 waves-effect waves-light teal white-text flow-text"
                              style="padding-top: 10px;padding-bottom: 10px;">
@@ -763,6 +805,16 @@
                      style="position: absolute;height: 100%;width: 100%;overflow: hidden;">
                     <!-- Hues -->
                     <div id="hues-div"></div>
+
+                    <div id="present-bar"
+                         style="position: absolute;
+                                width: 100%;display: none">
+
+                        <hr class="red" style="height: 2px;margin: 0;border: none">
+                        <span id="present-bar-hint"
+                              style="position:relative;left: 50px;"
+                              class="blue-text"></span>
+                    </div>
 
                     <div id="cursor-bar"
                          style="position: absolute;

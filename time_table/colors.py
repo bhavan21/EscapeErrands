@@ -1,21 +1,6 @@
-def color_map(pk):
-    if pk % 10 == 0:
-        return '#01579b'
-    elif pk % 10 == 1:
-        return '#e65100'
-    elif pk % 10 == 2:
-        return '#2e7d32'
-    elif pk % 10 == 3:
-        return '#6200ea'
-    elif pk % 10 == 4:
-        return '#4e342e'
-    elif pk % 10 == 5:
-        return '#827717'
-    elif pk % 10 == 6:
-        return '#455a64'
-    elif pk % 10 == 7:
-        return '#1b5e20'
-    elif pk % 10 == 8:
-        return '#e65100'
-    elif pk % 10 == 9:
-        return '#ff5722'
+def color_map(errand_id, piece_id):
+    red = (errand_id % 10) * 5 + (piece_id % 10) * 5
+    green = (errand_id % 15) * 10 + (piece_id % 5) * 30
+    blue = (errand_id % 5) * 40 + (piece_id % 15) * 15
+
+    return "rgba( " + str(red % 255) + " , " + str(green % 255) + ", " + str(blue % 255) + ", 1)"

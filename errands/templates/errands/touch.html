@@ -78,7 +78,7 @@
             Errand: {
                 pk: Number("{{ errand.pk }}"),
                 tag: "{{ errand.tag }}",
-                comment: "{{ errand.comment }}"
+                comment: "{{ errand.comment|linebreaksbr }}"
             },
             Old_Pieces: [
                 {% for i in old_pieces %}
@@ -97,7 +97,7 @@
                         end_date: "{{ i.end_date }}",
                         end_time: "{{ i.end_time }}",
                         tag: "{{ i.tag }}",
-                        comment: "{{ i.comment }}"
+                        comment: "{{ i.comment|linebreaksbr }}"
                     },
                     {# insert old pieces descritpions #}
                 {% endfor %}

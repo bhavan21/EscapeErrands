@@ -22,7 +22,7 @@
         }
 
         #errands_list .edit-btn:hover {
-            background-color: rgba(0, 255, 128, 0.4);
+            background-color: rgba(255, 255, 0, 0.4);
         }
 
         #errands_list .collapsible-header:hover {
@@ -60,13 +60,13 @@
                     }
                 );
 
-            {# Fetch and Render Errand #}
+            {# Fetch and Render Pieces #}
             $('#errands_list')
                 .on(
                     'click',
                     '.expand',
                     function () {
-                        var $li_parent = $(this).parent().parent().parent().parent();
+                        var $li_parent = $(this).parent().parent().parent().parent().parent();
                         // opening
                         var id = $($li_parent).attr('id');
 
@@ -81,6 +81,7 @@
 
                                 $.ajax({
                                     url: '/errands/read/errand/' + id + '/',
+                                    data: {"pieces_also": 1},
                                     error: function () {
                                         Materialize.toast('Details could not be fetched!', 2000);
                                         stop_preloader();
@@ -122,10 +123,12 @@
                         <li id="{{ i.pk }}">
 
                             <div class="collapsible-header">
+                                {# Serial Number #}
                                 <span class="badge">
                                     {{ forloop.counter }}
                                 </span>
-                                <a class="waves-effect waves-red delete-btn">
+                                {# Delete Button #}
+                                <a class="waves-effect waves-red red-text delete-btn">
                                     <i class="material-icons">delete</i>
                                 </a>
                                 <form class="delete_fm" method="post" action="{% url 'errands:delete_errand' %}"
@@ -134,52 +137,56 @@
                                     {# Delete Form Btn #}
                                     <input hidden name="pk" value="{{ i.pk }}">
                                 </form>
+                                {# Edit Button #}
                                 <a href="{% url 'errands:touch_errand' i.pk %}"
-                                   class="waves-effect waves-yellow edit-btn">
+                                   class="waves-effect waves-yellow orange-text edit-btn">
                                     <i class="material-icons">mode_edit</i>
                                 </a>
-
-                                <span class="blue-text">
-                                    <span class="tag">{{ i.tag }}</span>
-                                </span>
+                                {# Errand Tag #}
+                                <span class="tag blue-text">{{ i.tag }}</span>
                             </div>
 
                             <div class="collapsible-body">
                                 <div class="row" style="margin: 0;position:relative;">
                                     {# Comment #}
-                                    <code class="truncate comment"
-                                          style="padding: 20px;min-height: 60px">
-                                        {{ i.comment }}
-                                    </code>
-                                    {# Import Pieces Button #}
-                                    <span class="sync-fab"
-                                          style="position: absolute;right: 0;top: 0;padding: 10px;z-index: 10">
-                                        <a href="#" class="btn-floating waves-effect z-depth-1 white expand"><i
-                                                class="material-icons blue-text">sync</i></a>
-                                    </span>
-                                    {# Preloader #}
-                                    <div class="preloader"
-                                         style="position: absolute;right: 0;top: 0;padding: 12px;z-index: 11;display: none">
-                                        <div class="preloader-wrapper active small">
-                                            <div class="spinner-layer spinner-blue-only">
-                                                <div class="circle-clipper left">
-                                                    <div class="circle"></div>
-                                                </div>
-                                                <div class="gap-patch">
-                                                    <div class="circle"></div>
-                                                </div>
-                                                <div class="circle-clipper right">
-                                                    <div class="circle"></div>
+                                    <div class="comment grey-text"
+                                         style="padding: 20px;min-height: 60px">{{ i.comment|linebreaksbr }}
+                                    </div>
+                                    <div class="divider"></div>
+                                    {# Sync Pieces #}
+                                    <span>
+                                        {# Start Sync #}
+                                        <span class="sync-fab"
+                                              style="position: absolute;right: 0;top: 0;padding: 10px;z-index: 10">
+                                            <a href="#" class="btn-floating waves-effect z-depth-1 white expand"><i
+                                                    class="material-icons blue-text">sync</i></a>
+                                        </span>
+                                        {# Preloader #}
+                                        <div class="preloader"
+                                             style="position: absolute;right: 0;top: 0;padding: 12px;z-index: 11;display: none">
+                                            <div class="preloader-wrapper active small">
+                                                <div class="spinner-layer spinner-blue-only">
+                                                    <div class="circle-clipper left">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="gap-patch">
+                                                        <div class="circle"></div>
+                                                    </div>
+                                                    <div class="circle-clipper right">
+                                                        <div class="circle"></div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </span>
                                     {# Pieces Table #}
-                                    <table class="centered highlight" style="max-height: 500px">
-                                        <tbody class="pieces">
+                                    <div>
+                                        <table class="centered highlight" style="max-height: 500px">
+                                            <tbody class="pieces">
 
-                                        </tbody>
-                                    </table>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </li>

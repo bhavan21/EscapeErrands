@@ -3,7 +3,6 @@
 {% block title %}Time Table{% endblock %}
 {% block style %}
     <style>
-
         .block-screen {
             position: absolute;
             z-index: 999;
@@ -21,10 +20,6 @@
             background-color: rgba(255, 255, 255, 0.5);
         }
 
-        #event-stubs-div .stub {
-            font-size: x-small;
-        }
-
         #task-stubs-div {
             font-size: small;
         }
@@ -33,15 +28,20 @@
             border: ButtonShadow;
         }
 
+        #event-stubs-div .stub {
+            font-size: x-small;
+            border-radius: 2px;
+        }
+
         #task-stubs-div .stub {
-            border-radius: 10px;
+            border-radius: 2px;
         }
 
         #hues-div .hue {
             background-size: contain;
         }
 
-        .clipper {
+        .stretcher {
             position: absolute;
             background-color: transparent;
             margin: 0
@@ -63,9 +63,6 @@
             margin-bottom: 5px;
         }
 
-        #detail-div .tag {
-            margin-top: 10px;
-        }
     </style>
 {% endblock %}
 {% block body %}
@@ -97,46 +94,47 @@
         var $tomorrow;
         var $hues_div;
         var $hues_toggle;
+        var $touch_piece;
 
         var Context = {
-            Time_Table: {
+            TimeTable: {
                 Scale: {
-                    Px_To_Min: 60 / 60 // 1 min = 1px
+                    PxToMin: 60 / 60 // 1 min = 1px
                 },
                 Range: {
                     LB: function () {
                         return moment().hour(0).minute(0).second(0);
                     },
                     UB: function () {
-                        return Context.Time_Table.Range.LB().add(1, 'd');
+                        return Context.TimeTable.Range.LB().add(1, 'd');
                     }
                 },
                 Height: $(document).height() * (0.9), //px
-                Scroll_Top: 0,
-                Reload_Top_Fixed_Hint: function () {
+                ScrollTop: 0,
+                ReloadTopFixedHint: function () {
                     $($top_hint)
                         .html(
-                            Context.Time_Table.Range
+                            Context.TimeTable.Range
                                 .LB()
-                                .add(Context.Time_Table.Scroll_Top / Context.Time_Table.Scale.Px_To_Min, 'm')
+                                .add(Context.TimeTable.ScrollTop / Context.TimeTable.Scale.PxToMin, 'm')
                                 .format('MMM Do dddd')
                         );
                 }
             },
             Stubs: {
-                Task: {
+                Tasks: {
                     Def: [],
                     Breadth: '90%',
                     Height: '50', //px
                     Left: '5%'
                 },
-                Event: {
+                Events: {
                     Lanes: [],
                     Breadth: 30, //px
                     Padding: 5, // px
-                    Initial_Left: 50 // px
+                    InitialLeft: 50 // px
                 },
-                No: 0,
+                Count: 0,
                 Duration: 0 // minutes
             },
             Hue: {
@@ -184,7 +182,7 @@
         function render_cursor_hint_bar(e) {
             var pos_wrt_time_divisions =
                 e.clientY
-                + Context.Time_Table.Scroll_Top
+                + Context.TimeTable.ScrollTop
                 - ($($top_hint_div).height()
                     + parseInt($($top_hint_div).css('padding-top'))
                     + parseInt($($top_hint_div).css('padding-bottom'))
@@ -196,18 +194,18 @@
             $($cursor_bar).css({
                 top: pos_wrt_time_divisions
             });
-            var no_min_from_epoch = pos_wrt_time_divisions / Context.Time_Table.Scale.Px_To_Min;
+            var no_min_from_epoch = pos_wrt_time_divisions / Context.TimeTable.Scale.PxToMin;
             $($cursor_bar_hint).css({
                 left: e.clientX + 10,
                 top: e.clientY + 10 // slight adjustments for better repr
-            }).html(Context.Time_Table.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
+            }).html(Context.TimeTable.Range.LB().add(no_min_from_epoch, 'm').format('hh:mm A'));
         }
         // Present Bar Render
         function render_present_hint_bar() {
-            if (moment().isBefore(Context.Time_Table.Range.UB())
-                && moment().isAfter(Context.Time_Table.Range.LB())) {
+            if (moment().isBefore(Context.TimeTable.Range.UB())
+                && moment().isAfter(Context.TimeTable.Range.LB())) {
 
-                var top = parseInt(moment.duration(moment().diff(Context.Time_Table.Range.LB())).asMinutes());
+                var top = parseInt(moment.duration(moment().diff(Context.TimeTable.Range.LB())).asMinutes());
                 $($present_bar).css({
                     top: top
                 }).fadeIn(0);
@@ -219,25 +217,24 @@
         }
         // Render hues
         function render_hues() {
-            // todo : generalize to any timetable range
             for (var i = 0; i < Context.Hue.Hues.length; ++i) {
                 // for each hue
-                const LB = Context.Time_Table.Range.LB();
-                const UB = Context.Time_Table.Range.UB();
+                const LB = Context.TimeTable.Range.LB();
+                const UB = Context.TimeTable.Range.UB();
                 var bg = Context.Hue.Hues[i].bg;
                 // Hue bounds
                 var lb, ub, height, top;
                 lb = moment(Context.Hue.Hues[i].lb, Std.std_t_format);
                 ub = moment(Context.Hue.Hues[i].ub, Std.std_t_format);
                 // First Hue-Stub
-                lb = Context.Time_Table.Range.LB().subtract(1, 'd').hour(lb.hour()).minute(lb.minute()).seconds(0);
-                ub = Context.Time_Table.Range.LB().subtract(1, 'd').hour(ub.hour()).minute(ub.minute()).seconds(0);
+                lb = Context.TimeTable.Range.LB().subtract(1, 'd').hour(lb.hour()).minute(lb.minute()).seconds(0);
+                ub = Context.TimeTable.Range.LB().subtract(1, 'd').hour(ub.hour()).minute(ub.minute()).seconds(0);
                 if (ub.isBefore(lb)) {
                     ub.add(1, 'd');
                 }
                 while (lb.isBefore(UB)) {
-                    height = moment.duration(ub.diff(lb)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
-                    top = moment.duration(lb.diff(LB)).asMinutes() * Context.Time_Table.Scale.Px_To_Min + "px";
+                    height = moment.duration(ub.diff(lb)).asMinutes() * Context.TimeTable.Scale.PxToMin + "px";
+                    top = moment.duration(lb.diff(LB)).asMinutes() * Context.TimeTable.Scale.PxToMin + "px";
                     var hue = element(
                         ['div'],
                         [
@@ -300,7 +297,7 @@
                                 'class': 'pink white-text z-depth-2 remove-on-reload time-hint'
                             }
                         ],
-                        [Context.Time_Table.Range.LB().add(i * 60, 'm').format('HH:mm')],
+                        [Context.TimeTable.Range.LB().add(i * 60, 'm').format('HH:mm')],
                         [true]
                     );
                 }
@@ -326,7 +323,7 @@
                                 'class': 'teal white-text z-depth-2 remove-on-reload time-hint'
                             }
                         ],
-                        [Context.Time_Table.Range.LB().add(i * 60, 'm').format('HH:mm')],
+                        [Context.TimeTable.Range.LB().add(i * 60, 'm').format('HH:mm')],
                         [true]
                     );
                 }
@@ -336,10 +333,10 @@
                 $($time_hints_div).append(time_hint);
             }
 
-            // pushing the clipper in time stubs div to make the inner heights
+            // pushing the stretcher in time stubs div to make the inner heights
             // of time stubs div and time divisions div equal
             var total_height = 24 * 60 * no_days * scale;
-            $('.clipper').css({
+            $('.stretcher').css({
                 'top': total_height + 'px'
             })
         }
@@ -360,7 +357,7 @@
                         'left: ' + left + ';' +
                         'width:' + breadth + ';' +
                         'height:' + height + ';' +
-                        'background-color:' + details['bg']
+                        'background-color:' + details.bg
                     }
                 ],
                 [details.tag],
@@ -372,18 +369,20 @@
         }
         // Event stub
         function render_event_stub(stub, lane) {
-            // Geometry
+            // Preparing
             //noinspection JSUnresolvedVariable
             var epoch = moment(stub.epoch[0], Std.std_dt_format);
             var end = moment(stub.end[0], Std.std_dt_format);
             // Top
-            var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
-                * Context.Time_Table.Scale.Px_To_Min;
+            var top_in_min = moment.duration(epoch.diff(Context.TimeTable.Range.LB())).asMinutes();
+            var top = top_in_min * Context.TimeTable.Scale.PxToMin;
+            // Left
+            var left = lane * (Context.Stubs.Events.Breadth + Context.Stubs.Events.Padding) + Context.Stubs.Events.InitialLeft;
             // Duration
-            var duration = moment.duration(end.diff(epoch)).asMinutes();
-            Context.Stubs.Duration += duration;
+            var duration_in_min = moment.duration(end.diff(epoch)).asMinutes();
+            Context.Stubs.Duration += duration_in_min;
             // Height
-            var height = duration * Context.Time_Table.Scale.Px_To_Min;
+            var height = duration_in_min * Context.TimeTable.Scale.PxToMin;
             // Display Name
             /* Full Vertical Display */
             var display_name = '';
@@ -400,31 +399,41 @@
             {#                if (split[0].length > 1) display_name = split[0].charAt(0) + split[0].charAt(1);#}
             {#                else display_name = split[0].charAt(0);#}
             {#            }#}
+
             // Rendering
-            render_stub(
-                top + 'px',
-                lane * (Context.Stubs.Event.Breadth + Context.Stubs.Event.Padding) + Context.Stubs.Event.Initial_Left + 'px',
-                height + 'px',
-                Context.Stubs.Event.Breadth + 'px',
-                $($event_stubs_div),
-                {
-                    tooltip: {
-                        tag: stub.tag,
-                        position: 'top'
-                    },
-                    tag: display_name,
-                    title: stub.comment,
-                    pk: stub.pk,
-                    bg: stub.color
-                });
+            var _stub = element(
+                ['button'],
+                [
+                    {
+                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload stub tooltipped',
+                        'data-position': 'top',
+                        'data-delay': "50",
+                        'data-tooltip': stub.tag,
+                        'pk': stub.pk,
+                        'style': 'position:absolute;' +
+                        'top: ' + top + 'px;' +
+                        'left: ' + left + 'px;' +
+                        'width:' + Context.Stubs.Events.Breadth + 'px;' +
+                        'height:' + height + 'px;' +
+                        'background-color:' + stub.color,
+                        'top_min': top_in_min,
+                        'height_min': duration_in_min,
+                        'lane': lane
+                    }
+                ],
+                [display_name],
+                [true]
+            );
+
+            $($event_stubs_div).append(_stub);
         }
         // Event stubs
         function render_event_stubs() {
-            Context.Stubs.No = 0;
-            for (var i = 0; i < Context.Stubs.Event.Lanes.length; ++i) {
-                for (var j = 0; j < Context.Stubs.Event.Lanes[i].length; ++j) {
-                    render_event_stub(Context.Stubs.Event.Lanes[i][j], i);
-                    Context.Stubs.No++;
+            Context.Stubs.Count = 0;
+            for (var i = 0; i < Context.Stubs.Events.Lanes.length; ++i) {
+                for (var j = 0; j < Context.Stubs.Events.Lanes[i].length; ++j) {
+                    render_event_stub(Context.Stubs.Events.Lanes[i][j], i);
+                    Context.Stubs.Count++;
                 }
             }
         }
@@ -433,36 +442,43 @@
             {% comment %} Timed Form {% endcomment %}
             //noinspection JSUnresolvedVariable
             //var epoch = moment(stub.epoch[0], Std.dt_format);
-            //var top = moment.duration(epoch.diff(Context.Time_Table.Range.LB())).asMinutes()
-            //    * Context.Time_Table.Scale.Px_To_Min;
+            //var top = moment.duration(epoch.diff(Context.TimeTable.Range.LB())).asMinutes()
+            //    * Context.TimeTable.Scale.PxToMin;
             {% comment %} Stacked Form {% endcomment %}
             // Height
-            var height = Context.Stubs.Task.Height;
+            var height = Context.Stubs.Tasks.Height;
             // Top
             var top = i * height + i * 10 + 10;
             // Rendering
-            render_stub(
-                top + 'px',
-                Context.Stubs.Task.Left,
-                height + 'px',
-                Context.Stubs.Task.Breadth,
-                $($task_stubs_div),
-                {
-                    tooltip: {
-                        tag: stub.tag,
-                        position: 'left'
-                    },
-                    tag: stub.tag,
-                    title: stub.comment,
-                    pk: stub.pk,
-                    bg: stub.color
-                });
+            var _stub = element(
+                ['button'],
+                [
+                    {
+                        'class': 'truncate white-text waves-light waves-effect hoverable remove-on-reload stub tooltipped',
+                        'data-position': 'left',
+                        'data-delay': "50",
+                        'data-tooltip': stub.tag,
+                        'pk': stub.pk,
+                        'style': 'position:absolute;' +
+                        'top: ' + top + 'px;' +
+                        'left: ' + Context.Stubs.Tasks.Left + ';' +
+                        'width:' + Context.Stubs.Tasks.Breadth + ';' +
+                        'height:' + height + 'px;' +
+                        'background-color:' + stub.color
+                    }
+                ],
+                [stub.tag],
+                [true]
+            );
+            //console.log(stub);
+
+            $($task_stubs_div).append(_stub);
         }
         // Task stub
         function render_task_stubs() {
-            for (var i = 0; i < Context.Stubs.Task.Def.length; ++i) {
-                render_task_stub(Context.Stubs.Task.Def[i], i);
-                Context.Stubs.No++;
+            for (var i = 0; i < Context.Stubs.Tasks.Def.length; ++i) {
+                render_task_stub(Context.Stubs.Tasks.Def[i], i);
+                Context.Stubs.Count++;
             }
         }
         // Reload UI
@@ -470,10 +486,10 @@
             // Remove all removable objects
             $('.remove-on-reload').remove();
             // Initializing Height
-            $($middle).height(Context.Time_Table.Height);
+            $($middle).height(Context.TimeTable.Height);
             // Render Time Divisions and Time Hints
-            render_time_divisions(Context.Time_Table.Scale.Px_To_Min,
-                moment.duration(Context.Time_Table.Range.UB().diff(Context.Time_Table.Range.LB())).asDays());
+            render_time_divisions(Context.TimeTable.Scale.PxToMin,
+                moment.duration(Context.TimeTable.Range.UB().diff(Context.TimeTable.Range.LB())).asDays());
             // Render Present Bar
             render_present_hint_bar();
             // Render Hues
@@ -485,7 +501,7 @@
             // Materialize CSS Initializations
             materialize_css_init();
             // Stubs Count Hint
-            $($stub_count).html(Context.Stubs.No);
+            $($stub_count).html(Context.Stubs.Count);
             // Loading Complete
             $($loading_timetable).fadeOut(0);
         }
@@ -520,17 +536,17 @@
                 // reload using the stubs data
                 var json = JSON.parse(result)[0];
                 // Change the Context
-                Context.Time_Table.Range.LB = function () {
+                Context.TimeTable.Range.LB = function () {
                     return moment(json.LB, Std.std_dt_format);
                 };
-                Context.Time_Table.Range.UB = function () {
+                Context.TimeTable.Range.UB = function () {
                     return moment(json.UB, Std.std_dt_format);
                 };
-                Context.Time_Table.Reload_Top_Fixed_Hint();
+                Context.TimeTable.ReloadTopFixedHint();
                 // Copy the context
-                Context.Stubs.Event.Lanes = json.Stubs.Events;
-                Context.Stubs.Task.Def = json.Stubs.Tasks;
-                //console.log(json);
+                Context.Stubs.Events.Lanes = json.Stubs.Events;
+                Context.Stubs.Tasks.Def = json.Stubs.Tasks;
+                // console.log(json);
                 // Reload
                 reload();
             };
@@ -573,6 +589,7 @@
             $tomorrow = $('#tomorrow');
             $hues_div = $('#hues-div');
             $hues_toggle = $('#hues-toggle');
+            $touch_piece = $('#touch-piece');
 
             // Event Listeners
             /**
@@ -589,8 +606,8 @@
                          * Un Comment Below if Timed Repr of Task Stubs is Used
                          * */
                         //$($task_stubs_div).scrollTop($(this).scrollTop());
-                        Context.Time_Table.Scroll_Top = $(this).scrollTop();
-                        Context.Time_Table.Reload_Top_Fixed_Hint();
+                        Context.TimeTable.ScrollTop = $(this).scrollTop();
+                        Context.TimeTable.ReloadTopFixedHint();
                     }
                 );
             $($time_table_div)
@@ -625,13 +642,13 @@
             $($yesterday).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(-1, 'd').format(Std.std_dt_format));
+                    render_stubs_on(Context.TimeTable.Range.LB().add(-1, 'd').format(Std.std_dt_format));
                 }
             );
             $($tomorrow).on(
                 'click',
                 function () {
-                    render_stubs_on(Context.Time_Table.Range.LB().add(1, 'd').format(Std.std_dt_format));
+                    render_stubs_on(Context.TimeTable.Range.LB().add(1, 'd').format(Std.std_dt_format));
                 }
             );
 
@@ -639,14 +656,14 @@
              * Scale.Min_To_Px
              * */
             // Initializing
-            $($scale_select).val(Context.Time_Table.Scale.Px_To_Min * 60); // hour px selection
+            $($scale_select).val(Context.TimeTable.Scale.PxToMin * 60); // hour px selection
             // Listening
             // Listening
             $($scale_select)
                 .on(
                     'change',
                     function () {
-                        Context.Time_Table.Scale.Px_To_Min = $(this).val() / 60;
+                        Context.TimeTable.Scale.PxToMin = $(this).val() / 60;
                         reload();
                     }
                 );
@@ -674,76 +691,107 @@
                     'click',
                     '.stub',
                     function () {
-                        var that = $(this);
+                        var self = $(this);
+
+                        var reset_touch_piece_btn = function (errand_pk) {
+                            // Reset touch piece
+                            $($touch_piece).attr('href', '/errands/touch/errand/' + errand_pk + '/');
+                        };
+
+                        var display_fetched_info = function (result) {
+                            // Display the info about the selected Stub
+                            result = JSON.parse(result);
+                            // console.log(result);
+                            // Reset touch btn
+                            reset_touch_piece_btn(result.errand_pk);
+                            // Piece Tag
+                            $($detail_div).find('.piece-tag').html(result.tag);
+                            // Piece Comment
+                            $($detail_div).find('.piece-comment').html(result.comment);
+                            // Errand Tag
+                            $($detail_div).find('.errand-tag').html(result.errand_tag);
+                            // Errand Comment
+                            $($detail_div).find('.errand-comment').html(result.errand_comment);
+                            // Time period && Duration
+                            var duration = result.duration;
+                            var duration_formatted = cast_to_hours_minutes(duration);
+                            var time_period = result.time_period;
+                            var time_period_formatted = cast_to_days_hours(time_period);
+                            var type_of_stub = "";
+                            if (duration.days == 0 && duration.seconds == 0) {
+                                if (time_period.days == 0 && time_period.seconds == 0) {
+                                    type_of_stub = "A One Time Task"
+                                }
+                                else {
+                                    type_of_stub = "A Repeating Task";
+                                    $($detail_div).find('.time_period').find('.column_1').html(time_period_formatted.days + ' days');
+                                    $($detail_div).find('.time_period').find('.column_2').html(time_period_formatted.hours + ' hours');
+                                    $($detail_div).find('.time_period').fadeIn(0);
+                                }
+                            }
+                            else {
+                                if (time_period.days == 0 && time_period.seconds == 0) {
+                                    type_of_stub = "A One Time Event";
+                                    $($detail_div).find('.duration').find('.column_1').html(duration_formatted.hours + ' hours');
+                                    $($detail_div).find('.duration').find('.column_2').html(duration_formatted.minutes + ' minutes');
+                                    $($detail_div).find('.duration').fadeIn(0);
+                                }
+                                else {
+                                    type_of_stub = "A Repeating Event";
+                                    $($detail_div).find('.duration').find('.column_1').html(duration_formatted.hours + ' hours');
+                                    $($detail_div).find('.duration').find('.column_2').html(duration_formatted.minutes + ' minutes');
+                                    $($detail_div).find('.time_period').find('.column_1').html(time_period_formatted.days + ' days');
+                                    $($detail_div).find('.time_period').find('.column_2').html(time_period_formatted.hours + ' hours');
+                                    $($detail_div).find('.duration').fadeIn(0);
+                                    $($detail_div).find('.time_period').fadeIn(0);
+                                }
+                            }
+                            $($detail_div).find('.type_of_stub').html(type_of_stub);
+                            // Epoch
+                            var epoch_date = result.epoch_date;
+                            var epoch_time = result.epoch_time;
+                            $($detail_div).find('.epoch-time').html(moment(epoch_time, Std.dj_t_format).format('hh:mm A'));
+                            $($detail_div).find('.epoch-date').html(moment(epoch_date, Std.dj_d_format).format('MMM Do ddd'));
+                            var end_date = result.end_date;
+                            var end_time = result.end_time;
+                            var $end = $($detail_div).find('.end');
+                            // End
+                            if (end_time != "") {
+                                $($end).find('.time').html(moment(end_time, Std.dj_t_format).format('hh:mm A'));
+                                $($end).fadeIn(0);
+                            }
+                            if (end_date != "") {
+                                $($end).find('.date').html(moment(end_date, Std.dj_d_format).format('MMM Do ddd'));
+                                $($end).fadeIn(0);
+                            }
+                            // Stub Details
+                            var $this_stub = $($detail_div).find('.this-stub');
+                            var time_iter = Context.TimeTable.Range.LB().add(self.attr("top_min"), "m");
+                            $($this_stub).find('.start-time').html(time_iter.format('hh:mm A'));
+                            $($this_stub).find('.start-date').html(time_iter.format('MMM Do ddd'));
+                            time_iter.add(self.attr("height_min"), "m");
+                            $($this_stub).find('.stop-time').html(time_iter.format('hh:mm A'));
+                            $($this_stub).find('.stop-date').html(time_iter.format('MMM Do ddd'));
+                        };
+
                         $($detail_div).modal('open');
                         $($loading_detail).fadeIn(0);
                         $($error_detail).fadeOut(0);
-                        $.ajax(
-                            {
-                                url: '/errands/read/piece/' + $(that).attr('pk') + '/',
-                                error: function () {
-                                    $($error_detail).fadeIn(0);
-                                    $($loading_detail).fadeOut(0);
-                                },
-                                success: function (result) {
-                                    result = JSON.parse(result);
-                                    console.log(result);
-                                    $($detail_div).find('.touch-link').attr('href', '/errands/touch/errand/' + result.errand_pk + '/');
-                                    $($detail_div).find('.tag').html(result.tag);
-                                    $($detail_div).find('.errand-tag').html(result.errand_tag);
-                                    if (result.comment != "") {
-                                        $($detail_div).find('.comment').html(result.comment);
-                                        $($detail_div).find('.comment-bq').fadeIn(0);
-                                    }
-                                    else {
-                                        $($detail_div).find('.comment-bq').fadeOut(0);
-                                    }
-                                    var epoch_date = result.epoch_date;
-                                    var epoch_time = result.epoch_time;
-                                    var duration = result.duration;
-                                    var time_period = result.time_period;
-                                    var head = "";
-                                    if (duration.days == 0 && duration.seconds == 0) {
-                                        if (time_period.days == 0 && time_period.seconds == 0) {
-                                            head = "Non-Repeating Task"
-                                        }
-                                        else {
-                                            head = "Repeating Task";
-                                            $($detail_div).find('.time_period').find('.days').html(time_period.days + ' days');
-                                            $($detail_div).find('.time_period').find('.seconds').html(time_period.seconds + ' seconds');
-                                            $($detail_div).find('.time_period').fadeIn(0);
-                                        }
-                                    }
-                                    else {
-                                        if (time_period.days == 0 && time_period.seconds == 0) {
-                                            head = "Non-Repeating Event";
-                                            $($detail_div).find('.duration').find('.days').html(duration.days + ' days');
-                                            $($detail_div).find('.duration').find('.seconds').html(duration.seconds + ' seconds');
-                                            $($detail_div).find('.duration').fadeIn(0);
-                                        }
-                                        else {
-                                            head = "Repeating Event";
-                                            $($detail_div).find('.duration').find('.days').html(duration.days + ' days');
-                                            $($detail_div).find('.duration').find('.seconds').html(duration.seconds + ' seconds');
-                                            $($detail_div).find('.time_period').find('.days').html(time_period.days + ' days');
-                                            $($detail_div).find('.time_period').find('.seconds').html(time_period.seconds + ' seconds');
-                                            $($detail_div).find('.duration').fadeIn(0);
-                                            $($detail_div).find('.time_period').fadeIn(0);
-                                        }
-                                    }
-                                    $($detail_div).find('.head').html(head);
-                                    $($detail_div).find('.epoch-time').html(moment(epoch_time, Std.dj_t_format).format('hh:mm A'));
-                                    $($detail_div).find('.epoch-date').html(moment(epoch_date, Std.dj_d_format).format('MMM Do ddd'));
-                                    $($loading_detail).fadeOut(0);
-                                }
+                        $.ajax({
+                            url: '/errands/read/piece/' + $(self).attr('pk') + '/',
+                            error: function () {
+                                $($error_detail).fadeIn(0);
+                                $($loading_detail).fadeOut(0);
+                            },
+                            success: function (result) {
+                                display_fetched_info(result);
+                                $($loading_detail).fadeOut(0);
                             }
-                        )
+                        })
                     }
                 );
-            {% comment %}Initializing With Today{% endcomment %}
-
             // Showing today's time table
-            render_stubs_on(Context.Time_Table.Range.LB().format(Std.std_dt_format));
+            render_stubs_on(Context.TimeTable.Range.LB().format(Std.std_dt_format));
         });
     </script>
 
@@ -832,7 +880,7 @@
                      style="position: absolute;height: 100%;width: 80%;overflow: auto"
                      class="row">
 
-                    <hr class="clipper">
+                    <hr class="stretcher">
                 </div>
 
                 <!-- Task Stubs -->
@@ -840,7 +888,7 @@
                      style="position: absolute;height: 100%;width: 20%;left: 80%;overflow-y:auto;overflow-x: auto;background-color: rgba(0,0,255,0.1)"
                      class="row">
 
-                    <hr class="clipper">
+                    <hr class="stretcher">
                 </div>
 
                 <!-- Time Divisions -->
@@ -865,14 +913,14 @@
                 <div class="modal-content row" style="margin: 0">
                     <h3>Settings</h3>
                     <div class="col l6 m6 s6">
-                        <label>
-                            Scale
-                            <p class="range-field">
-                                <input type="range" id="scale-select" min="30" max="120"/>
-                            </p>
-                        </label>
-                    </div>
-                    <div class="col l3 m3 s3">
+                        <div>
+                            <label>
+                                Scale
+                                <p class="range-field">
+                                    <input type="range" id="scale-select" min="30" max="120"/>
+                                </p>
+                            </label>
+                        </div>
                         <div id="date-select-div">
                             <label>
                                 Jump To
@@ -880,6 +928,7 @@
                             </label>
                         </div>
                     </div>
+                    <div class="col l3 m3 s3"></div>
                     <div class="col l3 m3 s3">
                         <div class="switch right-align">
                             <label>
@@ -908,50 +957,88 @@
 
                 <div class="modal-content">
                     <div class="row">
-                        <div class="row head flow-text waves-effect"></div>
-                        <div class="row">
-                            <span class="flow-text truncate tag">Tag</span>
-                            <span class="pink-text truncate errand-tag">Errand Tag</span>
-                        </div>
-                        <blockquote class="row comment-bq" style="margin: 0;display: none">
-                            <div class="input-field">
-                                <textarea class="comment"
-                                          disabled
-                                          style="height: 100%;border: none">
-                                Comment
-                                </textarea>
-                            </div>
-                        </blockquote>
-                        <br>
-                        <br>
-                        <div class="row">
-                            <table class="highlight bordered" style="cursor: pointer">
+                        <!-- Stub Info -->
+                        <div class="this-stub row">
+                            <div class="row type_of_stub">Type</div>
+                            <table class="highlight" style="cursor: pointer">
                                 <tbody>
-                                <tr>
-                                    <td class=" truncate flow-text teal-text">Epoch</td>
-                                    <td class="epoch-time flow-text teal-text"></td>
-                                    <td class="epoch-date flow-text teal-text"></td>
+                                <tr class="teal-text">
+                                    <td class="truncate">Starts at</td>
+                                    <td class="start-time"></td>
+                                    <td class="start-date"></td>
                                 </tr>
-                                <tr class="row time_period" style="display: none">
-                                    <td class=" truncate flow-text red-text">Time Period</td>
-                                    <td class="days flow-text red-text"></td>
-                                    <td class="seconds flow-text red-text"></td>
+                                <tr class="red-text">
+                                    <td class="truncate">Stops at</td>
+                                    <td class="stop-time"></td>
+                                    <td class="stop-date"></td>
                                 </tr>
-                                <tr class="row duration" style="display: none;">
-                                    <td class=" truncate flow-text blue-text">Duration</td>
-                                    <td class="days flow-text blue-text"></td>
-                                    <td class="seconds flow-text blue-text"></td>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="divider"></div>
+                        <!-- Errand Family Info -->
+                        <div class="col l4 m4 s12 row" style="margin-top: 20px">
+                            <div class="truncate">
+                                <div>Piece : <span class="piece-tag pink-text">Piece's Tag</span></div>
+                                <div>
+                                <textarea class="piece-comment grey lighten-4"
+                                          disabled
+                                          style="height: 100%;border: none;">
+                                        Piece Comment
+                                </textarea>
+                                </div>
+                                <div>Errand : <span class="errand-tag pink-text">Errand's Tag</span></div>
+                                <div>
+                                <textarea class="errand-comment grey lighten-4"
+                                          disabled
+                                          style="height: 100%;border: none;">
+                                        Errand Comment
+                                </textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Date Time Info -->
+                        <div class="col l8 m8 s12 row" style="margin: 0;">
+                            <table class="highlight" style="cursor: pointer">
+                                <tbody>
+                                <tr class="teal-text">
+                                    <td class="truncate">Epoch</td>
+                                    <td class="epoch-time"></td>
+                                    <td class="epoch-date"></td>
+                                </tr>
+                                <tr class="row time_period purple-text " style="display: none">
+                                    <td class="truncate">Time Period</td>
+                                    <td class="column_1"></td>
+                                    <td class="column_2"></td>
+                                </tr>
+                                <tr class="row duration blue-text" style="display: none;">
+                                    <td class=" truncate">Duration</td>
+                                    <td class="column_1"></td>
+                                    <td class="column_2"></td>
+                                </tr>
+                                <tr class="row end red-text" style="display: none;">
+                                    <td class="truncate">End</td>
+                                    <td class="time"></td>
+                                    <td class="date"></td>
                                 </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer row" style="margin: 0">
-                    <a href="#" class="modal-action modal-close waves-effect waves-green btn-flat "><i
-                            class="material-icons">close</i></a>
-                    <a href="#" class="waves-effect waves-blue btn-flat touch-link orange white-text"><i
-                            class="material-icons">mode_edit</i></a>
+                <div class="modal-footer row waves-effect" style="margin: 0">
+                    <a href="#"
+                       style="margin-left: 5px"
+                       class="modal-action modal-close waves-effect btn-flat grey-text">
+                        <i
+                                class="material-icons">close</i>
+                    </a>
+                    <a href="#"
+                       id="touch-piece"
+                       style="margin-left: 5px"
+                       class="waves-effect  btn-flat orange-text">
+                        <i class="material-icons">mode_edit</i>
+                    </a>
                 </div>
             </div>
         </div>

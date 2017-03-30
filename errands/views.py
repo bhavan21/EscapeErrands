@@ -193,8 +193,25 @@ def delete_errand(request):
 
 
 def read_errand(request, pk):
+    json_dict = {}
+
     try:
         errand = Errand.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        return httpR(-1)
+
+    json_dict['pk'] = errand.pk
+    json_dict['errand'] = errand.description
+
+    if 'pieces_also' in request.GET:
+        if request.GET['pieces_also'] == '1':
+            pieces_also = 1
+        else:
+            pieces_also = 0
+    else:
+        pieces_also = 0
+
+    if pieces_also == 1:
         piece_descriptions = []
         pieces = errand.piece_set.all()
         for piece in pieces:
@@ -202,13 +219,9 @@ def read_errand(request, pk):
             piece_description['pk'] = piece.pk
             piece_descriptions.append(piece_description)
 
-    except ObjectDoesNotExist:
-        return httpR(-1)
+        json_dict['pieces'] = piece_descriptions
 
-    errand_description = json.loads(errand.description)
-    errand_description['pk'] = errand.pk
-
-    json_string = json.dumps({'errand': errand_description, 'pieces': piece_descriptions})
+    json_string = json.dumps(json_dict)
     return httpR(json_string)
 
 
@@ -222,6 +235,7 @@ def read_piece(request, pk):
     desc['pk'] = piece.pk
     desc['errand_pk'] = piece.errand_id
     desc['errand_tag'] = piece.errand.tag
+    desc['errand_comment'] = piece.errand.comment
     json_string = json.dumps(desc)
     return httpR(json_string)
 
@@ -237,7 +251,7 @@ def do_stubs_intersect(e1, e2):
         or e2_epoch <= e1_end <= e2_end
 
 
-def filter_stubs_in_range(lb, ub):
+def get_stubs_in_range(lb, ub):
     event_stubs = []
     lanes = []
     task_stubs = []
@@ -357,16 +371,28 @@ def filter_stubs_in_range(lb, ub):
 
 
 def read_stubs(request):
-    ranges = json.loads(request.GET['ranges'])
-    if 'ranges' in request.GET:
-        try:
-            for range_i in ranges:
-                lb = dt.strptime(range_i['LB'], Std.input_dt_format)
-                ub = dt.strptime(range_i['UB'], Std.input_dt_format)
-                range_i['Stubs'] = filter_stubs_in_range(lb, ub)
+    """
+    :param request:
+    :return:
+        stubs belonging to the "POSTed ranges"
+        in json format
+        event-stubs lane wise sorted
+        task-stubs separate from event stubs
+    """
+    try:
+        if 'ranges' in request.GET:
+            ranges = json.loads(request.GET['ranges'])
+            try:
+                for range_i in ranges:
+                    lb = dt.strptime(range_i['LB'], Std.input_dt_format)
+                    ub = dt.strptime(range_i['UB'], Std.input_dt_format)
+                    range_i['Stubs'] = get_stubs_in_range(lb, ub)
 
-            return httpR(json.dumps(ranges))
-        except ValueError or TypeError:
+                return httpR(json.dumps(ranges))
+            except ValueError or TypeError:
+                return httpR(-1)
+        else:
             return httpR(-1)
-    else:
+
+    except ValueError or TypeError:
         return httpR(-1)

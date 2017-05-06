@@ -32,7 +32,7 @@ def login(request):
                 return httpRPR(request.POST[Std.Keys.client_site])
             # Else Redirect to home
             else:
-                return httpRPR(reverse('errands:all'))
+                return httpRPR(reverse('errands:all_errands'))
         # Else
         else:
             return render(request, 'home/invalid_access.html')

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -246,9 +247,9 @@ def do_stubs_intersect(e1, e2):
     e1_end = e1['end']
     e2_end = e2['end']
     return e1_epoch <= e2_epoch <= e1_end \
-        or e1_epoch <= e2_end <= e1_end \
-        or e2_epoch <= e1_epoch <= e2_end \
-        or e2_epoch <= e1_end <= e2_end
+           or e1_epoch <= e2_end <= e1_end \
+           or e2_epoch <= e1_epoch <= e2_end \
+           or e2_epoch <= e1_end <= e2_end
 
 
 def get_stubs_in_range(lb, ub):
@@ -380,18 +381,16 @@ def read_stubs(request):
         task-stubs separate from event stubs
     """
     try:
-        if 'ranges' in request.GET:
-            ranges = json.loads(request.GET['ranges'])
-            try:
-                for range_i in ranges:
-                    lb = dt.strptime(range_i['LB'], Std.input_dt_format)
-                    ub = dt.strptime(range_i['UB'], Std.input_dt_format)
-                    range_i['Stubs'] = get_stubs_in_range(lb, ub)
+        ranges = json.loads(request.GET['ranges'])
+        try:
+            for range_i in ranges:
+                lb = dt.strptime(range_i['LB'], Std.input_dt_format)
+                ub = dt.strptime(range_i['UB'], Std.input_dt_format)
+                range_i['Stubs'] = get_stubs_in_range(lb, ub)
 
-                return httpR(json.dumps(ranges))
-            except ValueError or TypeError:
-                return httpR(-1)
-        else:
+            return httpR(json.dumps(ranges))
+
+        except ValueError or TypeError:
             return httpR(-1)
 
     except ValueError or TypeError:

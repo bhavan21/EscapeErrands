@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.http import HttpResponsePermanentRedirect as httpRPR, HttpResponse as httpR
 from home.views import in_session
 import json
+import math
 
 
 def all_errands(request):
@@ -252,6 +253,10 @@ def do_stubs_intersect(e1, e2):
            or e2_epoch <= e1_end <= e2_end
 
 
+def td_in_microsecond(timedelta):
+    return timedelta.days * 86400000000 + timedelta.seconds * 1000000 + timedelta.microseconds
+
+
 def get_stubs_in_range(lb, ub):
     event_stubs = []
     lanes = []
@@ -279,12 +284,14 @@ def get_stubs_in_range(lb, ub):
             # Non - Zero Time Period
             time_period = piece.time_period
             # Starting from init_epoch
-            i_epoch = init_epoch
-            i_end = i_epoch + duration
-            # Travelling from init_epoch to the first possible intersection
-            while i_end <= lb:
-                i_end += time_period
-            i_epoch = i_end - duration
+            if init_epoch < lb:
+                no_of_time_periods = int(math.ceil(float(td_in_microsecond(lb - init_epoch)) / float(
+                    td_in_microsecond(time_period))))
+                i_epoch = init_epoch + time_period * no_of_time_periods
+            elif lb <= init_epoch <= ub:
+                i_epoch = init_epoch
+            else:
+                continue
 
             # Adding Stubs
             # Task Stubs (Once a task piece always a task piece)

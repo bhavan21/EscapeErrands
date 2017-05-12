@@ -333,7 +333,7 @@ class Piece(models.Model):
 
     def get_stub_which_intersects(self, epoch, lb, ub):
         """
-        Assumes proper params are given
+        Assert epoch is a comes by adding multiple of time period to self.epoch
         :param epoch datetime
         :param lb datetime
         :param ub datetime

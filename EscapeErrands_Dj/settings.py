@@ -56,9 +56,9 @@ TEMPLATES = [
     },
 ]
 
-ROOT_URLCONF = 'DjEscapeErrands.urls'
+ROOT_URLCONF = 'EscapeErrands_Dj.urls'
 
-WSGI_APPLICATION = 'DjEscapeErrands.wsgi.application'
+WSGI_APPLICATION = 'EscapeErrands_Dj.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases

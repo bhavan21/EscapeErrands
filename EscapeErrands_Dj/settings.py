@@ -22,11 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home',
-    'cli',
-    'errands',
-    'time_table',
-    'stats',
+    'home.apps.HomeConfig',
+    'cli.apps.CliConfig',
+    'errands.apps.ErrandsConfig',
+    'time_table.apps.TimeTableConfig',
+    'stats.apps.StatsConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,12 +1,8 @@
 import os
 import dj_database_url
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'rt$g!n6fo^gs91m%osd#4ia-rc^qyhaaisj%+0=^dd05p7@=&h'
@@ -14,7 +10,6 @@ SECRET_KEY = 'rt$g!n6fo^gs91m%osd#4ia-rc^qyhaaisj%+0=^dd05p7@=&h'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -22,11 +17,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'home.apps.HomeConfig',
-    'cli.apps.CliConfig',
-    'errands.apps.ErrandsConfig',
-    'time_table.apps.TimeTableConfig',
-    'stats.apps.StatsConfig',
 ]
 
 MIDDLEWARE = [
@@ -60,18 +50,12 @@ ROOT_URLCONF = 'EscapeErrands_Dj.urls'
 
 WSGI_APPLICATION = 'EscapeErrands_Dj.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/1.9/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
-# Password validation
-# https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {

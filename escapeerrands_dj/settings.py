@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core'
 ]
 
 MIDDLEWARE = [
@@ -46,9 +47,9 @@ TEMPLATES = [
     },
 ]
 
-ROOT_URLCONF = 'EscapeErrands_Dj.urls'
+ROOT_URLCONF = 'escapeerrands_dj.urls'
 
-WSGI_APPLICATION = 'EscapeErrands_Dj.wsgi.application'
+WSGI_APPLICATION = 'escapeerrands_dj.wsgi.application'
 
 DATABASES = {
     'default': {

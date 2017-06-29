@@ -1,4 +1,4 @@
-from django.conf.urls import url, include
+from django.conf.urls import url
 from django.contrib import admin
 
 urlpatterns = [
@@ -6,7 +6,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 
     # # host
-    # url(r'^', include('home.urls')),
+    # url(r'^', ),
     # # host/errands/
     # url(r'^errands/', include("errands.urls")),
     # # host/time_table/

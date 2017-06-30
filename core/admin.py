@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from models import Errand, Branch
+from models import TimeTree, TimeBranch
 
-admin.site.register(Errand)
-admin.site.register(Branch)
+admin.site.register(TimeTree)
+admin.site.register(TimeBranch)

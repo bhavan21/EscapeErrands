@@ -5,15 +5,14 @@ from datetime import datetime as dt, timedelta as td
 from escapeerrands_dj.timeutils import to_microseconds
 
 
-class Errand(models.Model):
+class TimeTree(models.Model):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=10)
 
     def __str__(self):
-        return str(self.id) + self.name
+        return str(self.id)
 
 
-class Branch(models.Model):
+class TimeBranch(models.Model):
     class Standards:
         MIN_TPR = td(0, 43200)
         MAX_TPR = td(740)
@@ -23,29 +22,21 @@ class Branch(models.Model):
         def __init__(self):
             pass
 
+    # Relational fields
     id = models.AutoField(primary_key=True)
+    parent_tree = models.ForeignKey(TimeTree, on_delete=models.CASCADE)
     # Time fields
     epoch = models.DateTimeField(blank=True, null=True)
     end = models.DateTimeField(blank=True, null=True)
     time_period = models.DurationField()
     duration = models.DurationField()
-    # Type fields
-    TYPES_COUNT = 2
-    EVENT, TASK = range(TYPES_COUNT)
-    TYPES = (
-        (EVENT, 'event'),
-        (TASK, 'task'),
-    )
-    type = models.PositiveSmallIntegerField(choices=TYPES)
-    # Relational fields
-    errand = models.ForeignKey(Errand, on_delete=models.CASCADE)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         is_valid = self.is_valid()
         if is_valid is True:
             is_standard = self.is_standard()
             if is_standard is True:
-                super(Branch, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+                super(TimeBranch, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
                 return True
             else:
                 error_message = is_standard[1]
@@ -56,20 +47,12 @@ class Branch(models.Model):
     def is_valid(self):
         # Related Errand
         try:
-            if self.errand is None:
-                return False, 'No related errand'
-            if not isinstance(self.errand, Errand):
-                return False, 'Invalid related errand'
+            if self.parent_tree is None:
+                return False, 'No related parent_tree'
+            if not isinstance(self.parent_tree, TimeTree):
+                return False, 'Invalid related parent_tree'
         except Exception:
-            return False, 'No related errand'
-
-        # Type
-        if self.type is None:
-            return False, 'No type'
-        if not isinstance(self.type, int):
-            return False, 'Invalid Type'
-        if self.type >= Branch.TYPES_COUNT:
-            return False, 'Invalid Type'
+            return False, 'No related parent_tree'
 
         # Time Period
         if self.time_period is None:
@@ -125,14 +108,14 @@ class Branch(models.Model):
         return True
 
     def is_standard(self):
-        if self.time_period < Branch.Standards.MIN_TPR:
+        if self.time_period < TimeBranch.Standards.MIN_TPR:
             return False, 'Too small time period'
-        if self.time_period > Branch.Standards.MAX_TPR:
+        if self.time_period > TimeBranch.Standards.MAX_TPR:
             return False, 'Too big time period'
 
-        if self.duration < Branch.Standards.MIN_DUR:
+        if self.duration < TimeBranch.Standards.MIN_DUR:
             return False, 'Too small duration'
-        if self.duration > Branch.Standards.MAX_DUR:
+        if self.duration > TimeBranch.Standards.MAX_DUR:
             return False, 'Too big duration'
 
         return True
@@ -141,8 +124,8 @@ class Branch(models.Model):
         return str(self.id)
 
     def __hash__(self):
-        return hash((self.epoch, self.end, self.time_period, self.duration, self.type))
+        return hash((self.epoch, self.end, self.time_period, self.duration))
 
     def __eq__(self, other):
-        return (self.epoch, self.end, self.time_period, self.duration, self.type) == (
-            other.epoch, other.end, other.time_period, other.duration, other.type)
+        return (self.epoch, self.end, self.time_period, self.duration) == (
+            other.epoch, other.end, other.time_period, other.duration)

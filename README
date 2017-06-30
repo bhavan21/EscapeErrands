@@ -1,0 +1,8 @@
+Running Instructions
+====================
+1. Make migrations in all apps
+    python manage.py makemigrations <app>
+2. Migrate the migrations
+    python manage.py migrate
+3. Run the server
+    python manage.py runserver

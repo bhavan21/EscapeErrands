@@ -14,6 +14,15 @@ class Errand(models.Model):
 
 
 class Piece(models.Model):
+    class Standards:
+        MIN_TPR = td(0, 43200)
+        MAX_TPR = td(740)
+        MIN_DUR = td(0, 1800)
+        MAX_DUR = td(15)
+
+        def __init__(self):
+            pass
+
     id = models.AutoField(primary_key=True)
     # Time fields
     epoch = models.DateTimeField(blank=True, null=True)
@@ -34,11 +43,18 @@ class Piece(models.Model):
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         is_valid = self.is_valid()
         if is_valid is True:
-            super(Piece, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
-        return is_valid
+            is_standard = self.is_standard()
+            if is_standard is True:
+                super(Piece, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+                return True
+            else:
+                error_message = is_standard[1]
+        else:
+            error_message = is_valid[1]
+        return False, error_message
 
     def is_valid(self):
-        # Errand
+        # Related Errand
         try:
             if self.errand is None:
                 return False, 'No related errand'
@@ -106,6 +122,19 @@ class Piece(models.Model):
                         return False, 'Non integral number of cycles'
 
         # No objection -> valid
+        return True
+
+    def is_standard(self):
+        if self.time_period < Piece.Standards.MIN_TPR:
+            return False, 'Too small time period'
+        if self.time_period > Piece.Standards.MAX_TPR:
+            return False, 'Too big time period'
+
+        if self.duration < Piece.Standards.MIN_DUR:
+            return False, 'Too small duration'
+        if self.duration > Piece.Standards.MAX_DUR:
+            return False, 'Too big duration'
+
         return True
 
     def __str__(self):

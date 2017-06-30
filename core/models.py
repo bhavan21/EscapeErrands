@@ -13,7 +13,7 @@ class Errand(models.Model):
         return str(self.id) + self.name
 
 
-class Piece(models.Model):
+class Branch(models.Model):
     class Standards:
         MIN_TPR = td(0, 43200)
         MAX_TPR = td(740)
@@ -45,7 +45,7 @@ class Piece(models.Model):
         if is_valid is True:
             is_standard = self.is_standard()
             if is_standard is True:
-                super(Piece, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+                super(Branch, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
                 return True
             else:
                 error_message = is_standard[1]
@@ -68,7 +68,7 @@ class Piece(models.Model):
             return False, 'No type'
         if not isinstance(self.type, int):
             return False, 'Invalid Type'
-        if self.type >= Piece.TYPES_COUNT:
+        if self.type >= Branch.TYPES_COUNT:
             return False, 'Invalid Type'
 
         # Time Period
@@ -125,17 +125,24 @@ class Piece(models.Model):
         return True
 
     def is_standard(self):
-        if self.time_period < Piece.Standards.MIN_TPR:
+        if self.time_period < Branch.Standards.MIN_TPR:
             return False, 'Too small time period'
-        if self.time_period > Piece.Standards.MAX_TPR:
+        if self.time_period > Branch.Standards.MAX_TPR:
             return False, 'Too big time period'
 
-        if self.duration < Piece.Standards.MIN_DUR:
+        if self.duration < Branch.Standards.MIN_DUR:
             return False, 'Too small duration'
-        if self.duration > Piece.Standards.MAX_DUR:
+        if self.duration > Branch.Standards.MAX_DUR:
             return False, 'Too big duration'
 
         return True
 
     def __str__(self):
         return str(self.id)
+
+    def __hash__(self):
+        return hash((self.epoch, self.end, self.time_period, self.duration, self.type))
+
+    def __eq__(self, other):
+        return (self.epoch, self.end, self.time_period, self.duration, self.type) == (
+            other.epoch, other.end, other.time_period, other.duration, other.type)

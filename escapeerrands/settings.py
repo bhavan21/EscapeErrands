@@ -47,9 +47,9 @@ TEMPLATES = [
     },
 ]
 
-ROOT_URLCONF = 'escapeerrands_dj.urls'
+ROOT_URLCONF = 'escapeerrands.urls'
 
-WSGI_APPLICATION = 'escapeerrands_dj.wsgi.application'
+WSGI_APPLICATION = 'escapeerrands.wsgi.application'
 
 DATABASES = {
     'default': {

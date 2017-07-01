@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from datetime import datetime as dt, timedelta as td
-from escapeerrands_dj.timeutils import to_microseconds
+from escapeerrands.timeutils import to_microseconds
 
 
 class TimeTree(models.Model):

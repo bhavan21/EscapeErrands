@@ -1,7 +1,10 @@
 from __future__ import unicode_literals
 
+import math
 from django.db import models
 from datetime import datetime as dt, timedelta as td
+
+from core.classes import Stub
 from escapeerrands.timeutils import to_microseconds
 
 
@@ -28,24 +31,35 @@ class TimeBranch(models.Model):
     # Time fields
     epoch = models.DateTimeField(blank=True, null=True)
     end = models.DateTimeField(blank=True, null=True)
-    time_period = models.DurationField()
+    time_period = models.DurationField(blank=True, null=True)
     duration = models.DurationField()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        is_valid = self.is_valid()
-        if is_valid is True:
-            is_standard = self.is_standard()
-            if is_standard is True:
-                super(TimeBranch, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
-                return True
-            else:
-                error_message = is_standard[1]
+        is_savable = self.is_savable()
+        if is_savable is True:
+            super(TimeBranch, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
+            return True
         else:
-            error_message = is_valid[1]
+            return is_savable
+
+    def is_savable(self):
+        is_timewise_valid = self.is_timewise_valid()
+        if is_timewise_valid is True:
+            is_relationally_valid = self.is_relationally_valid()
+            if is_relationally_valid is True:
+                is_standard = self.is_standard()
+                if is_standard is True:
+                    return True
+                else:
+                    error_message = is_standard[1]
+            else:
+                error_message = is_relationally_valid[1]
+        else:
+            error_message = is_timewise_valid[1]
+
         return False, error_message
 
-    def is_valid(self):
-        # Related Errand
+    def is_relationally_valid(self):
         try:
             if self.parent_tree is None:
                 return False, 'No related parent_tree'
@@ -54,13 +68,16 @@ class TimeBranch(models.Model):
         except Exception:
             return False, 'No related parent_tree'
 
+        # No objection -> valid
+        return True
+
+    def is_timewise_valid(self):
         # Time Period
-        if self.time_period is None:
-            return False, 'No time period'
-        if not isinstance(self.time_period, td):
-            return False, 'Invalid time period'
-        if self.time_period <= td():
-            return False, 'Non positive time period'
+        if self.time_period is not None:
+            if not isinstance(self.time_period, td):
+                return False, 'Invalid time period'
+            if self.time_period <= td():
+                return False, 'Non positive time period'
 
         # Duration
         if self.duration is None:
@@ -108,10 +125,11 @@ class TimeBranch(models.Model):
         return True
 
     def is_standard(self):
-        if self.time_period < TimeBranch.Standards.MIN_TPR:
-            return False, 'Too small time period'
-        if self.time_period > TimeBranch.Standards.MAX_TPR:
-            return False, 'Too big time period'
+        if self.time_period is not None:
+            if self.time_period < TimeBranch.Standards.MIN_TPR:
+                return False, 'Too small time period'
+            if self.time_period > TimeBranch.Standards.MAX_TPR:
+                return False, 'Too big time period'
 
         if self.duration < TimeBranch.Standards.MIN_DUR:
             return False, 'Too small duration'
@@ -119,6 +137,96 @@ class TimeBranch(models.Model):
             return False, 'Too big duration'
 
         return True
+
+    # Time complexity
+    # if time_period, O(n) where n = window / time_period
+    # else O(1)
+    def get_snapshot(self, lp, up):
+        if self.is_savable() is not True:
+            return False
+        if lp >= up:
+            return False
+
+        # Non Repeating
+        if self.time_period is None:
+            epoch = self.epoch
+            end = self.end
+            if end <= lp or epoch >= up:
+                return []
+            else:
+                stub_epoch = max([lp, epoch])
+                stub_end = min([end, up])
+                stub_duration = stub_end - stub_epoch
+                return [Stub(stub_epoch, stub_end, stub_duration)]
+        # Repeating
+        else:
+            snapshot = []
+            duration = self.duration
+            time_period = self.time_period
+
+            if self.epoch is None:
+                init_end = self.end
+
+                if init_end > up:
+                    num = to_microseconds(init_end - up)
+                    den = to_microseconds(time_period)
+                    no_of_time_periods = int(math.floor(float(num) / float(den)))
+                    i_end = init_end - (time_period * no_of_time_periods)
+                    i_epoch = i_end - duration
+                    if i_epoch < up:
+                        stub_epoch = i_epoch
+                        stub_end = min([i_end, up])
+                        stub_duration = stub_end - stub_epoch
+                        snapshot.append(Stub(stub_epoch, stub_end, stub_duration))
+                    i_end -= time_period
+                elif up >= init_end > lp:
+                    i_end = init_end
+                else:
+                    return []
+
+                loop_limit = lp
+
+                while i_end > loop_limit:
+                    i_epoch = i_end + duration
+                    stub_epoch = max([i_epoch, loop_limit])
+                    stub_end = i_end
+                    stub_duration = stub_end - stub_epoch
+                    snapshot.append(Stub(stub_epoch, stub_end, stub_duration))
+                    i_end -= time_period
+            else:
+                init_epoch = self.epoch
+
+                if init_epoch < lp:
+                    num = to_microseconds(lp - init_epoch)
+                    den = to_microseconds(time_period)
+                    no_of_time_periods = int(math.floor(float(num) / float(den)))
+                    i_epoch = init_epoch + (time_period * no_of_time_periods)
+                    i_end = i_epoch + duration
+                    if i_end > lp:
+                        stub_epoch = lp
+                        stub_end = min([i_end, up])
+                        stub_duration = stub_end - stub_epoch
+                        snapshot.append(Stub(stub_epoch, stub_end, stub_duration))
+                    i_epoch += time_period
+                elif lp <= init_epoch < up:
+                    i_epoch = init_epoch
+                else:
+                    return []
+
+                if self.end is None:
+                    loop_limit = up
+                else:
+                    loop_limit = min([self.end, up])
+
+                while i_epoch < loop_limit:
+                    i_end = i_epoch + duration
+                    stub_epoch = i_epoch
+                    stub_end = min([i_end, loop_limit])
+                    stub_duration = stub_end - stub_epoch
+                    snapshot.append(Stub(stub_epoch, stub_end, stub_duration))
+                    i_epoch += time_period
+
+            return snapshot
 
     def __str__(self):
         return str(self.id)

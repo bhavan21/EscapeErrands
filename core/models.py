@@ -59,6 +59,7 @@ class TimeBranch(models.Model):
 
         return False, error_message
 
+    # todo : improve this method
     def is_relationally_valid(self):
         try:
             if self.parent_tree is None:
@@ -187,7 +188,7 @@ class TimeBranch(models.Model):
                 loop_limit = lp
 
                 while i_end > loop_limit:
-                    i_epoch = i_end + duration
+                    i_epoch = i_end - duration
                     stub_epoch = max([i_epoch, loop_limit])
                     stub_end = i_end
                     stub_duration = stub_end - stub_epoch

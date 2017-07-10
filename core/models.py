@@ -45,41 +45,17 @@ class TimeBranch(models.Model):
     def is_savable(self):
         is_timewise_valid = self.is_timewise_valid()
         if is_timewise_valid is True:
-            is_relationally_valid = self.is_relationally_valid()
-            if is_relationally_valid is True:
-                is_standard = self.is_standard()
-                if is_standard is True:
-                    return True
-                else:
-                    error_message = is_standard[1]
+            is_standard = self.is_standard()
+            if is_standard is True:
+                return True
             else:
-                error_message = is_relationally_valid[1]
+                error_message = is_standard[1]
         else:
             error_message = is_timewise_valid[1]
 
         return False, error_message
 
-    # todo : improve this method
-    def is_relationally_valid(self):
-        try:
-            if self.parent_tree is None:
-                return False, 'No related parent_tree'
-            if not isinstance(self.parent_tree, TimeTree):
-                return False, 'Invalid related parent_tree'
-        except Exception:
-            return False, 'No related parent_tree'
-
-        # No objection -> valid
-        return True
-
     def is_timewise_valid(self):
-        # Time Period
-        if self.time_period is not None:
-            if not isinstance(self.time_period, td):
-                return False, 'Invalid time period'
-            if self.time_period <= td():
-                return False, 'Non positive time period'
-
         # Duration
         if self.duration is None:
             return False, 'No duration'
@@ -87,6 +63,15 @@ class TimeBranch(models.Model):
             return False, 'Invalid duration'
         if self.duration <= td():
             return False, 'Non positive duration'
+
+        # Time Period
+        if self.time_period is not None:
+            if not isinstance(self.time_period, td):
+                return False, 'Invalid time period'
+            if self.time_period <= td():
+                return False, 'Non positive time period'
+            if self.time_period <= self.duration:
+                return False, 'time period <= duration'
 
         # Epoch and End
         if self.epoch is None and self.end is None:
@@ -139,6 +124,7 @@ class TimeBranch(models.Model):
 
         return True
 
+    # todo : can return a better format of snapshot (than all the stubs)
     # Time complexity
     # if time_period, O(n) where n = window / time_period
     # else O(1)

@@ -222,5 +222,10 @@ class TimeBranch(models.Model):
         return hash((self.epoch, self.end, self.time_period, self.duration))
 
     def __eq__(self, other):
+        if not isinstance(other, TimeBranch):
+            return False
         return (self.epoch, self.end, self.time_period, self.duration) == (
             other.epoch, other.end, other.time_period, other.duration)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

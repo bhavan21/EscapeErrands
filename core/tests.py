@@ -1,3 +1,4 @@
+# execfile('core/tests.py')
 from core.models import *
 from django.utils import timezone as tz
 
@@ -36,7 +37,8 @@ def time_tree_relations_test1():
 
 
 a = Goal.objects.get(pk=1)
-# a.is_achieved = True
-# print a.parents.all()[0].deadline
-# a.deadline = tz.now()
-# print a.is_savable()
+b = Goal.objects.get(pk=2)
+c = Goal.objects.get(pk=3)
+d = Goal.objects.get(pk=4)
+e = Goal.objects.get(pk=5)
+f = Goal.objects.get(pk=6)

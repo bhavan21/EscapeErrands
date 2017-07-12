@@ -234,7 +234,7 @@ class TimeBranch(models.Model):
 class Goal(models.Model):
     # Relational fields
     id = models.AutoField(primary_key=True)
-    parents = models.ManyToManyField('Goal', related_name='children')
+    __parents = models.ManyToManyField('Goal', related_name='__children')
     # Other fields
     description = models.TextField(default='')
     deadline = models.DateTimeField(blank=True, null=True)
@@ -262,43 +262,88 @@ class Goal(models.Model):
         return False, error_message
 
     def is_deadline_valid(self):
-        for parent in self.parents.all():
-            if self.deadline is None and parent.deadline is None:
-                continue
-            if self.deadline is None and parent.deadline is not None:
-                continue
-            if self.deadline is not None and parent.deadline is None:
-                return False, 'Deadline before parent'
-            if self.deadline is not None and parent.deadline is not None:
-                if self.deadline < parent.deadline:
+        # Not saved yet
+        if self.id is not None:
+            for parent in self.__parents.all():
+                if self.deadline is None and parent.deadline is None:
+                    continue
+                if self.deadline is None and parent.deadline is not None:
+                    continue
+                if self.deadline is not None and parent.deadline is None:
                     return False, 'Deadline before parent'
+                if self.deadline is not None and parent.deadline is not None:
+                    if self.deadline < parent.deadline:
+                        return False, 'Deadline before parent'
 
-        for child in self.children.all():
-            if self.deadline is None and child.deadline is None:
-                continue
-            if self.deadline is None and child.deadline is not None:
-                return False, 'Deadline after child'
-            if self.deadline is not None and child.deadline is None:
-                continue
-            if self.deadline is not None and child.deadline is not None:
-                if self.deadline > child.deadline:
+            for child in self.__children.all():
+                if self.deadline is None and child.deadline is None:
+                    continue
+                if self.deadline is None and child.deadline is not None:
                     return False, 'Deadline after child'
+                if self.deadline is not None and child.deadline is None:
+                    continue
+                if self.deadline is not None and child.deadline is not None:
+                    if self.deadline > child.deadline:
+                        return False, 'Deadline after child'
 
-        # No objection -> deadline valid
-        return True
+            # No objection -> deadline valid
+            return True
+        else:
+            return True
 
     def is_is_achieved_valid(self):
-        if self.is_achieved is True:
-            for parent in self.parents.all():
-                if parent.is_achieved is False:
-                    return False, 'This goal is achieved before its parent'
-        elif self.is_achieved is False:
-            for child in self.children.all():
-                if child.is_achieved is True:
-                    return False, 'Child goal is achieved before this'
+        if self.id is not None:
+            if self.is_achieved is True:
+                for parent in self.__parents.all():
+                    if parent.is_achieved is False:
+                        return False, 'This goal is achieved before its parent'
+            elif self.is_achieved is False:
+                for child in self.__children.all():
+                    if child.is_achieved is True:
+                        return False, 'Child goal is achieved before this'
 
-        # No objection -> is_achieved valid
-        return True
+            # No objection -> is_achieved valid
+            return True
+        else:
+            return True
+
+    def __dfs_for_checking_cycles(self, node, origin_id, at_root=True):
+        if not at_root and node.id == origin_id:
+            return True
+        else:
+            for child in node.__children.all():
+                if self.__dfs_for_checking_cycles(child, origin_id, False) is True:
+                    return True
+
+    def is_acyclically_valid(self):
+        # Assumes the graph before inserting this vertex is acyclic
+        if self.id is not None:
+            if self.__dfs_for_checking_cycles(self, self.id, True) is not True:
+                return True
+            else:
+                return False, 'Forms cycle'
+        else:
+            return True
+
+    def add_parents(self, parents_list):
+        self.__parents.add(parents_list)
+        is_acyclically_valid = self.is_acyclically_valid()
+        if is_acyclically_valid is not True:
+            self.__parents.remove(parents_list)
+        return is_acyclically_valid
+
+    def add_children(self, children_list):
+        self.__children.add(children_list)
+        is_acyclically_valid = self.is_acyclically_valid()
+        if is_acyclically_valid is not True:
+            self.__children.remove(children_list)
+        return is_acyclically_valid
+
+    def all_parents(self):
+        return self.__parents.all()
+
+    def all_children(self):
+        return self.__children.all()
 
     def __str__(self):
         return str(self.id)

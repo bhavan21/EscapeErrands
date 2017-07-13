@@ -1,5 +1,6 @@
 # execfile('core/tests.py')
-from core.models import *
+from core.time_models import *
+from core.graph_models import *
 from django.utils import timezone as tz
 
 

@@ -37,9 +37,9 @@ def time_tree_relations_test1():
     b = TimeBranch.objects.get(pk=3)
 
 
-a = Goal.objects.get(pk=1)
-b = Goal.objects.get(pk=2)
-c = Goal.objects.get(pk=3)
-d = Goal.objects.get(pk=4)
-e = Goal.objects.get(pk=5)
-f = Goal.objects.get(pk=6)
+# a = Goal.objects.get(pk=1)
+# b = Goal.objects.get(pk=2)
+# c = Goal.objects.get(pk=3)
+# d = Goal.objects.get(pk=4)
+# e = Goal.objects.get(pk=5)
+# f = Goal.objects.get(pk=6)

@@ -26,7 +26,7 @@ class TimeBranch(models.Model):
 
     # Relational fields
     id = models.AutoField(primary_key=True)
-    parent_tree = models.ForeignKey(TimeTree, on_delete=models.CASCADE)
+    parent_tree = models.ForeignKey(TimeTree, on_delete=models.CASCADE, related_name='branches')
     # Time fields
     epoch = models.DateTimeField(blank=True, null=True)
     end = models.DateTimeField(blank=True, null=True)

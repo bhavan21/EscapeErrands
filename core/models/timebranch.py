@@ -3,15 +3,9 @@ from __future__ import unicode_literals
 import math
 from django.db import models
 from datetime import datetime as dt, timedelta as td
+from timetree import TimeTree
 
-from time_utils import Stub, to_microseconds
-
-
-class TimeTree(models.Model):
-    id = models.AutoField(primary_key=True)
-
-    def __str__(self):
-        return str(self.id)
+from core.timeutils import Stub, to_microseconds
 
 
 class TimeBranch(models.Model):

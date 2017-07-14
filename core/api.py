@@ -1,8 +1,8 @@
-from graph_models import Goal, Job
-from time_models import TimeTree, TimeBranch
+from core.models.timebranch import TimeBranch
+from models.timetree import TimeTree
 
 
-class TimeBranchApi:
+class TimeBranchDAI:
     @staticmethod
     def create(epoch, end, time_period, duration):
         new_time_branch = TimeBranch(epoch=epoch, end=end, time_period=time_period, duration=duration)
@@ -14,6 +14,7 @@ class TimeBranchApi:
             time_branch = TimeBranch.objects.get(pk=time_branch_id)
             time_tree = TimeTree.objects.get(pk=time_tree_id)
             time_tree.branches.add(time_branch)
+            return True
         except Exception:
             return False, 'an exception was caught'
 

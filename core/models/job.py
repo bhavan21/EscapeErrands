@@ -78,18 +78,18 @@ class Job(models.Model):
             self._time_tree = prev_time_tree
         return is_timewise_valid
 
-    def all_goals(self):
+    def get_goals(self):
         return self._goals.all()
 
-    def add_goals(self, goals_list):
-        self._goals.add(goals_list)
+    def add_goal(self, goal):
+        self._goals.add(goal)
         is_timewise_valid = self.is_timewise_valid()
         if is_timewise_valid is not True:
-            self._goals.remove(goals_list)
+            self._goals.remove(goal)
         return is_timewise_valid
 
-    def remove_goals(self, goals_list):
-        self._goals.remove(goals_list)
+    def remove_goal(self, goal):
+        self._goals.remove(goal)
 
     def __str__(self):
         return str(self.id)

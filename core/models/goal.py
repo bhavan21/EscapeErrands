@@ -79,18 +79,18 @@ class Goal(models.Model):
         else:
             return True
 
-    def __dfs_for_checking_cycles(self, node, origin_id, at_root=True):
+    def _dfs_for_checking_cycles(self, node, origin_id, at_root=True):
         if not at_root and node.id == origin_id:
             return True
         else:
             for child in node.get_children().all():
-                if self.__dfs_for_checking_cycles(child, origin_id, False) is True:
+                if self._dfs_for_checking_cycles(child, origin_id, False) is True:
                     return True
 
     def is_acyclically_valid(self):
         # Assumes the graph before inserting this vertex is acyclic
         if self.id is not None:
-            if self.__dfs_for_checking_cycles(self, self.id, True) is not True:
+            if self._dfs_for_checking_cycles(self, self.id, True) is not True:
                 return True
             else:
                 return False, 'Forms cycle'
@@ -100,37 +100,52 @@ class Goal(models.Model):
     def get_parents(self):
         return self._parents.all()
 
-    def add_parents(self, parents_list):
-        self._parents.add(parents_list)
+    def add_parent(self, parent):
+        self._parents.add(parent)
         is_acyclically_valid = self.is_acyclically_valid()
         if is_acyclically_valid is not True:
-            self._parents.remove(parents_list)
+            self._parents.remove(parent)
         return is_acyclically_valid
 
-    def remove_parents(self, parents_list):
-        self._parents.remove(parents_list)
+    def remove_parent(self, parent):
+        self._parents.remove(parent)
 
     def get_children(self):
         return self._children.all()
 
-    def add_children(self, children_list):
-        self._children.add(children_list)
+    def add_child(self, child):
+        self._children.add(child)
         is_acyclically_valid = self.is_acyclically_valid()
         if is_acyclically_valid is not True:
-            self._children.remove(children_list)
+            self._children.remove(child)
         return is_acyclically_valid
 
-    def remove_children(self, children_list):
-        self._children.remove(children_list)
+    def remove_child(self, child):
+        self._children.remove(child)
 
     def get_jobs(self):
         return self._jobs.all()
 
-    def add_jobs(self, jobs_list):
-        self._jobs.add(jobs_list)
+    def add_job(self, job):
+        self._jobs.add(job)
 
-    def remove_jobs(self, jobs_list):
-        self._jobs.remove(jobs_list)
+    def remove_job(self, job):
+        self._jobs.remove(job)
+
+    def _dfs_for_family(self, node, family):
+        family.add(node.id)
+        for parent in node.get_parents():
+            if parent.id not in family:
+                self._dfs_for_family(parent, family)
+
+        for child in node.get_children():
+            if child.id not in family:
+                self._dfs_for_family(child, family)
+
+    def get_family_set(self):
+        family = set()
+        self._dfs_for_family(self, family)
+        return family
 
     def __str__(self):
         return str(self.id)

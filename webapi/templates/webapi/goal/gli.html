@@ -1,0 +1,12 @@
+{% extends 'webapi/base.html' %}
+
+{% block body %}
+    <div>
+        <input id="cmd" type="text">
+        <script>
+            $.ajax({
+                url: {% url 'webapi:' %}
+            });
+        </script>
+    </div>
+{% endblock %}

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <script src="{% static 'webapi/jquery.min.js' %}"></script>
+    <script src="{% static 'webapi/vis.min.js' %}"></script>
+    <title>{% block title %}{% endblock %}</title>
+    {% block css %}{% endblock %}
+</head>
+<body>{% block body %}{% endblock %}</body>
+</html>

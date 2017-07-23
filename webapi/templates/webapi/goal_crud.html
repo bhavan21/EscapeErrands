@@ -1,0 +1,194 @@
+{% extends 'webapi/base.html' %}
+{% block title %}Goals{% endblock %}
+{% block css %}
+    <style>
+        #search-bar {
+            margin: 0;
+            font-family: monospace;
+            font-size: larger;
+            font-weight: bold;
+        }
+
+        #goal-graphs {
+            height: 100vh;
+            border-left: 2px solid black;
+        }
+
+        #toast-container {
+            top: 0;
+            left: 20%;
+            right: auto;
+            bottom: auto;
+        }
+
+        #goal-graphs-control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 5%;
+            margin: 0;
+        }
+
+        #goal-graphs-clear-btn {
+            padding: 0;
+        }
+
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row" style="margin: 0">
+            <div class="col s12 m3 l3">
+                {# search-bar #}
+                <div>
+                    <input id="search-bar" type="text" autofocus title="Your command is my wish">
+                    {# Ajax #}
+                    <script>
+                        $(document).ready(function () {
+                            $('#search-bar').keydown(function (e) {
+                                // Enter Key
+                                if (e.keyCode === 13) {
+                                    $.ajax({
+                                        url: "{% url 'webapi:goal_read_regex' %}",
+                                        method: "GET",
+                                        data: {search: $(this).val()},
+                                        success: function (response) {
+                                            var json_response = JSON.parse(response);
+                                            if (json_response.status === 0) {
+                                                setTable(json_response.body);
+                                            } else if (json_response.status === -1) {
+                                                Materialize.toast(json_response.message, 1000);
+                                            }
+                                        },
+                                        error: function (response) {
+                                            Materialize.toast('Error', 2000);
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    </script>
+                </div>
+                {# results #}
+                <div>
+                    <table id="results" class="table striped highlight"></table>
+                    {# Table manager #}
+                    <script>
+                        function drag_start(e) {
+                            e.dataTransfer.setData("id", e.target.id);
+                        }
+
+                        function getHTMLRow(description, deadline, is_achieved, id) {
+                            deadline = deadline === null ? "-" : deadline;
+                            return '<tr id="' + id + '" draggable="true" ondragstart="drag_start(event)" class="search-result">'
+                                + '<td>' + description + '</td>'
+                                + '<td>' + deadline + '</td>'
+                                + '<td>' + is_achieved + '</td>'
+                                + '</tr>'
+                        }
+
+                        function setTable(rows) {
+                            var results = $('#results');
+                            $(results).empty();
+                            for (var i = 0; i < rows.length; ++i) {
+                                $(results).append(getHTMLRow(
+                                    rows[i].description,
+                                    rows[i].deadline,
+                                    rows[i].is_achieved,
+                                    rows[i].id
+                                ));
+                            }
+                        }
+                    </script>
+                </div>
+            </div>
+            <div class="col s12 m9 l9">
+                {# goal families #}
+                <div>
+                    <div id="goal-graphs" ondrop="drop(event)" ondragover="allow_drop(event)"></div>
+                    <div id="goal-graphs-control-panel" class="row">
+                        <button id="goal-graphs-clear-btn"
+                                class="col s12 m12 l12 btn red"
+                                onclick="empty_goal_graphs()"
+                                title="Clear screen"><i class="material-icons">clear</i></button>
+                    </div>
+                    <script>
+                        function allow_drop(e) {
+                            e.preventDefault();
+                        }
+
+                        function drop(e) {
+                            load_family_of(e.dataTransfer.getData("id"));
+                        }
+
+                        function load_family_of(id) {
+                            $.ajax({
+                                {# Dirty Hack #}
+                                url: "{% url 'webapi:goal_read_family' 1729 %}".replace('1729', id),
+                                method: "GET",
+                                success: function (response) {
+                                    var json_response = JSON.parse(response);
+                                    if (json_response.status === 0) {
+                                        var family = json_response.body;
+                                        render_family(family);
+                                    } else if (json_response.status === -1) {
+                                        Materialize.toast(json_response.message, 1000);
+                                    }
+                                },
+                                error: function (response) {
+                                    Materialize.toast('Error', 2000);
+                                }
+                            });
+                        }
+
+                        function empty_goal_graphs() {
+                            $('#goal-graphs').empty();
+                        }
+
+                        function render_family(family) {
+                            var goal_graphs = document.getElementById('goal-graphs');
+
+                            var nodes = new vis.DataSet(get_node_set(family));
+                            var edges = new vis.DataSet(get_edge_set(family));
+                            var data = {
+                                nodes: nodes,
+                                edges: edges
+                            };
+                            var options = {};
+                            new vis.Network(goal_graphs, data, options);
+                        }
+
+                        function get_node_set(family) {
+                            var array = [];
+                            for (var i = 0; i < family.length; ++i) {
+                                var member = family[i];
+                                array.push({
+                                    id: member.id,
+                                    label: member.description
+                                });
+                            }
+                            return (array);
+                        }
+
+                        function get_edge_set(family) {
+                            var array = [];
+                            for (var i = 0; i < family.length; ++i) {
+                                var member = family[i];
+                                for (var j = 0; j < member.child_ids.length; ++j) {
+                                    var child_id = member.child_ids[j];
+                                    array.push({
+                                        from: member.id,
+                                        to: child_id,
+                                        arrows: 'to'
+                                    });
+                                }
+                            }
+                            return (array);
+                        }
+
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

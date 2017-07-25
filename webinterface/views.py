@@ -6,10 +6,6 @@ import json
 from core.models.goal import Goal
 
 
-def crud(request):
-    return render(request, 'webapi/goal_crud.html')
-
-
 def to_json_style(goal):
     deadline = None
     if goal.deadline is not None:

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% load static %}
+    <script src="{% static 'webinterface/jquery.min.js' %}"></script>
+    <script src="{% static 'webinterface/vis.min.js' %}"></script>
+    <link rel="icon" href="{% static 'webinterface/logo.png' %}">
+
+    <title>{% block title %}{% endblock %}</title>
+    {% block css %}{% endblock %}
+</head>
+<body>{% block body %}{% endblock %}</body>
+</html>

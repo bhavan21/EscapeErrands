@@ -9,7 +9,7 @@ from core.models.goal import Goal
 def to_json_style(goal):
     deadline = None
     if goal.deadline is not None:
-        deadline = goal.deadline.strftime('%c')
+        deadline = goal.deadline.strftime('%H:%M %a %d %b')
     parent_ids = []
     for parent in goal.get_parents():
         parent_ids.append(parent.id)
@@ -55,6 +55,21 @@ def read_family(request, pk):
             json_family.append(to_json_style(member))
 
         return HttpResponse(json.dumps({'status': 0, 'body': json_family}))
+    except ObjectDoesNotExist:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'No goal with such id'}))
 
+
+def goal_glance(request):
+    return render(request, 'webinterface/goal/glance.html')
+
+
+def toggle_is_achieved(request, pk):
+    try:
+        goal = Goal.objects.get(pk=pk)
+        goal.is_achieved = not goal.is_achieved
+        if goal.save() is not True:
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Some dependency goals are not completed'}))
+        else:
+            return HttpResponse(json.dumps({'status': 0}))
     except ObjectDoesNotExist:
         return HttpResponse(json.dumps({'status': -1, 'message': 'No goal with such id'}))

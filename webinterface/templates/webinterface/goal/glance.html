@@ -1,0 +1,204 @@
+{% extends 'webinterface/base.html' %}
+{% block title %}Goals at a Glance{% endblock %}
+{% load static %}
+{% block extra_headers %}
+    <script src="{% static 'webinterface/vis.min.js' %}"></script>
+{% endblock %}
+{% block css %}
+    <style>
+        #goal-search-input {
+            margin: 0;
+            font-family: monospace;
+            font-size: larger;
+            font-weight: bold;
+        }
+
+        #goal-canvas-div {
+            height: 100vh;
+            border-left: 2px solid black;
+        }
+
+        #goal-canvas-clear-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 5%;
+        }
+
+        #goal-canvas-clear-btn {
+            padding: 0;
+        }
+    </style>
+{% endblock %}
+{% block body %}
+    <div class="container-fluid">
+        <div class="row" style="margin: 0">
+            <div class="col s12 m3 l3">
+                <div id="goal-search-div">
+                    <input id="goal-search-input" type="text" autofocus title="Your command is my wish">
+                    <table id="goal-results-table" class="table striped highlight"></table>
+                    <script>
+                        var IS_ACHIEVED_TRUE_ICON = "done";
+                        var IS_ACHIEVED_FALSE_ICON = "crop_square";
+                        function dragStart(e) {
+                            e.dataTransfer.setData("id", e.target.id);
+                        }
+                        function getHTMLRow(description, deadline, is_achieved, id) {
+                            deadline = deadline === null ? "-" : deadline;
+                            var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                            if (is_achieved === true) {
+                                is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+                            }
+                            return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
+                                + '<td class="description">' + description + '</td>'
+                                + '<td>' + deadline + '</td>'
+                                + '<td>' + is_achieved_res + '</td>'
+                                + '</tr>'
+                        }
+                        function setTable(rows) {
+                            var results = $('#goal-results-table');
+                            $(results).empty();
+                            for (var i = 0; i < rows.length; ++i) {
+                                $(results).append(getHTMLRow(
+                                    rows[i].description,
+                                    rows[i].deadline,
+                                    rows[i].is_achieved,
+                                    rows[i].id
+                                ));
+                            }
+                        }
+                        function toggleIsAchieved(icon) {
+                            if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
+                                $(icon).html(IS_ACHIEVED_TRUE_ICON);
+                            } else {
+                                $(icon).html(IS_ACHIEVED_FALSE_ICON);
+                            }
+                        }
+                        $(document).ready(function () {
+                            $('#goal-search-input').keydown(function (e) {
+                                // Enter Key
+                                if (e.keyCode === 13) {
+                                    $.ajax({
+                                        url: "{% url 'webinterface:goal_read_regex' %}",
+                                        method: "GET",
+                                        data: {search: $(this).val()},
+                                        success: function (response) {
+                                            var json_response = JSON.parse(response);
+                                            if (json_response.status === 0) {
+                                                setTable(json_response.body);
+                                            } else if (json_response.status === -1) {
+                                                alert(json_response.message);
+                                            }
+                                        },
+                                        error: function (response) {
+                                            alert('Error');
+                                        }
+                                    });
+                                }
+                            });
+                            $('#goal-results-table')
+                                .on('click', '.is-achieved', function () {
+                                    var id = $(this).parent().parent().attr('id');
+                                    var icon = $(this);
+                                    $.ajax({
+                                        {# Dirty Hack #}
+                                        url: "{% url 'webinterface:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                                        method: "GET",
+                                        success: function (response) {
+                                            var json_response = JSON.parse(response);
+                                            if (json_response.status === 0) {
+                                                toggleIsAchieved(icon);
+                                            } else if (json_response.status === -1) {
+                                                alert(json_response.message);
+                                            }
+                                        },
+                                        error: function (response) {
+                                            alert('Error');
+                                        }
+                                    });
+                                })
+                                .on('click', '.description', function () {
+                                    loadFamilyOf($(this).parent().attr('id'));
+                                });
+                        });
+                    </script>
+                </div>
+            </div>
+            <div class="col s12 m9 l9">
+                <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    <script>
+                        function allowDrop(e) {
+                            e.preventDefault();
+                        }
+                        function drop(e) {
+                            loadFamilyOf(e.dataTransfer.getData("id"));
+                        }
+                        function loadFamilyOf(id) {
+                            $.ajax({
+                                {# Dirty Hack #}
+                                url: "{% url 'webinterface:goal_read_family' 1729 %}".replace('1729', id),
+                                method: "GET",
+                                success: function (response) {
+                                    var json_response = JSON.parse(response);
+                                    if (json_response.status === 0) {
+                                        var family = json_response.body;
+                                        renderFamily(family);
+                                    } else if (json_response.status === -1) {
+                                        alert(json_response.message);
+                                    }
+                                },
+                                error: function (response) {
+                                    alert('Error');
+                                }
+                            });
+                        }
+                        function emptyGoalGraphs() {
+                            $('#goal-canvas-div').empty();
+                        }
+                        function renderFamily(family) {
+                            var goal_canvas_div = document.getElementById('goal-canvas-div');
+                            var nodes = new vis.DataSet(getNodeSet(family));
+                            var edges = new vis.DataSet(getEdgeSet(family));
+                            var data = {
+                                nodes: nodes,
+                                edges: edges
+                            };
+                            var options = {};
+                            new vis.Network(goal_canvas_div, data, options);
+                        }
+                        function getNodeSet(family) {
+                            var array = [];
+                            for (var i = 0; i < family.length; ++i) {
+                                var member = family[i];
+                                array.push({
+                                    id: member.id,
+                                    label: member.description
+                                });
+                            }
+                            return (array);
+                        }
+                        function getEdgeSet(family) {
+                            var array = [];
+                            for (var i = 0; i < family.length; ++i) {
+                                var member = family[i];
+                                for (var j = 0; j < member.child_ids.length; ++j) {
+                                    var child_id = member.child_ids[j];
+                                    array.push({
+                                        from: member.id,
+                                        to: child_id,
+                                        arrows: 'to'
+                                    });
+                                }
+                            }
+                            return (array);
+                        }
+                    </script>
+                </div>
+                <button id="goal-canvas-clear-btn"
+                        class="col s12 m12 l12 btn red"
+                        onclick="emptyGoalGraphs()"
+                        title="Clear canvas"><i class="material-icons">clear</i></button>
+            </div>
+        </div>
+    </div>
+{% endblock %}

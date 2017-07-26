@@ -67,8 +67,9 @@ def toggle_is_achieved(request, pk):
     try:
         goal = Goal.objects.get(pk=pk)
         goal.is_achieved = not goal.is_achieved
-        if goal.save() is not True:
-            return HttpResponse(json.dumps({'status': -1, 'message': 'Some dependency goals are not completed'}))
+        is_saved = goal.save()
+        if is_saved is not True:
+            return HttpResponse(json.dumps({'status': -1, 'message': is_saved[1]}))
         else:
             return HttpResponse(json.dumps({'status': 0}))
     except ObjectDoesNotExist:

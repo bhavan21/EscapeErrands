@@ -44,6 +44,7 @@
                             e.dataTransfer.setData("id", e.target.id);
                         }
                         function getHTMLRow(description, deadline, is_achieved, id) {
+                            description = description === "" ? "NO DESCRIPTION" : description;
                             deadline = deadline === null ? "-" : deadline;
                             var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                             if (is_achieved === true) {

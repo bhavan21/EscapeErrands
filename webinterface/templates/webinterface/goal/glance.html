@@ -3,6 +3,7 @@
 {% load static %}
 {% block extra_headers %}
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
+    <script src="{% static 'webinterface/vis.min.css' %}"></script>
 {% endblock %}
 {% block css %}
     <style>
@@ -80,7 +81,7 @@
                                 // Enter Key
                                 if (e.keyCode === 13) {
                                     $.ajax({
-                                        url: "{% url 'webinterface:goal_read_regex' %}",
+                                        url: "{% url 'restapi:goal_read_regex' %}",
                                         method: "GET",
                                         data: {search: $(this).val()},
                                         success: function (response) {
@@ -103,7 +104,7 @@
                                     var icon = $(this);
                                     $.ajax({
                                         {# Dirty Hack #}
-                                        url: "{% url 'webinterface:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                                        url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
                                         method: "GET",
                                         success: function (response) {
                                             var json_response = JSON.parse(response);
@@ -137,7 +138,7 @@
                         function loadFamilyOf(id) {
                             $.ajax({
                                 {# Dirty Hack #}
-                                url: "{% url 'webinterface:goal_read_family' 1729 %}".replace('1729', id),
+                                url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
                                 method: "GET",
                                 success: function (response) {
                                     var json_response = JSON.parse(response);
@@ -153,7 +154,7 @@
                                 }
                             });
                         }
-                        function emptyGoalGraphs() {
+                        function emptyGoalCanvasDiv() {
                             $('#goal-canvas-div').empty();
                         }
                         function renderFamily(family) {
@@ -171,10 +172,7 @@
                             var array = [];
                             for (var i = 0; i < family.length; ++i) {
                                 var member = family[i];
-                                array.push({
-                                    id: member.id,
-                                    label: member.description
-                                });
+                                array.push([member.id, {label: member.description}]);
                             }
                             return (array);
                         }
@@ -184,11 +182,7 @@
                                 var member = family[i];
                                 for (var j = 0; j < member.child_ids.length; ++j) {
                                     var child_id = member.child_ids[j];
-                                    array.push({
-                                        from: member.id,
-                                        to: child_id,
-                                        arrows: 'to'
-                                    });
+                                    array.push([member.id, child_id]);
                                 }
                             }
                             return (array);
@@ -197,7 +191,7 @@
                 </div>
                 <button id="goal-canvas-clear-btn"
                         class="col s12 m12 l12 btn red"
-                        onclick="emptyGoalGraphs()"
+                        onclick="emptyGoalCanvasDiv()"
                         title="Clear canvas"><i class="material-icons">clear</i></button>
             </div>
         </div>

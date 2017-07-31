@@ -7,16 +7,45 @@
 {% endblock %}
 {% block css %}
     <style>
-        #goal-search-input {
-            margin: 0;
+        #goal-search-div {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 25%;
+            z-index: 999;
+            margin: 20px;
+            background-color: white;
+            border-left: 2px solid black;
+            border-right: 2px solid black;
             font-family: monospace;
-            font-size: larger;
+            font-size: large;
             font-weight: bold;
+        }
+
+        .description:hover {
+            background: rgba(63,63,63,0.10);
+        }
+
+        #goal-search-input {
+            font-size: larger;
+            border-top: 2px solid black;
+            border-bottom: 2px solid black;
+            outline: none;
+            margin-bottom: 0;
+            width: 100%;
+            box-shadow: none;
+        }
+
+        #goal-search-clear-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            padding-left: 10px;
+            padding-right: 10px;
         }
 
         #goal-canvas-div {
             height: 100vh;
-            border-left: 2px solid black;
         }
 
         #goal-canvas-clear-btn {
@@ -24,11 +53,9 @@
             top: 20px;
             right: 20px;
             width: 5%;
-        }
-
-        #goal-canvas-clear-btn {
             padding: 0;
         }
+
     </style>
 {% endblock %}
 {% block body %}
@@ -127,15 +154,16 @@
                     var options = {
                         nodes: {
                             shape: 'dot',
-                            size: 25
+                            size: 25,
+                            font: {size: 12, color: 'black', strokeWidth: 10, face: 'Roboto'}
                         },
                         layout: {
                             hierarchical: {
                                 sortMethod: "directed"
                             }
                         },
-                        edges: {
-                            arrows: {to: true}
+                        interaction: {
+                            keyboard: true
                         }
                     };
                     new vis.Network(canvasDiv, data, options);
@@ -178,119 +206,133 @@
             }
         };
     </script>
-    <div class="container-fluid row" style="margin: 0">
-        <div class="col s12 m3 l3">
-            <div id="goal-search-div">
-                <input id="goal-search-input" type="text" autofocus title="Your command is my wish">
-                <table id="goal-results-table" class="table striped highlight"></table>
-                <script>
-                    var IS_ACHIEVED_TRUE_ICON = "done";
-                    var IS_ACHIEVED_FALSE_ICON = "crop_square";
 
-                    function dragStart(e) {
-                        e.dataTransfer.setData("id", e.target.id);
-                    }
+    <script>
+        var IS_ACHIEVED_TRUE_ICON = "done";
+        var IS_ACHIEVED_FALSE_ICON = "crop_square";
 
-                    function getHTMLRow(description, deadline, is_achieved, id) {
-                        description = description === "" ? "NO DESCRIPTION" : description;
-                        deadline = deadline === null ? "-" : deadline;
-                        var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
-                        if (is_achieved === true) {
-                            is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
-                        }
-                        return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
-                            + '<td class="description">' + description + '</td>'
-                            + '<td>' + deadline + '</td>'
-                            + '<td>' + is_achieved_res + '</td>'
-                            + '</tr>'
-                    }
+        function dragStart(e) {
+            e.dataTransfer.setData("id", e.target.id);
+        }
 
-                    function setTable(rows) {
-                        var results = $('#goal-results-table');
-                        $(results).empty();
-                        for (var i = 0; i < rows.length; ++i) {
-                            $(results).append(getHTMLRow(
-                                rows[i].description,
-                                rows[i].deadline,
-                                rows[i].is_achieved,
-                                rows[i].id
-                            ));
-                        }
-                    }
+        function getHTMLRow(description, deadline, is_achieved, id) {
+            description = description === "" ? "NO DESCRIPTION" : description;
+            deadline = deadline === null ? "-" : deadline;
+            var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+            if (is_achieved === true) {
+                is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+            }
+            return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
+                + '<td class="description">' + description + '</td>'
+                + '<td>' + deadline + '</td>'
+                + '<td>' + is_achieved_res + '</td>'
+                + '</tr>'
+        }
 
-                    function toggleIsAchieved(icon) {
-                        if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
-                            $(icon).html(IS_ACHIEVED_TRUE_ICON);
-                        } else {
-                            $(icon).html(IS_ACHIEVED_FALSE_ICON);
-                        }
-                    }
+        function setTable(rows) {
+            var results = $('#goal-results-table');
+            $(results).empty();
+            if (rows.length === 0) {
+                $(results).append('<tr class="red-text"><td>No matching goals</td></tr>');
+            } else {
+                for (var i = 0; i < rows.length; ++i) {
+                    $(results).append(getHTMLRow(
+                        rows[i].description,
+                        rows[i].deadline,
+                        rows[i].is_achieved,
+                        rows[i].id
+                    ));
+                }
+            }
+        }
 
-                    $(document).ready(function () {
-                        $('#goal-search-input').keydown(function (e) {
-                            // Enter Key
-                            if (e.keyCode === 13) {
-                                $.ajax({
-                                    url: "{% url 'restapi:goal_read_regex' %}",
-                                    method: "GET",
-                                    data: {search: $(this).val()},
-                                    success: function (response) {
-                                        var json_response = JSON.parse(response);
-                                        if (json_response.status === 0) {
-                                            setTable(json_response.body);
-                                        } else if (json_response.status === -1) {
-                                            alert(json_response.message);
-                                        }
-                                    },
-                                    error: function (response) {
-                                        alert('Error');
-                                    }
-                                });
+        function clearSearchInputAndResults() {
+            $('#goal-results-table').empty();
+            $('#goal-search-input').val('');
+        }
+
+        function toggleIsAchieved(icon) {
+            if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
+                $(icon).html(IS_ACHIEVED_TRUE_ICON);
+            } else {
+                $(icon).html(IS_ACHIEVED_FALSE_ICON);
+            }
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            SocietyManager.addFamilyOf(e.dataTransfer.getData("id"));
+        }
+
+        $(document).ready(function () {
+            $('#goal-search-input').keydown(function (e) {
+                // Enter Key
+                if (e.keyCode === 13) {
+                    $.ajax({
+                        url: "{% url 'restapi:goal_read_regex' %}",
+                        method: "GET",
+                        data: {search: $(this).val()},
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                setTable(json_response.body);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
                             }
-                        });
-                        $('#goal-results-table')
-                            .on('click', '.is-achieved', function () {
-                                var id = $(this).parent().parent().attr('id');
-                                var icon = $(this);
-                                $.ajax({
-                                    {# Dirty Hack #}
-                                    url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
-                                    method: "GET",
-                                    success: function (response) {
-                                        var json_response = JSON.parse(response);
-                                        if (json_response.status === 0) {
-                                            toggleIsAchieved(icon);
-                                        } else if (json_response.status === -1) {
-                                            alert(json_response.message);
-                                        }
-                                    },
-                                    error: function (response) {
-                                        alert('Error');
-                                    }
-                                });
-                            })
-                            .on('click', '.description', function () {
-                                SocietyManager.addFamilyOf($(this).parent().attr('id'));
-                            });
+                        },
+                        error: function (response) {
+                            alert('Error');
+                        }
                     });
-                </script>
-            </div>
+                }
+                else if (e.keyCode === 27) {
+                    clearSearchInputAndResults();
+                }
+            });
+            $('#goal-results-table')
+                .on('click', '.is-achieved', function () {
+                    var id = $(this).parent().parent().attr('id');
+                    var icon = $(this);
+                    $.ajax({
+                        {# Dirty Hack #}
+                        url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                        method: "GET",
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                toggleIsAchieved(icon);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error');
+                        }
+                    });
+                })
+                .on('click', '.description', function () {
+                    SocietyManager.addFamilyOf($(this).parent().attr('id'));
+                });
+        });
+    </script>
+    <div class="container-fluid">
+        <div id="goal-search-div" class="z-depth-1">
+            <input id="goal-search-input" autofocus title="Search using regex">
+            <button id="goal-search-clear-btn"
+                    class="btn z-depth-0 black-text white"
+                    title="clear"
+                    onclick="clearSearchInputAndResults()">
+                <i class="material-icons">clear</i></button>
+            <table id="goal-results-table" class=""></table>
         </div>
-        <div class="col s12 m9 l9">
-            <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)">
-                <script>
-                    function allowDrop(e) {
-                        e.preventDefault();
-                    }
 
-                    function drop(e) {
-                        SocietyManager.addFamilyOf(e.dataTransfer.getData("id"));
-                    }
-                </script>
-            </div>
-            <button id="goal-canvas-clear-btn"
-                    class="col s12 m12 l12 btn red"
-                    title="Clear canvas"><i class="material-icons">clear</i></button>
-        </div>
+        <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+        <button id="goal-canvas-clear-btn"
+                class="col s12 m12 l12 btn red"
+                title="Clear canvas"><i class="material-icons">clear</i></button>
     </div>
 {% endblock %}

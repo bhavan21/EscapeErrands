@@ -3,7 +3,7 @@
 {% load static %}
 {% block extra_headers %}
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
-    <script src="{% static 'webinterface/vis.min.css' %}"></script>
+    <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis.min.css' %}"/>
 {% endblock %}
 {% block css %}
     <style>
@@ -32,168 +32,265 @@
     </style>
 {% endblock %}
 {% block body %}
-    <div class="container-fluid">
-        <div class="row" style="margin: 0">
-            <div class="col s12 m3 l3">
-                <div id="goal-search-div">
-                    <input id="goal-search-input" type="text" autofocus title="Your command is my wish">
-                    <table id="goal-results-table" class="table striped highlight"></table>
-                    <script>
-                        var IS_ACHIEVED_TRUE_ICON = "done";
-                        var IS_ACHIEVED_FALSE_ICON = "crop_square";
-                        function dragStart(e) {
-                            e.dataTransfer.setData("id", e.target.id);
+    <script>
+        var SocietyManager = {
+            society: {
+                families: [],
+                push: function (family) {
+                    this.families.push(family);
+                    this.rendererCallBack();
+                },
+                remove: function (familyIndex) {
+                    this.families.splice(familyIndex, 1);
+                    this.rendererCallBack();
+                },
+                rendererCallBack: function () {
+                    SocietyRenderer.reRender(this.families);
+                }
+            },
+            isInSociety: function (id) {
+                id = Number(id);
+                for (var i = 0; i < this.society.families.length; ++i) {
+                    var ithFamily = this.society.families[i];
+                    for (var j = 0; j < ithFamily.length; ++j) {
+                        var jthMember = ithFamily[j];
+                        if (jthMember.id === id) {
+                            return true;
                         }
-                        function getHTMLRow(description, deadline, is_achieved, id) {
-                            description = description === "" ? "NO DESCRIPTION" : description;
-                            deadline = deadline === null ? "-" : deadline;
-                            var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
-                            if (is_achieved === true) {
-                                is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+                    }
+                }
+                return false;
+            },
+            addFamilyOf: function (id) {
+                if (this.isInSociety(id)) {
+                    return false;
+                } else {
+                    var society = this.society;
+                    {# read and add its family #}
+                    $.ajax({
+                        {# Dirty hack #}
+                        url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
+                        method: "GET",
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                var family = json_response.body;
+                                society.push(family);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
                             }
-                            return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
-                                + '<td class="description">' + description + '</td>'
-                                + '<td>' + deadline + '</td>'
-                                + '<td>' + is_achieved_res + '</td>'
-                                + '</tr>'
+                        },
+                        error: function (response) {
+                            alert('Error reading family of ' + id);
                         }
-                        function setTable(rows) {
-                            var results = $('#goal-results-table');
-                            $(results).empty();
-                            for (var i = 0; i < rows.length; ++i) {
-                                $(results).append(getHTMLRow(
-                                    rows[i].description,
-                                    rows[i].deadline,
-                                    rows[i].is_achieved,
-                                    rows[i].id
-                                ));
+                    });
+                    return true;
+                }
+            },
+            removeFamilyOf: function (id) {
+                var indexOfFamilyToBeRemoved = -1;
+                for (var i = 0; i < this.society.families.length; ++i) {
+                    var ithFamily = this.society.families[i];
+                    for (var j = 0; j < ithFamily.length; ++j) {
+                        var jthMember = ithFamily[j];
+                        if (jthMember.id === id) {
+                            indexOfFamilyToBeRemoved = i;
+                            break;
+                        }
+                    }
+                    if (indexOfFamilyToBeRemoved > -1) {
+                        break;
+                    }
+                }
+                if (indexOfFamilyToBeRemoved > -1) {
+                    this.society.remove(indexOfFamilyToBeRemoved);
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        };
+        var SocietyRenderer = {
+            reRender: function (families) {
+                var canvasId = 'goal-canvas-div';
+                var emptyCanvasDiv = function () {
+                    $('#' + canvasId).empty();
+                };
+                var render = function (families) {
+                    var canvasDiv = document.getElementById(canvasId);
+                    var nodes = getNodeSet(families);
+                    var edges = getEdgeSet(families);
+                    var data = {
+                        nodes: nodes,
+                        edges: edges
+                    };
+                    var options = {
+                        nodes: {
+                            shape: 'dot',
+                            size: 25
+                        },
+                        layout: {
+                            hierarchical: {
+                                sortMethod: "directed"
                             }
+                        },
+                        edges: {
+                            arrows: {to: true}
                         }
-                        function toggleIsAchieved(icon) {
-                            if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
-                                $(icon).html(IS_ACHIEVED_TRUE_ICON);
-                            } else {
-                                $(icon).html(IS_ACHIEVED_FALSE_ICON);
-                            }
-                        }
-                        $(document).ready(function () {
-                            $('#goal-search-input').keydown(function (e) {
-                                // Enter Key
-                                if (e.keyCode === 13) {
-                                    $.ajax({
-                                        url: "{% url 'restapi:goal_read_regex' %}",
-                                        method: "GET",
-                                        data: {search: $(this).val()},
-                                        success: function (response) {
-                                            var json_response = JSON.parse(response);
-                                            if (json_response.status === 0) {
-                                                setTable(json_response.body);
-                                            } else if (json_response.status === -1) {
-                                                alert(json_response.message);
-                                            }
-                                        },
-                                        error: function (response) {
-                                            alert('Error');
-                                        }
-                                    });
-                                }
+                    };
+                    new vis.Network(canvasDiv, data, options);
+                };
+                var getNodeSet = function (families) {
+                    var array = [];
+                    for (var i = 0; i < families.length; ++i) {
+                        var ithFamily = families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            array.push({
+                                id: jthMember.id,
+                                label: jthMember.description
                             });
-                            $('#goal-results-table')
-                                .on('click', '.is-achieved', function () {
-                                    var id = $(this).parent().parent().attr('id');
-                                    var icon = $(this);
-                                    $.ajax({
-                                        {# Dirty Hack #}
-                                        url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
-                                        method: "GET",
-                                        success: function (response) {
-                                            var json_response = JSON.parse(response);
-                                            if (json_response.status === 0) {
-                                                toggleIsAchieved(icon);
-                                            } else if (json_response.status === -1) {
-                                                alert(json_response.message);
-                                            }
-                                        },
-                                        error: function (response) {
-                                            alert('Error');
-                                        }
-                                    });
-                                })
-                                .on('click', '.description', function () {
-                                    loadFamilyOf($(this).parent().attr('id'));
+                        }
+                    }
+                    return (array);
+                };
+                var getEdgeSet = function (families) {
+                    var array = [];
+                    for (var i = 0; i < families.length; ++i) {
+                        var ithFamily = families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            for (var k = 0; k < jthMember.child_ids.length; ++k) {
+                                var child_id = jthMember.child_ids[k];
+                                array.push({
+                                    from: jthMember.id,
+                                    to: child_id,
+                                    arrows: 'to'
                                 });
-                        });
-                    </script>
-                </div>
-            </div>
-            <div class="col s12 m9 l9">
-                <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)">
-                    <script>
-                        function allowDrop(e) {
-                            e.preventDefault();
+                            }
                         }
-                        function drop(e) {
-                            loadFamilyOf(e.dataTransfer.getData("id"));
+                    }
+                    return (array);
+                };
+
+                emptyCanvasDiv();
+                render(families);
+            }
+        };
+    </script>
+    <div class="container-fluid row" style="margin: 0">
+        <div class="col s12 m3 l3">
+            <div id="goal-search-div">
+                <input id="goal-search-input" type="text" autofocus title="Your command is my wish">
+                <table id="goal-results-table" class="table striped highlight"></table>
+                <script>
+                    var IS_ACHIEVED_TRUE_ICON = "done";
+                    var IS_ACHIEVED_FALSE_ICON = "crop_square";
+
+                    function dragStart(e) {
+                        e.dataTransfer.setData("id", e.target.id);
+                    }
+
+                    function getHTMLRow(description, deadline, is_achieved, id) {
+                        description = description === "" ? "NO DESCRIPTION" : description;
+                        deadline = deadline === null ? "-" : deadline;
+                        var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                        if (is_achieved === true) {
+                            is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
                         }
-                        function loadFamilyOf(id) {
-                            $.ajax({
-                                {# Dirty Hack #}
-                                url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
-                                method: "GET",
-                                success: function (response) {
-                                    var json_response = JSON.parse(response);
-                                    if (json_response.status === 0) {
-                                        var family = json_response.body;
-                                        renderFamily(family);
-                                    } else if (json_response.status === -1) {
-                                        alert(json_response.message);
+                        return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
+                            + '<td class="description">' + description + '</td>'
+                            + '<td>' + deadline + '</td>'
+                            + '<td>' + is_achieved_res + '</td>'
+                            + '</tr>'
+                    }
+
+                    function setTable(rows) {
+                        var results = $('#goal-results-table');
+                        $(results).empty();
+                        for (var i = 0; i < rows.length; ++i) {
+                            $(results).append(getHTMLRow(
+                                rows[i].description,
+                                rows[i].deadline,
+                                rows[i].is_achieved,
+                                rows[i].id
+                            ));
+                        }
+                    }
+
+                    function toggleIsAchieved(icon) {
+                        if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
+                            $(icon).html(IS_ACHIEVED_TRUE_ICON);
+                        } else {
+                            $(icon).html(IS_ACHIEVED_FALSE_ICON);
+                        }
+                    }
+
+                    $(document).ready(function () {
+                        $('#goal-search-input').keydown(function (e) {
+                            // Enter Key
+                            if (e.keyCode === 13) {
+                                $.ajax({
+                                    url: "{% url 'restapi:goal_read_regex' %}",
+                                    method: "GET",
+                                    data: {search: $(this).val()},
+                                    success: function (response) {
+                                        var json_response = JSON.parse(response);
+                                        if (json_response.status === 0) {
+                                            setTable(json_response.body);
+                                        } else if (json_response.status === -1) {
+                                            alert(json_response.message);
+                                        }
+                                    },
+                                    error: function (response) {
+                                        alert('Error');
                                     }
-                                },
-                                error: function (response) {
-                                    alert('Error');
-                                }
+                                });
+                            }
+                        });
+                        $('#goal-results-table')
+                            .on('click', '.is-achieved', function () {
+                                var id = $(this).parent().parent().attr('id');
+                                var icon = $(this);
+                                $.ajax({
+                                    {# Dirty Hack #}
+                                    url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                                    method: "GET",
+                                    success: function (response) {
+                                        var json_response = JSON.parse(response);
+                                        if (json_response.status === 0) {
+                                            toggleIsAchieved(icon);
+                                        } else if (json_response.status === -1) {
+                                            alert(json_response.message);
+                                        }
+                                    },
+                                    error: function (response) {
+                                        alert('Error');
+                                    }
+                                });
+                            })
+                            .on('click', '.description', function () {
+                                SocietyManager.addFamilyOf($(this).parent().attr('id'));
                             });
-                        }
-                        function emptyGoalCanvasDiv() {
-                            $('#goal-canvas-div').empty();
-                        }
-                        function renderFamily(family) {
-                            var goal_canvas_div = document.getElementById('goal-canvas-div');
-                            var nodes = new vis.DataSet(getNodeSet(family));
-                            var edges = new vis.DataSet(getEdgeSet(family));
-                            var data = {
-                                nodes: nodes,
-                                edges: edges
-                            };
-                            var options = {};
-                            new vis.Network(goal_canvas_div, data, options);
-                        }
-                        function getNodeSet(family) {
-                            var array = [];
-                            for (var i = 0; i < family.length; ++i) {
-                                var member = family[i];
-                                array.push([member.id, {label: member.description}]);
-                            }
-                            return (array);
-                        }
-                        function getEdgeSet(family) {
-                            var array = [];
-                            for (var i = 0; i < family.length; ++i) {
-                                var member = family[i];
-                                for (var j = 0; j < member.child_ids.length; ++j) {
-                                    var child_id = member.child_ids[j];
-                                    array.push([member.id, child_id]);
-                                }
-                            }
-                            return (array);
-                        }
-                    </script>
-                </div>
-                <button id="goal-canvas-clear-btn"
-                        class="col s12 m12 l12 btn red"
-                        onclick="emptyGoalCanvasDiv()"
-                        title="Clear canvas"><i class="material-icons">clear</i></button>
+                    });
+                </script>
             </div>
+        </div>
+        <div class="col s12 m9 l9">
+            <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <script>
+                    function allowDrop(e) {
+                        e.preventDefault();
+                    }
+
+                    function drop(e) {
+                        SocietyManager.addFamilyOf(e.dataTransfer.getData("id"));
+                    }
+                </script>
+            </div>
+            <button id="goal-canvas-clear-btn"
+                    class="col s12 m12 l12 btn red"
+                    title="Clear canvas"><i class="material-icons">clear</i></button>
         </div>
     </div>
 {% endblock %}

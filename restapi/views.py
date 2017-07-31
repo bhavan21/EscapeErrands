@@ -1,8 +1,10 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpResponse
+from django.utils.datastructures import MultiValueDictKeyError
+from datetime import datetime as dt
+from core.models.goal import Goal
 import re
 import json
-from core.models.goal import Goal
 
 
 def to_json_style(goal):
@@ -64,6 +66,29 @@ def read_family(request, pk):
         return HttpResponse(json.dumps({'status': 0, 'body': json_family}))
     except ObjectDoesNotExist:
         return HttpResponse(json.dumps({'status': -1, 'message': 'No goal with such id'}))
+
+
+def create(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.POST['data'])
+            description = data['description']
+            deadline = data['deadline']
+            if deadline is not None:
+                deadline = dt(year=deadline['year'],
+                              month=deadline['month'],
+                              day=deadline['day'],
+                              hour=deadline['hour'],
+                              minute=deadline['minute'],
+                              second=deadline['second'],
+                              microseconds=deadline['microsecond'])
+            new_goal = Goal(description=description, deadline=deadline)
+            new_goal.save()
+            return HttpResponse(json.dumps({'status': 0, 'body': to_json_style(new_goal)}))
+        except (ValueError, TypeError):
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
+    else:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
 
 def toggle_is_achieved(request, pk):

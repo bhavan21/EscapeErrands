@@ -3,6 +3,7 @@
 {% load static %}
 {% block extra_headers %}
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
+    <script src="{% static 'webinterface/cookie.js' %}"></script>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis.min.css' %}"/>
 {% endblock %}
 {% block css %}
@@ -22,7 +23,7 @@
             font-weight: bold;
         }
 
-        .description:hover {
+        .search-result:hover {
             background: rgba(63, 63, 63, 0.10);
         }
 
@@ -44,14 +45,67 @@
             padding-right: 10px;
         }
 
+        #goal-results-div {
+            height: 90vh;
+            overflow-y: auto;
+            display: none;
+        }
+
         #goal-canvas-div {
             height: 100vh;
         }
 
-        #goal-canvas-clear-btn {
+        #goal-canvas-clear-btn, #new-goal-modal-toggle-btn {
             position: fixed;
             top: 20px;
             right: 20px;
+        }
+
+        #new-goal-modal-toggle-btn {
+            top: 80px;
+        }
+
+        #new-goal-modal {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 25%;
+            background-color: white;
+            border: 2px solid black;
+            padding: 20px;
+            margin: 20px;
+            z-index: 1000;
+            display: none;
+            font-size: large;
+            font-weight: bold;
+        }
+
+        #new-goal-description {
+            border: none;
+            border-bottom: 1px solid black;
+            height: 200px;
+        }
+
+        #new-goal-description:focus {
+            border: 1px solid black;
+            outline: none;
+        }
+
+        #new-goal-deadline {
+            outline: none;
+            box-shadow: none;
+            border-bottom: 1px solid black;
+        }
+
+        #new-goal-modal-hide-btn {
+            padding: 0;
+            position: absolute;
+            top: 5px;
+            right: 10px;
+        }
+
+        #new-goal-modal-submit-btn {
+            padding: 0;
         }
 
     </style>
@@ -63,19 +117,11 @@
                 families: [],
                 push: function (family) {
                     this.families.push(family);
-                    this.familiesChangeCallback();
+                    this.resetGraph();
                 },
                 remove: function (familyIndex) {
                     this.families.splice(familyIndex, 1);
-                    this.familiesChangeCallback();
-                },
-                set: function (family) {
-                    this.families = [family];
-                    this.familiesChangeCallback();
-                },
-                clear: function () {
-                    this.families = [];
-                    this.familiesChangeCallback();
+                    this.resetGraph();
                 },
                 toggleIsAchieved: function (id) {
                     id = Number(id);
@@ -88,14 +134,27 @@
                             }
                         }
                     }
-                    this.familiesChangeCallback();
+                    this.resetGraph();
                 },
-                familiesChangeCallback: function () {
-                    var societyGraph = SocietyRenderer.reRender(this.families);
-                    // Set Listeners to the rendered graph
-                    societyGraph.on('doubleClick', function (params) {
+                set: function (family) {
+                    this.families = [family];
+                    this.resetGraph();
+                },
+                clear: function () {
+                    this.families = [];
+                    this.resetGraph();
+                },
+                resetGraph: function () {
+                    var graph = SocietyRenderer.reRender(this.families);
+                    // Set Listeners
+                    graph.on('doubleClick', function (params) {
+                        // on node
                         if (params.nodes.length === 1) {
                             SocietyManager.toggleAchievement(params.nodes[0]);
+                        }
+                        // on empty space
+                        else if (params.nodes.length === 0 && params.edges.length === 0) {
+                            $('#new-goal-modal').toggle();
                         }
                     });
                 }
@@ -201,6 +260,49 @@
                         alert('Error toggling completion of goal');
                     }
                 });
+            },
+            createGoal: function (description, deadline) {
+                var csrfSafeMethod = function (method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                };
+                var parseDeadline = function (deadline) {
+                    deadline = deadline === '' ? null : deadline;
+                    return deadline;
+                };
+                var breakDownDescription = function (description) {
+                    return description;
+                };
+                var jsonStringedData = JSON.stringify({
+                    description: breakDownDescription(description),
+                    deadline: parseDeadline(deadline)
+                });
+                $.ajax({
+                    url: "{% url 'restapi:goal_create' %}",
+                    method: 'POST',
+                    data: {
+                        data: jsonStringedData
+                    },
+                    success: function (response) {
+                        var json_response = JSON.parse(response);
+                        if (json_response.status === 0) {
+                            SocietyManager.society.push([json_response.body]);
+                        } else if (json_response.status === -1) {
+                            alert(json_response.message);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error creating goal');
+                    },
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                        }
+                    }
+                });
+            },
+            init: function () {
+                this.society.resetGraph();
             }
         };
         var SocietyRenderer = {
@@ -285,6 +387,7 @@
         var GoalSearchManager = {
             searchInputId: 'goal-search-input',
             resultsTableId: 'goal-results-table',
+            resultsDivId: 'goal-results-div',
             initService: function () {
                 $('#' + GoalSearchManager.searchInputId).keydown(function (e) {
                     switch (e.keyCode) {
@@ -317,17 +420,18 @@
             },
             reset: function () {
                 $('#' + GoalSearchManager.resultsTableId).empty();
+                $('#' + GoalSearchManager.resultsDivId).hide();
                 $('#' + GoalSearchManager.searchInputId).val('');
             },
             results: {
                 setTable: function (rows) {
-                    var results = $('#goal-results-table');
-                    $(results).empty();
+                    var resultsTable = $('#' + GoalSearchManager.resultsTableId);
+                    $(resultsTable).empty();
                     if (rows.length === 0) {
-                        $(results).append('<tr class="red-text"><td>No matching goals</td></tr>');
+                        $(resultsTable).append('<tr class="red-text"><td>No matching goals</td></tr>');
                     } else {
                         for (var i = 0; i < rows.length; ++i) {
-                            $(results).append(this.getHTMLRow(
+                            $(resultsTable).append(this.getHTMLRow(
                                 rows[i].description,
                                 rows[i].deadline,
                                 rows[i].is_achieved,
@@ -335,6 +439,7 @@
                             ));
                         }
                     }
+                    $('#' + GoalSearchManager.resultsDivId).show();
                 },
                 getHTMLRow: function (description, deadline, is_achieved, id) {
                     var IS_ACHIEVED_TRUE_ICON = "done";
@@ -342,9 +447,9 @@
 
                     description = description === "" ? "@Empty" : description;
                     deadline = deadline === null ? "@Free" : deadline;
-                    var is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                    var is_achieved_res = '<i class="material-icons orange-text">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
-                        is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+                        is_achieved_res = '<i class="material-icons green-text">' + IS_ACHIEVED_TRUE_ICON + '</i>';
                     }
 
                     return '<tr id="' + id + '" draggable="true" '
@@ -352,7 +457,7 @@
                         + 'onclick="function click(id) {SocietyManager.setFamilyOf(id);} click(this.id)"'
                         + 'class="search-result">'
                         + '<td class="description">' + description + '</td>'
-                        + '<td class="deadline">' + deadline + '</td>'
+                        + '<td class="deadline red-text">' + deadline + '</td>'
                         + '<td class="is-achieved">' + is_achieved_res + '</td>'
                         + '</tr>'
                 }
@@ -363,6 +468,7 @@
     <script>
         $(document).ready(function () {
             GoalSearchManager.initService();
+            SocietyManager.init();
         });
     </script>
     <div class="container-fluid">
@@ -373,9 +479,10 @@
                     title="clear"
                     onclick="GoalSearchManager.reset()">
                 <i class="material-icons">clear</i></button>
-            <table id="goal-results-table" class=""></table>
+            <div id="goal-results-div">
+                <table id="goal-results-table"></table>
+            </div>
         </div>
-
         <div id="goal-canvas-div"
              ondrop="function drop(e) {var id = e.dataTransfer.getData('id');SocietyManager.addFamilyOf(id);}drop(event)"
              ondragover="function allowDrop(e) {e.preventDefault();}allowDrop(event)"></div>
@@ -384,5 +491,33 @@
                 title="Clear canvas"
                 onclick="function clear() {SocietyManager.clearSociety()}clear()">
             <i class="material-icons">replay</i></button>
+        <button id="new-goal-modal-toggle-btn"
+                class="btn-floating purple z-depth-0"
+                title="Create goal"
+                onclick="function toggleNewGoalModal() {$('#new-goal-modal').toggle();}toggleNewGoalModal()">
+            <i class="material-icons">add</i></button>
+        <div id="new-goal-modal">
+            <button id="new-goal-modal-hide-btn"
+                    class="btn white black-text z-depth-0"
+                    title="Submit"
+                    onclick="function hideNewGoalModal() {$('#new-goal-modal').hide();}hideNewGoalModal()">
+                <i class="material-icons">close</i></button>
+            <label for="new-goal-description">Description</label><textarea id="new-goal-description"></textarea>
+            <label for="new-goal-deadline">Deadline</label><input id="new-goal-deadline">
+            <button id="new-goal-modal-submit-btn"
+                    class="btn btn-large white black-text z-depth-0"
+                    title="Submit"
+                    onclick="function submit() {
+                        var descriptionInput = $('#new-goal-description');
+                        var deadlineInput = $('#new-goal-deadline');
+                        var description = $(descriptionInput).val();
+                        var deadline = $(deadlineInput).val();
+                        SocietyManager.createGoal(description, deadline);
+                        $(descriptionInput).val('');
+                        $(deadlineInput).val('');
+                        $('#new-goal-modal').hide();
+                    }submit()">
+                <i class="material-icons">send</i></button>
+        </div>
     </div>
 {% endblock %}

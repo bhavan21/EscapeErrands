@@ -52,8 +52,6 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            width: 5%;
-            padding: 0;
         }
 
     </style>
@@ -65,18 +63,41 @@
                 families: [],
                 push: function (family) {
                     this.families.push(family);
-                    this.societyChangeCallback();
+                    this.familiesChangeCallback();
                 },
                 remove: function (familyIndex) {
                     this.families.splice(familyIndex, 1);
-                    this.societyChangeCallback();
+                    this.familiesChangeCallback();
                 },
                 set: function (family) {
                     this.families = [family];
-                    this.societyChangeCallback();
+                    this.familiesChangeCallback();
                 },
-                societyChangeCallback: function () {
-                    SocietyRenderer.reRender(this.families);
+                clear: function () {
+                    this.families = [];
+                    this.familiesChangeCallback();
+                },
+                toggleIsAchieved: function (id) {
+                    id = Number(id);
+                    for (var i = 0; i < this.families.length; ++i) {
+                        var ithFamily = this.families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                jthMember.is_achieved = !jthMember.is_achieved;
+                            }
+                        }
+                    }
+                    this.familiesChangeCallback();
+                },
+                familiesChangeCallback: function () {
+                    var societyGraph = SocietyRenderer.reRender(this.families);
+                    // Set Listeners to the rendered graph
+                    societyGraph.on('doubleClick', function (params) {
+                        if (params.nodes.length === 1) {
+                            SocietyManager.toggleAchievement(params.nodes[0]);
+                        }
+                    });
                 }
             },
             isInSociety: function (id) {
@@ -159,12 +180,33 @@
                         alert('Error reading family of ' + id);
                     }
                 });
+            },
+            clearSociety: function () {
+                this.society.clear();
+            },
+            toggleAchievement: function (id) {
+                $.ajax({
+                    {# Dirty Hack #}
+                    url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                    method: "GET",
+                    success: function (response) {
+                        var json_response = JSON.parse(response);
+                        if (json_response.status === 0) {
+                            SocietyManager.society.toggleIsAchieved(id);
+                        } else if (json_response.status === -1) {
+                            alert(json_response.message);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error toggling completion of goal');
+                    }
+                });
             }
         };
         var SocietyRenderer = {
             containerId: 'goal-canvas-div',
             reRender: function (families) {
-                var emptyCanvasDiv = function () {
+                var emptyContainer = function () {
                     $('#' + SocietyRenderer.containerId).empty();
                 };
                 var render = function (families) {
@@ -192,7 +234,7 @@
                             hover: true
                         },
                     };
-                    new vis.Network(canvasDiv, data, options);
+                    return new vis.Network(canvasDiv, data, options);
                 };
                 var getNodeSet = function (families) {
                     var array = [];
@@ -200,9 +242,17 @@
                         var ithFamily = families[i];
                         for (var j = 0; j < ithFamily.length; ++j) {
                             var jthMember = ithFamily[j];
+                            var color = {};
+                            if (jthMember.is_achieved === true) {
+                                color.background = 'lightgreen';
+                                color.border = 'green';
+                            } else {
+                                color.background = 'pink';
+                                color.border = 'purple';
+                            }
                             array.push({
                                 id: jthMember.id,
-                                color: {background: 'pink', border: 'purple'},
+                                color: color,
                                 label: jthMember.description
                             });
                         }
@@ -228,8 +278,8 @@
                     return (array);
                 };
 
-                emptyCanvasDiv();
-                render(families);
+                emptyContainer();
+                return render(families);
             }
         };
         var GoalSearchManager = {
@@ -287,19 +337,23 @@
                     }
                 },
                 getHTMLRow: function (description, deadline, is_achieved, id) {
-                    description = description === "" ? "NO DESCRIPTION" : description;
-                    deadline = deadline === null ? "-" : deadline;
-                    var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                    var IS_ACHIEVED_TRUE_ICON = "done";
+                    var IS_ACHIEVED_FALSE_ICON = "crop_square";
+
+                    description = description === "" ? "@Empty" : description;
+                    deadline = deadline === null ? "@Free" : deadline;
+                    var is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
-                        is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+                        is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_TRUE_ICON + '</i>';
                     }
+
                     return '<tr id="' + id + '" draggable="true" '
                         + 'ondragstart="function transferId(e) {e.dataTransfer.setData(\'id\', e.target.id);} transferId(event)" '
                         + 'onclick="function click(id) {SocietyManager.setFamilyOf(id);} click(this.id)"'
                         + 'class="search-result">'
                         + '<td class="description">' + description + '</td>'
-                        + '<td>' + deadline + '</td>'
-                        + '<td>' + is_achieved_res + '</td>'
+                        + '<td class="deadline">' + deadline + '</td>'
+                        + '<td class="is-achieved">' + is_achieved_res + '</td>'
                         + '</tr>'
                 }
             }
@@ -307,40 +361,8 @@
     </script>
 
     <script>
-        var IS_ACHIEVED_TRUE_ICON = "done";
-        var IS_ACHIEVED_FALSE_ICON = "crop_square";
-
-        function toggleIsAchieved(icon) {
-            if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
-                $(icon).html(IS_ACHIEVED_TRUE_ICON);
-            } else {
-                $(icon).html(IS_ACHIEVED_FALSE_ICON);
-            }
-        }
-
         $(document).ready(function () {
             GoalSearchManager.initService();
-            $('#goal-results-table')
-                .on('click', '.is-achieved', function () {
-                    var id = $(this).parent().parent().attr('id');
-                    var icon = $(this);
-                    $.ajax({
-                        {# Dirty Hack #}
-                        url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
-                        method: "GET",
-                        success: function (response) {
-                            var json_response = JSON.parse(response);
-                            if (json_response.status === 0) {
-                                toggleIsAchieved(icon);
-                            } else if (json_response.status === -1) {
-                                alert(json_response.message);
-                            }
-                        },
-                        error: function (response) {
-                            alert('Error');
-                        }
-                    });
-                });
         });
     </script>
     <div class="container-fluid">
@@ -358,7 +380,9 @@
              ondrop="function drop(e) {var id = e.dataTransfer.getData('id');SocietyManager.addFamilyOf(id);}drop(event)"
              ondragover="function allowDrop(e) {e.preventDefault();}allowDrop(event)"></div>
         <button id="goal-canvas-clear-btn"
-                class="btn red"
-                title="Clear canvas"><i class="material-icons">clear</i></button>
+                class="btn-floating black z-depth-0"
+                title="Clear canvas"
+                onclick="function clear() {SocietyManager.clearSociety()}clear()">
+            <i class="material-icons">replay</i></button>
     </div>
 {% endblock %}

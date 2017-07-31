@@ -23,7 +23,7 @@
         }
 
         .description:hover {
-            background: rgba(63,63,63,0.10);
+            background: rgba(63, 63, 63, 0.10);
         }
 
         #goal-search-input {
@@ -65,13 +65,17 @@
                 families: [],
                 push: function (family) {
                     this.families.push(family);
-                    this.rendererCallBack();
+                    this.societyChangeCallback();
                 },
                 remove: function (familyIndex) {
                     this.families.splice(familyIndex, 1);
-                    this.rendererCallBack();
+                    this.societyChangeCallback();
                 },
-                rendererCallBack: function () {
+                set: function (family) {
+                    this.families = [family];
+                    this.societyChangeCallback();
+                },
+                societyChangeCallback: function () {
                     SocietyRenderer.reRender(this.families);
                 }
             },
@@ -111,7 +115,6 @@
                             alert('Error reading family of ' + id);
                         }
                     });
-                    return true;
                 }
             },
             removeFamilyOf: function (id) {
@@ -135,6 +138,27 @@
                 } else {
                     return false;
                 }
+            },
+            setFamilyOf: function (id) {
+                var society = this.society;
+                {# read and add its family #}
+                $.ajax({
+                    {# Dirty hack #}
+                    url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
+                    method: "GET",
+                    success: function (response) {
+                        var json_response = JSON.parse(response);
+                        if (json_response.status === 0) {
+                            var family = json_response.body;
+                            society.set(family);
+                        } else if (json_response.status === -1) {
+                            alert(json_response.message);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error reading family of ' + id);
+                    }
+                });
             }
         };
         var SocietyRenderer = {
@@ -314,7 +338,7 @@
                     });
                 })
                 .on('click', '.description', function () {
-                    SocietyManager.addFamilyOf($(this).parent().attr('id'));
+                    SocietyManager.setFamilyOf($(this).parent().attr('id'));
                 });
         });
     </script>

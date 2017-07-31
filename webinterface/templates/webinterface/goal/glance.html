@@ -162,13 +162,13 @@
             }
         };
         var SocietyRenderer = {
+            containerId: 'goal-canvas-div',
             reRender: function (families) {
-                var canvasId = 'goal-canvas-div';
                 var emptyCanvasDiv = function () {
-                    $('#' + canvasId).empty();
+                    $('#' + SocietyRenderer.containerId).empty();
                 };
                 var render = function (families) {
-                    var canvasDiv = document.getElementById(canvasId);
+                    var canvasDiv = document.getElementById(SocietyRenderer.containerId);
                     var nodes = getNodeSet(families);
                     var edges = getEdgeSet(families);
                     var data = {
@@ -178,8 +178,9 @@
                     var options = {
                         nodes: {
                             shape: 'dot',
-                            size: 25,
-                            font: {size: 12, color: 'black', strokeWidth: 10, face: 'Roboto'}
+                            borderWidth: 5,
+                            size: 10,
+                            font: {size: 15, color: 'black', background: 'white', face: 'Roboto'}
                         },
                         layout: {
                             hierarchical: {
@@ -187,8 +188,9 @@
                             }
                         },
                         interaction: {
-                            keyboard: true
-                        }
+                            keyboard: true,
+                            hover: true
+                        },
                     };
                     new vis.Network(canvasDiv, data, options);
                 };
@@ -200,6 +202,7 @@
                             var jthMember = ithFamily[j];
                             array.push({
                                 id: jthMember.id,
+                                color: {background: 'pink', border: 'purple'},
                                 label: jthMember.description
                             });
                         }
@@ -229,51 +232,83 @@
                 render(families);
             }
         };
+        var GoalSearchManager = {
+            searchInputId: 'goal-search-input',
+            resultsTableId: 'goal-results-table',
+            initService: function () {
+                $('#' + GoalSearchManager.searchInputId).keydown(function (e) {
+                    switch (e.keyCode) {
+                        // Enter Key
+                        case 13:
+                            $.ajax({
+                                url: "{% url 'restapi:goal_read_regex' %}",
+                                method: "GET",
+                                data: {search: $(this).val()},
+                                success: function (response) {
+                                    var jsonResponse = JSON.parse(response);
+                                    if (jsonResponse.status === 0) {
+                                        GoalSearchManager.results.setTable(jsonResponse.body);
+                                    } else if (jsonResponse.status === -1) {
+                                        alert(jsonResponse.message);
+                                    }
+                                },
+                                error: function (response) {
+                                    alert('Error searching for goals');
+                                }
+                            });
+                            break;
+                        case 27:
+                            GoalSearchManager.reset();
+                            break;
+                        default:
+                            break;
+                    }
+                });
+            },
+            reset: function () {
+                $('#' + GoalSearchManager.resultsTableId).empty();
+                $('#' + GoalSearchManager.searchInputId).val('');
+            },
+            results: {
+                setTable: function (rows) {
+                    var results = $('#goal-results-table');
+                    $(results).empty();
+                    if (rows.length === 0) {
+                        $(results).append('<tr class="red-text"><td>No matching goals</td></tr>');
+                    } else {
+                        for (var i = 0; i < rows.length; ++i) {
+                            $(results).append(this.getHTMLRow(
+                                rows[i].description,
+                                rows[i].deadline,
+                                rows[i].is_achieved,
+                                rows[i].id
+                            ));
+                        }
+                    }
+                },
+                getHTMLRow: function (description, deadline, is_achieved, id) {
+                    description = description === "" ? "NO DESCRIPTION" : description;
+                    deadline = deadline === null ? "-" : deadline;
+                    var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                    if (is_achieved === true) {
+                        is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
+                    }
+                    return '<tr id="' + id + '" draggable="true" '
+                        + 'ondragstart="function transferId(e) {e.dataTransfer.setData(\'id\', e.target.id);} transferId(event)" '
+                        + 'onclick="function click(id) {SocietyManager.setFamilyOf(id);} click(this.id)"'
+                        + 'class="search-result">'
+                        + '<td class="description">' + description + '</td>'
+                        + '<td>' + deadline + '</td>'
+                        + '<td>' + is_achieved_res + '</td>'
+                        + '</tr>'
+                }
+            }
+        };
     </script>
 
     <script>
         var IS_ACHIEVED_TRUE_ICON = "done";
         var IS_ACHIEVED_FALSE_ICON = "crop_square";
-
-        function dragStart(e) {
-            e.dataTransfer.setData("id", e.target.id);
-        }
-
-        function getHTMLRow(description, deadline, is_achieved, id) {
-            description = description === "" ? "NO DESCRIPTION" : description;
-            deadline = deadline === null ? "-" : deadline;
-            var is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_FALSE_ICON + '</i>';
-            if (is_achieved === true) {
-                is_achieved_res = '<i class="material-icons is-achieved">' + IS_ACHIEVED_TRUE_ICON + '</i>';
-            }
-            return '<tr id="' + id + '" draggable="true" ondragstart="dragStart(event)" class="search-result">'
-                + '<td class="description">' + description + '</td>'
-                + '<td>' + deadline + '</td>'
-                + '<td>' + is_achieved_res + '</td>'
-                + '</tr>'
-        }
-
-        function setTable(rows) {
-            var results = $('#goal-results-table');
-            $(results).empty();
-            if (rows.length === 0) {
-                $(results).append('<tr class="red-text"><td>No matching goals</td></tr>');
-            } else {
-                for (var i = 0; i < rows.length; ++i) {
-                    $(results).append(getHTMLRow(
-                        rows[i].description,
-                        rows[i].deadline,
-                        rows[i].is_achieved,
-                        rows[i].id
-                    ));
-                }
-            }
-        }
-
-        function clearSearchInputAndResults() {
-            $('#goal-results-table').empty();
-            $('#goal-search-input').val('');
-        }
 
         function toggleIsAchieved(icon) {
             if ($(icon).html() === IS_ACHIEVED_FALSE_ICON) {
@@ -283,39 +318,8 @@
             }
         }
 
-        function allowDrop(e) {
-            e.preventDefault();
-        }
-
-        function drop(e) {
-            SocietyManager.addFamilyOf(e.dataTransfer.getData("id"));
-        }
-
         $(document).ready(function () {
-            $('#goal-search-input').keydown(function (e) {
-                // Enter Key
-                if (e.keyCode === 13) {
-                    $.ajax({
-                        url: "{% url 'restapi:goal_read_regex' %}",
-                        method: "GET",
-                        data: {search: $(this).val()},
-                        success: function (response) {
-                            var json_response = JSON.parse(response);
-                            if (json_response.status === 0) {
-                                setTable(json_response.body);
-                            } else if (json_response.status === -1) {
-                                alert(json_response.message);
-                            }
-                        },
-                        error: function (response) {
-                            alert('Error');
-                        }
-                    });
-                }
-                else if (e.keyCode === 27) {
-                    clearSearchInputAndResults();
-                }
-            });
+            GoalSearchManager.initService();
             $('#goal-results-table')
                 .on('click', '.is-achieved', function () {
                     var id = $(this).parent().parent().attr('id');
@@ -336,9 +340,6 @@
                             alert('Error');
                         }
                     });
-                })
-                .on('click', '.description', function () {
-                    SocietyManager.setFamilyOf($(this).parent().attr('id'));
                 });
         });
     </script>
@@ -348,15 +349,16 @@
             <button id="goal-search-clear-btn"
                     class="btn z-depth-0 black-text white"
                     title="clear"
-                    onclick="clearSearchInputAndResults()">
+                    onclick="GoalSearchManager.reset()">
                 <i class="material-icons">clear</i></button>
             <table id="goal-results-table" class=""></table>
         </div>
 
-        <div id="goal-canvas-div" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-
+        <div id="goal-canvas-div"
+             ondrop="function drop(e) {var id = e.dataTransfer.getData('id');SocietyManager.addFamilyOf(id);}drop(event)"
+             ondragover="function allowDrop(e) {e.preventDefault();}allowDrop(event)"></div>
         <button id="goal-canvas-clear-btn"
-                class="col s12 m12 l12 btn red"
+                class="btn red"
                 title="Clear canvas"><i class="material-icons">clear</i></button>
     </div>
 {% endblock %}

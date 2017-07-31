@@ -8,7 +8,15 @@ from core.models.goal import Goal
 def to_json_style(goal):
     deadline = None
     if goal.deadline is not None:
-        deadline = goal.deadline.strftime('%H:%M %a %d %b')
+        deadline = {
+            'year': goal.deadline.year,
+            'month': goal.deadline.month,
+            'day': goal.deadline.day,
+            'hour': goal.deadline.hour,
+            'minute': goal.deadline.minute,
+            'second': goal.deadline.second,
+            'microsecond': goal.deadline.microsecond,
+        }
     parent_ids = []
     for parent in goal.get_parents():
         parent_ids.append(parent.id)

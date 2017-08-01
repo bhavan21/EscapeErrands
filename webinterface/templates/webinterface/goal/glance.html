@@ -127,9 +127,32 @@
                     this.families.push(family);
                     GoalSocietyRenderer.addNodes(family);
                 },
+                edit: function (goal) {
+                    var id = goal.id;
+                    for (var i = 0; i < this.families.length; ++i) {
+                        var ithFamily = this.families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                this.families[i][j] = goal;
+                                GoalSocietyRenderer.updateNode(goal);
+                                return;
+                            }
+                        }
+                    }
+                    return false;
+                },
                 remove: function (familyIndex) {
                     var removedFamilies = this.families.splice(familyIndex, 1);
                     GoalSocietyRenderer.removeNodes(removedFamilies[0]);
+                },
+                set: function (family) {
+                    this.families = [family];
+                    GoalSocietyRenderer.reRender(this.families);
+                },
+                clear: function () {
+                    this.families = [];
+                    GoalSocietyRenderer.reRender(this.families);
                 },
                 toggleIsAchieved: function (id) {
                     id = Number(id);
@@ -144,14 +167,6 @@
                             }
                         }
                     }
-                },
-                set: function (family) {
-                    this.families = [family];
-                    GoalSocietyRenderer.reRender(this.families);
-                },
-                clear: function () {
-                    this.families = [];
-                    GoalSocietyRenderer.reRender(this.families);
                 },
                 init: function () {
                     GoalSocietyRenderer.reRender(this.families);
@@ -203,6 +218,47 @@
                     },
                     error: function (response) {
                         alert('Error creating goal');
+                    },
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                        }
+                    }
+                });
+            },
+            updateGoal: function (id, description, deadline) {
+                var csrfSafeMethod = function (method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                };
+                var parseDeadline = function (deadline) {
+                    deadline = deadline === '' ? null : deadline;
+                    return deadline;
+                };
+                var breakDownDescription = function (description) {
+                    return description;
+                };
+                var jsonStringedData = JSON.stringify({
+                    id: id,
+                    description: breakDownDescription(description),
+                    deadline: parseDeadline(deadline)
+                });
+                $.ajax({
+                    url: "{% url 'restapi:goal_update' %}",
+                    method: 'POST',
+                    data: {
+                        data: jsonStringedData
+                    },
+                    success: function (response) {
+                        var json_response = JSON.parse(response);
+                        if (json_response.status === 0) {
+                            GoalSocietyManager.society.edit(json_response.body);
+                        } else if (json_response.status === -1) {
+                            alert(json_response.message);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error updating goal');
                     },
                     beforeSend: function (xhr, settings) {
                         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -428,6 +484,9 @@
                 this.nodesDataSet.add(this.getNodeArray([family]));
                 this.edgesDataSet.add(this.getEdgeArray([family]));
             },
+            updateNode: function (goal) {
+                this.nodesDataSet.update([{id: goal.id, label: goal.description, title: goal.description}]);
+            },
             removeNodes: function (family) {
                 this.nodesDataSet.remove(this.getNodeArray([family]));
             },
@@ -592,13 +651,16 @@
                     class="btn btn-large white black-text z-depth-0"
                     title="Update"
                     onclick="function submit() {
+                        var idInput = $('#existing-goal-id');
                         var descriptionInput = $('#existing-goal-description');
                         var deadlineInput = $('#existing-goal-deadline');
+                        var id = $(idInput).val();
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-
+                        GoalSocietyManager.updateGoal(id, description, deadline);
                         $(descriptionInput).val('');
                         $(deadlineInput).val('');
+                        $(idInput).val('');
                         $('#existing-goal-modal').hide();
                     }submit()">
                 <i class="material-icons">sync</i></button>

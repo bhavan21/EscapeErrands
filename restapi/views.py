@@ -91,6 +91,38 @@ def create(request):
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
 
+def update(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.POST['data'])
+            pk = data['id']
+            description = data['description']
+            deadline = data['deadline']
+            if deadline is not None:
+                deadline = dt(year=deadline['year'],
+                              month=deadline['month'],
+                              day=deadline['day'],
+                              hour=deadline['hour'],
+                              minute=deadline['minute'],
+                              second=deadline['second'],
+                              microseconds=deadline['microsecond'])
+            existing_goal = Goal.objects.get(pk=pk)
+            existing_goal.description = description
+            existing_goal.deadline = deadline
+            is_saved = existing_goal.save()
+            if is_saved is True:
+                return HttpResponse(json.dumps({'status': 0, 'body': to_json_style(existing_goal)}))
+            else:
+                return HttpResponse(json.dumps({'status': -1, 'message': is_saved[1]}))
+        except (ValueError, TypeError):
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
+        except ObjectDoesNotExist:
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
+
+    else:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
+
+
 def toggle_is_achieved(request, pk):
     try:
         goal = Goal.objects.get(pk=pk)

@@ -65,10 +65,8 @@
             top: 80px;
         }
 
-        #new-goal-modal {
+        #new-goal-modal, #existing-goal-modal {
             position: fixed;
-            bottom: 0;
-            right: 0;
             width: 25%;
             background-color: white;
             border: 2px solid black;
@@ -80,31 +78,41 @@
             font-weight: bold;
         }
 
-        #new-goal-description {
+        #new-goal-modal {
+            bottom: 0;
+            right: 0;
+        }
+
+        #existing-goal-modal {
+            top: 0;
+            right: 0;
+        }
+
+        #new-goal-description, #existing-goal-description {
             border: none;
             border-bottom: 1px solid black;
             height: 200px;
         }
 
-        #new-goal-description:focus {
+        #new-goal-description:focus, #existing-goal-description:focus {
             border: 1px solid black;
             outline: none;
         }
 
-        #new-goal-deadline {
+        #new-goal-deadline, #existing-goal-deadline {
             outline: none;
             box-shadow: none;
             border-bottom: 1px solid black;
         }
 
-        #new-goal-modal-hide-btn {
+        #new-goal-modal-hide-btn, #existing-goal-modal-hide-btn {
             padding: 0;
             position: absolute;
             top: 5px;
             right: 10px;
         }
 
-        #new-goal-modal-submit-btn {
+        #new-goal-modal-submit-btn, #existing-goal-modal-submit-btn {
             padding: 0;
         }
 
@@ -112,16 +120,16 @@
 {% endblock %}
 {% block body %}
     <script>
-        var SocietyManager = {
+        var GoalSocietyManager = {
             society: {
                 families: [],
-                push: function (family) {
+                add: function (family) {
                     this.families.push(family);
-                    SocietyRenderer.addNodes(family);
+                    GoalSocietyRenderer.addNodes(family);
                 },
                 remove: function (familyIndex) {
                     var removedFamilies = this.families.splice(familyIndex, 1);
-                    SocietyRenderer.removeNodes(removedFamilies[0]);
+                    GoalSocietyRenderer.removeNodes(removedFamilies[0]);
                 },
                 toggleIsAchieved: function (id) {
                     id = Number(id);
@@ -131,7 +139,7 @@
                             var jthMember = ithFamily[j];
                             if (jthMember.id === id) {
                                 jthMember.is_achieved = !jthMember.is_achieved;
-                                SocietyRenderer.toggleColorOfNodeInGraph(id, jthMember.is_achieved);
+                                GoalSocietyRenderer.toggleColorOfNodeInGraph(id, jthMember.is_achieved);
                                 return;
                             }
                         }
@@ -139,29 +147,71 @@
                 },
                 set: function (family) {
                     this.families = [family];
-                    this.resetGraph();
+                    GoalSocietyRenderer.reRender(this.families);
                 },
                 clear: function () {
                     this.families = [];
-                    this.resetGraph();
+                    GoalSocietyRenderer.reRender(this.families);
                 },
-                resetGraph: function () {
-                    var graph = SocietyRenderer.reRender(this.families);
-                    // Set Listeners
-                    graph.on('doubleClick', function (params) {
-                        // on empty space
-                        if (params.nodes.length === 0 && params.edges.length === 0) {
-                            $('#new-goal-modal').toggle();
-                        }
-                    });
-                    graph.on('selectNode', function (params) {
-                        if (params.nodes.length === 1) {
-                            SocietyManager.toggleAchievement(params.nodes[0]);
-                        }
-                    });
+                init: function () {
+                    GoalSocietyRenderer.reRender(this.families);
                 }
             },
-            isInSociety: function (id) {
+            getGoal: function (id) {
+                id = Number(id);
+                for (var i = 0; i < this.society.families.length; ++i) {
+                    var ithFamily = this.society.families[i];
+                    for (var j = 0; j < ithFamily.length; ++j) {
+                        var jthMember = ithFamily[j];
+                        if (jthMember.id === id) {
+                            return jthMember;
+                        }
+                    }
+                }
+                return false;
+            },
+            // todo : create deadline parser and description breakdown
+            createGoal: function (description, deadline) {
+                var csrfSafeMethod = function (method) {
+                    // these HTTP methods do not require CSRF protection
+                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                };
+                var parseDeadline = function (deadline) {
+                    deadline = deadline === '' ? null : deadline;
+                    return deadline;
+                };
+                var breakDownDescription = function (description) {
+                    return description;
+                };
+                var jsonStringedData = JSON.stringify({
+                    description: breakDownDescription(description),
+                    deadline: parseDeadline(deadline)
+                });
+                $.ajax({
+                    url: "{% url 'restapi:goal_create' %}",
+                    method: 'POST',
+                    data: {
+                        data: jsonStringedData
+                    },
+                    success: function (response) {
+                        var json_response = JSON.parse(response);
+                        if (json_response.status === 0) {
+                            GoalSocietyManager.society.add([json_response.body]);
+                        } else if (json_response.status === -1) {
+                            alert(json_response.message);
+                        }
+                    },
+                    error: function (response) {
+                        alert('Error creating goal');
+                    },
+                    beforeSend: function (xhr, settings) {
+                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                        }
+                    }
+                });
+            },
+            isGoalInSociety: function (id) {
                 id = Number(id);
                 for (var i = 0; i < this.society.families.length; ++i) {
                     var ithFamily = this.society.families[i];
@@ -174,12 +224,10 @@
                 }
                 return false;
             },
-            addFamilyOf: function (id) {
-                if (this.isInSociety(id)) {
+            selectFamilyOfGoal: function (id) {
+                if (this.isGoalInSociety(id)) {
                     return false;
                 } else {
-                    var society = this.society;
-                    {# read and add its family #}
                     $.ajax({
                         {# Dirty hack #}
                         url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
@@ -188,7 +236,7 @@
                             var json_response = JSON.parse(response);
                             if (json_response.status === 0) {
                                 var family = json_response.body;
-                                society.push(family);
+                                GoalSocietyManager.society.add(family);
                             } else if (json_response.status === -1) {
                                 alert(json_response.message);
                             }
@@ -199,31 +247,31 @@
                     });
                 }
             },
-            removeFamilyOf: function (id) {
-                var indexOfFamilyToBeRemoved = -1;
+            deselectFamilyOfGoal: function (id) {
+                id = Number(id);
+                var indexOfFamilyToBeDeSelected = -1;
                 for (var i = 0; i < this.society.families.length; ++i) {
                     var ithFamily = this.society.families[i];
                     for (var j = 0; j < ithFamily.length; ++j) {
                         var jthMember = ithFamily[j];
                         if (jthMember.id === id) {
-                            indexOfFamilyToBeRemoved = i;
+                            indexOfFamilyToBeDeSelected = i;
                             break;
                         }
                     }
-                    if (indexOfFamilyToBeRemoved > -1) {
+                    if (indexOfFamilyToBeDeSelected > -1) {
                         break;
                     }
                 }
-                if (indexOfFamilyToBeRemoved > -1) {
-                    this.society.remove(indexOfFamilyToBeRemoved);
+                if (indexOfFamilyToBeDeSelected > -1) {
+                    this.society.remove(indexOfFamilyToBeDeSelected);
                     return true;
                 } else {
                     return false;
                 }
             },
-            setFamilyOf: function (id) {
+            hardSelectFamilyOfGoal: function (id) {
                 var society = this.society;
-                {# read and add its family #}
                 $.ajax({
                     {# Dirty hack #}
                     url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
@@ -253,7 +301,7 @@
                     success: function (response) {
                         var json_response = JSON.parse(response);
                         if (json_response.status === 0) {
-                            SocietyManager.society.toggleIsAchieved(id);
+                            GoalSocietyManager.society.toggleIsAchieved(id);
                         } else if (json_response.status === -1) {
                             alert(json_response.message);
                         }
@@ -263,52 +311,11 @@
                     }
                 });
             },
-            // todo : create deadline parser and description breakdown
-            createGoal: function (description, deadline) {
-                var csrfSafeMethod = function (method) {
-                    // these HTTP methods do not require CSRF protection
-                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-                };
-                var parseDeadline = function (deadline) {
-                    deadline = deadline === '' ? null : deadline;
-                    return deadline;
-                };
-                var breakDownDescription = function (description) {
-                    return description;
-                };
-                var jsonStringedData = JSON.stringify({
-                    description: breakDownDescription(description),
-                    deadline: parseDeadline(deadline)
-                });
-                $.ajax({
-                    url: "{% url 'restapi:goal_create' %}",
-                    method: 'POST',
-                    data: {
-                        data: jsonStringedData
-                    },
-                    success: function (response) {
-                        var json_response = JSON.parse(response);
-                        if (json_response.status === 0) {
-                            SocietyManager.society.push([json_response.body]);
-                        } else if (json_response.status === -1) {
-                            alert(json_response.message);
-                        }
-                    },
-                    error: function (response) {
-                        alert('Error creating goal');
-                    },
-                    beforeSend: function (xhr, settings) {
-                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                            xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
-                        }
-                    }
-                });
-            },
             init: function () {
-                this.society.resetGraph();
+                this.society.init();
             }
         };
-        var SocietyRenderer = {
+        var GoalSocietyRenderer = {
             containerId: 'goal-canvas-div',
             edgesDataSet: undefined,
             nodesDataSet: undefined,
@@ -329,7 +336,8 @@
                         array.push({
                             id: jthMember.id,
                             color: color,
-                            label: jthMember.description
+                            label: jthMember.description,
+                            title: jthMember.description,
                         });
                     }
                 }
@@ -355,15 +363,15 @@
             },
             reRender: function (families) {
                 var emptyContainer = function () {
-                    $('#' + SocietyRenderer.containerId).empty();
+                    $('#' + GoalSocietyRenderer.containerId).empty();
                 };
-                var render = function (families) {
-                    var canvasDiv = document.getElementById(SocietyRenderer.containerId);
-                    SocietyRenderer.nodesDataSet = new vis.DataSet(SocietyRenderer.getNodeArray(families));
-                    SocietyRenderer.edgesDataSet = new vis.DataSet(SocietyRenderer.getEdgeArray(families));
+                var renderGraph = function (families) {
+                    var canvasDiv = document.getElementById(GoalSocietyRenderer.containerId);
+                    GoalSocietyRenderer.nodesDataSet = new vis.DataSet(GoalSocietyRenderer.getNodeArray(families));
+                    GoalSocietyRenderer.edgesDataSet = new vis.DataSet(GoalSocietyRenderer.getEdgeArray(families));
                     var data = {
-                        nodes: SocietyRenderer.nodesDataSet,
-                        edges: SocietyRenderer.edgesDataSet
+                        nodes: GoalSocietyRenderer.nodesDataSet,
+                        edges: GoalSocietyRenderer.edgesDataSet
                     };
                     var options = {
                         nodes: {
@@ -379,12 +387,42 @@
                         },
                         interaction: {
                             hover: true
-                        },
+                        }
                     };
                     return new vis.Network(canvasDiv, data, options);
                 };
+                var setListeners = function (graph) {
+                    graph.on('doubleClick', function (params) {
+                        // On node
+                        if (params.nodes.length === 1) {
+                            $('#existing-goal-modal').hide();
+                            GoalSocietyManager.toggleAchievement(params.nodes[0]);
+                        }
+                        // on empty space
+                        else if (params.nodes.length === 0 && params.edges.length === 0) {
+                            $('#new-goal-modal').toggle();
+                        }
+                    });
+                    graph.on('click', function (params) {
+                        // on empty space
+                        if (params.nodes.length === 0 && params.edges.length === 0) {
+                            $('#existing-goal-modal').hide();
+                        }
+                    });
+                    graph.on('selectNode', function (params) {
+                        var goal = GoalSocietyManager.getGoal(params.nodes[0]);
+                        $('#existing-goal-description').val(goal.description);
+                        $('#existing-goal-deadline').val(goal.deadline);
+                        $('#existing-goal-id').val(goal.id);
+                        $('#existing-goal-modal').show();
+                    });
+                    graph.on('showPopup', function (nodeId) {
+                        console.log(GoalSocietyRenderer.nodesDataSet.get(nodeId));
+                    });
+                };
                 emptyContainer();
-                return render(families);
+                var graph = renderGraph(families);
+                setListeners(graph);
             },
             addNodes: function (family) {
                 this.nodesDataSet.add(this.getNodeArray([family]));
@@ -475,9 +513,9 @@
 
                     return '<tr id="' + id + '" draggable="true" '
                         + 'ondragstart="function transferId(e) {e.dataTransfer.setData(\'id\', e.target.id);} transferId(event)" '
-                        + 'onclick="function click(id) {SocietyManager.setFamilyOf(id);} click(this.id)"'
+                        + 'onclick="function click(id) {GoalSocietyManager.hardSelectFamilyOfGoal(id);} click(this.id)"'
                         + 'class="search-result">'
-                        + '<td class="description">' + description + '</td>'
+                        + '<td class="description" title="' + description + '">' + description + '</td>'
                         + '<td class="deadline red-text">' + deadline + '</td>'
                         + '<td class="is-achieved">' + is_achieved_res + '</td>'
                         + '</tr>'
@@ -489,7 +527,7 @@
     <script>
         $(document).ready(function () {
             GoalSearchManager.initService();
-            SocietyManager.init();
+            GoalSocietyManager.init();
         });
     </script>
     <div class="container-fluid">
@@ -505,12 +543,12 @@
             </div>
         </div>
         <div id="goal-canvas-div"
-             ondrop="function drop(e) {var id = e.dataTransfer.getData('id');SocietyManager.addFamilyOf(id);}drop(event)"
+             ondrop="function drop(e) {var id = e.dataTransfer.getData('id');GoalSocietyManager.selectFamilyOfGoal(id);}drop(event)"
              ondragover="function allowDrop(e) {e.preventDefault();}allowDrop(event)"></div>
         <button id="goal-canvas-clear-btn"
                 class="btn-floating black z-depth-0"
                 title="Clear canvas"
-                onclick="function clear() {SocietyManager.clearSociety()}clear()">
+                onclick="function clear() {GoalSocietyManager.clearSociety()}clear()">
             <i class="material-icons">replay</i></button>
         <button id="new-goal-modal-toggle-btn"
                 class="btn-floating purple z-depth-0"
@@ -533,12 +571,46 @@
                         var deadlineInput = $('#new-goal-deadline');
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-                        SocietyManager.createGoal(description, deadline);
+                        GoalSocietyManager.createGoal(description, deadline);
                         $(descriptionInput).val('');
                         $(deadlineInput).val('');
                         $('#new-goal-modal').hide();
                     }submit()">
                 <i class="material-icons">send</i></button>
+        </div>
+        <div id="existing-goal-modal">
+            <button id="existing-goal-modal-hide-btn"
+                    class="btn white black-text z-depth-0"
+                    title="Create"
+                    onclick="function hideNewGoalModal() {$('#existing-goal-modal').hide();}hideNewGoalModal()">
+                <i class="material-icons">close</i></button>
+            <label for="existing-goal-description">Description</label><textarea
+                id="existing-goal-description"></textarea>
+            <label for="existing-goal-deadline">Deadline</label><input id="existing-goal-deadline">
+            <input id="existing-goal-id" hidden>
+            <button id="existing-goal-modal-submit-btn"
+                    class="btn btn-large white black-text z-depth-0"
+                    title="Update"
+                    onclick="function submit() {
+                        var descriptionInput = $('#existing-goal-description');
+                        var deadlineInput = $('#existing-goal-deadline');
+                        var description = $(descriptionInput).val();
+                        var deadline = $(deadlineInput).val();
+
+                        $(descriptionInput).val('');
+                        $(deadlineInput).val('');
+                        $('#existing-goal-modal').hide();
+                    }submit()">
+                <i class="material-icons">sync</i></button>
+            <button id="existing-goal-family-deselect-btn"
+                    class="btn btn-large white black-text z-depth-0"
+                    title="De-Select"
+                    onclick="function submit() {
+                        var goalId = $('#existing-goal-id').val();
+                        GoalSocietyManager.deselectFamilyOfGoal(goalId);
+                        $('#existing-goal-modal').hide();
+                    }submit()">
+                <i class="material-icons">input</i></button>
         </div>
     </div>
 {% endblock %}

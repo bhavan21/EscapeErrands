@@ -117,11 +117,11 @@
                 families: [],
                 push: function (family) {
                     this.families.push(family);
-                    this.resetGraph();
+                    SocietyRenderer.addNodes(family);
                 },
                 remove: function (familyIndex) {
-                    this.families.splice(familyIndex, 1);
-                    this.resetGraph();
+                    var removedFamilies = this.families.splice(familyIndex, 1);
+                    SocietyRenderer.removeNodes(removedFamilies[0]);
                 },
                 toggleIsAchieved: function (id) {
                     id = Number(id);
@@ -131,10 +131,11 @@
                             var jthMember = ithFamily[j];
                             if (jthMember.id === id) {
                                 jthMember.is_achieved = !jthMember.is_achieved;
+                                SocietyRenderer.toggleColorOfNodeInGraph(id, jthMember.is_achieved);
+                                return;
                             }
                         }
                     }
-                    this.resetGraph();
                 },
                 set: function (family) {
                     this.families = [family];
@@ -148,13 +149,14 @@
                     var graph = SocietyRenderer.reRender(this.families);
                     // Set Listeners
                     graph.on('doubleClick', function (params) {
-                        // on node
+                        // on empty space
+                        if (params.nodes.length === 0 && params.edges.length === 0) {
+                            $('#new-goal-modal').toggle();
+                        }
+                    });
+                    graph.on('selectNode', function (params) {
                         if (params.nodes.length === 1) {
                             SocietyManager.toggleAchievement(params.nodes[0]);
-                        }
-                        // on empty space
-                        else if (params.nodes.length === 0 && params.edges.length === 0) {
-                            $('#new-goal-modal').toggle();
                         }
                     });
                 }
@@ -261,6 +263,7 @@
                     }
                 });
             },
+            // todo : create deadline parser and description breakdown
             createGoal: function (description, deadline) {
                 var csrfSafeMethod = function (method) {
                     // these HTTP methods do not require CSRF protection
@@ -307,17 +310,60 @@
         };
         var SocietyRenderer = {
             containerId: 'goal-canvas-div',
+            edgesDataSet: undefined,
+            nodesDataSet: undefined,
+            getNodeArray: function (families) {
+                var array = [];
+                for (var i = 0; i < families.length; ++i) {
+                    var ithFamily = families[i];
+                    for (var j = 0; j < ithFamily.length; ++j) {
+                        var jthMember = ithFamily[j];
+                        var color = {};
+                        if (jthMember.is_achieved === true) {
+                            color.background = 'lightgreen';
+                            color.border = 'green';
+                        } else {
+                            color.background = 'pink';
+                            color.border = 'purple';
+                        }
+                        array.push({
+                            id: jthMember.id,
+                            color: color,
+                            label: jthMember.description
+                        });
+                    }
+                }
+                return array;
+            },
+            getEdgeArray: function (families) {
+                var array = [];
+                for (var i = 0; i < families.length; ++i) {
+                    var ithFamily = families[i];
+                    for (var j = 0; j < ithFamily.length; ++j) {
+                        var jthMember = ithFamily[j];
+                        for (var k = 0; k < jthMember.child_ids.length; ++k) {
+                            var child_id = jthMember.child_ids[k];
+                            array.push({
+                                from: jthMember.id,
+                                to: child_id,
+                                arrows: 'to'
+                            });
+                        }
+                    }
+                }
+                return array;
+            },
             reRender: function (families) {
                 var emptyContainer = function () {
                     $('#' + SocietyRenderer.containerId).empty();
                 };
                 var render = function (families) {
                     var canvasDiv = document.getElementById(SocietyRenderer.containerId);
-                    var nodes = getNodeSet(families);
-                    var edges = getEdgeSet(families);
+                    SocietyRenderer.nodesDataSet = new vis.DataSet(SocietyRenderer.getNodeArray(families));
+                    SocietyRenderer.edgesDataSet = new vis.DataSet(SocietyRenderer.getEdgeArray(families));
                     var data = {
-                        nodes: nodes,
-                        edges: edges
+                        nodes: SocietyRenderer.nodesDataSet,
+                        edges: SocietyRenderer.edgesDataSet
                     };
                     var options = {
                         nodes: {
@@ -337,50 +383,26 @@
                     };
                     return new vis.Network(canvasDiv, data, options);
                 };
-                var getNodeSet = function (families) {
-                    var array = [];
-                    for (var i = 0; i < families.length; ++i) {
-                        var ithFamily = families[i];
-                        for (var j = 0; j < ithFamily.length; ++j) {
-                            var jthMember = ithFamily[j];
-                            var color = {};
-                            if (jthMember.is_achieved === true) {
-                                color.background = 'lightgreen';
-                                color.border = 'green';
-                            } else {
-                                color.background = 'pink';
-                                color.border = 'purple';
-                            }
-                            array.push({
-                                id: jthMember.id,
-                                color: color,
-                                label: jthMember.description
-                            });
-                        }
-                    }
-                    return (array);
-                };
-                var getEdgeSet = function (families) {
-                    var array = [];
-                    for (var i = 0; i < families.length; ++i) {
-                        var ithFamily = families[i];
-                        for (var j = 0; j < ithFamily.length; ++j) {
-                            var jthMember = ithFamily[j];
-                            for (var k = 0; k < jthMember.child_ids.length; ++k) {
-                                var child_id = jthMember.child_ids[k];
-                                array.push({
-                                    from: jthMember.id,
-                                    to: child_id,
-                                    arrows: 'to'
-                                });
-                            }
-                        }
-                    }
-                    return (array);
-                };
-
                 emptyContainer();
                 return render(families);
+            },
+            addNodes: function (family) {
+                this.nodesDataSet.add(this.getNodeArray([family]));
+                this.edgesDataSet.add(this.getEdgeArray([family]));
+            },
+            removeNodes: function (family) {
+                this.nodesDataSet.remove(this.getNodeArray([family]));
+            },
+            toggleColorOfNodeInGraph: function (id, is_achieved) {
+                var color = {};
+                if (is_achieved === true) {
+                    color.background = 'lightgreen';
+                    color.border = 'green';
+                } else {
+                    color.background = 'pink';
+                    color.border = 'purple';
+                }
+                this.nodesDataSet.update([{id: id, color: color}]);
             }
         };
         var GoalSearchManager = {

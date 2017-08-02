@@ -185,7 +185,7 @@
                 }
                 return false;
             },
-            // todo : create deadline parser and description breakdown
+            // todo : create deadline parser breakdown
             createGoal: function (description, deadline) {
                 var csrfSafeMethod = function (method) {
                     // these HTTP methods do not require CSRF protection
@@ -195,11 +195,8 @@
                     deadline = deadline === '' ? null : deadline;
                     return deadline;
                 };
-                var breakDownDescription = function (description) {
-                    return description;
-                };
                 var jsonStringedData = JSON.stringify({
-                    description: breakDownDescription(description),
+                    description: description,
                     deadline: parseDeadline(deadline)
                 });
                 $.ajax({
@@ -226,6 +223,7 @@
                     }
                 });
             },
+            // todo : create deadline parser breakdown
             updateGoal: function (id, description, deadline) {
                 var csrfSafeMethod = function (method) {
                     // these HTTP methods do not require CSRF protection
@@ -235,12 +233,9 @@
                     deadline = deadline === '' ? null : deadline;
                     return deadline;
                 };
-                var breakDownDescription = function (description) {
-                    return description;
-                };
                 var jsonStringedData = JSON.stringify({
                     id: id,
-                    description: breakDownDescription(description),
+                    description: description,
                     deadline: parseDeadline(deadline)
                 });
                 $.ajax({
@@ -375,12 +370,21 @@
             containerId: 'goal-canvas-div',
             edgesDataSet: undefined,
             nodesDataSet: undefined,
+            options: {
+                maxLabelLength: 10
+            },
             getNodeArray: function (families) {
                 var array = [];
                 for (var i = 0; i < families.length; ++i) {
                     var ithFamily = families[i];
                     for (var j = 0; j < ithFamily.length; ++j) {
                         var jthMember = ithFamily[j];
+                        var label;
+                        if (jthMember.description.length > this.options.maxLabelLength) {
+                            label = jthMember.description.substring(0, 15) + '...';
+                        } else {
+                            label = jthMember.description;
+                        }
                         var color = {};
                         if (jthMember.is_achieved === true) {
                             color.background = 'lightgreen';
@@ -392,8 +396,8 @@
                         array.push({
                             id: jthMember.id,
                             color: color,
-                            label: jthMember.description,
-                            title: jthMember.description,
+                            label: label,
+                            title: jthMember.description
                         });
                     }
                 }
@@ -460,6 +464,7 @@
                         }
                     });
                     graph.on('click', function (params) {
+                        $('#goal-results-div').hide();
                         // on empty space
                         if (params.nodes.length === 0 && params.edges.length === 0) {
                             $('#existing-goal-modal').hide();

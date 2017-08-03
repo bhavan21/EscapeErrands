@@ -140,11 +140,34 @@
                             }
                         }
                     }
-                    return false;
                 },
                 remove: function (familyIndex) {
                     var removedFamilies = this.families.splice(familyIndex, 1);
                     GoalSocietyRenderer.removeNodes(removedFamilies[0]);
+                },
+                breakRelation: function (parentId, childId, newFamilies) {
+                    var familyIndex = -1;
+                    for (var i = 0; i < this.families.length; ++i) {
+                        var ithFamily = this.families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === parentId) {
+                                familyIndex = i;
+                                break;
+                            }
+                        }
+                        if (familyIndex > -1) {
+                            break;
+                        }
+                    }
+                    if (familyIndex > -1) {
+                        this.families.splice(familyIndex, 1);
+                        this.families.push(newFamilies[0]);
+                        if (newFamilies.length === 2) {
+                            this.families.push(newFamilies[1]);
+                        }
+                        GoalSocietyRenderer.reRender(this.families);
+                    }
                 },
                 set: function (family) {
                     this.families = [family];
@@ -225,42 +248,80 @@
             },
             // todo : create deadline parser breakdown
             updateGoal: function (id, description, deadline) {
-                var csrfSafeMethod = function (method) {
-                    // these HTTP methods do not require CSRF protection
-                    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-                };
-                var parseDeadline = function (deadline) {
-                    deadline = deadline === '' ? null : deadline;
-                    return deadline;
-                };
-                var jsonStringedData = JSON.stringify({
-                    id: id,
-                    description: description,
-                    deadline: parseDeadline(deadline)
-                });
-                $.ajax({
-                    url: "{% url 'restapi:goal_update' %}",
-                    method: 'POST',
-                    data: {
-                        data: jsonStringedData
-                    },
-                    success: function (response) {
-                        var json_response = JSON.parse(response);
-                        if (json_response.status === 0) {
-                            GoalSocietyManager.society.edit(json_response.body);
-                        } else if (json_response.status === -1) {
-                            alert(json_response.message);
+                if (!this.isGoalInSociety(id)) {
+                    return false;
+                } else {
+                    var csrfSafeMethod = function (method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    };
+                    var parseDeadline = function (deadline) {
+                        deadline = deadline === '' ? null : deadline;
+                        return deadline;
+                    };
+                    var jsonStringedData = JSON.stringify({
+                        id: id,
+                        description: description,
+                        deadline: parseDeadline(deadline)
+                    });
+                    $.ajax({
+                        url: "{% url 'restapi:goal_update' %}",
+                        method: 'POST',
+                        data: {
+                            data: jsonStringedData
+                        },
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                GoalSocietyManager.society.edit(json_response.body);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error updating goal');
+                        },
+                        beforeSend: function (xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                            }
                         }
-                    },
-                    error: function (response) {
-                        alert('Error updating goal');
-                    },
-                    beforeSend: function (xhr, settings) {
-                        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                            xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                    });
+                }
+            },
+            removeRelation: function (parentId, childId) {
+                if (!this.isGoalInSociety(parentId) || !this.isGoalInSociety(childId)) {
+                    return false;
+                } else {
+                    var csrfSafeMethod = function (method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    };
+                    $.ajax({
+                        url: "{% url 'restapi:goal_remove_relation' %}",
+                        method: 'POST',
+                        data: {
+                            parent_id: parentId,
+                            child_id: childId
+                        },
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                GoalSocietyManager.society.breakRelation(parentId, childId, json_response.body);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error removing relation');
+                        },
+                        beforeSend: function (xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                            }
                         }
-                    }
-                });
+                    });
+                }
             },
             isGoalInSociety: function (id) {
                 id = Number(id);
@@ -322,7 +383,6 @@
                 }
             },
             hardSelectFamilyOfGoal: function (id) {
-                var society = this.society;
                 $.ajax({
                     {# Dirty hack #}
                     url: "{% url 'restapi:goal_read_family' 1729 %}".replace('1729', id),
@@ -331,7 +391,7 @@
                         var json_response = JSON.parse(response);
                         if (json_response.status === 0) {
                             var family = json_response.body;
-                            society.set(family);
+                            GoalSocietyManager.society.set(family);
                         } else if (json_response.status === -1) {
                             alert(json_response.message);
                         }
@@ -345,22 +405,26 @@
                 this.society.clear();
             },
             toggleAchievement: function (id) {
-                $.ajax({
-                    {# Dirty Hack #}
-                    url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
-                    method: "GET",
-                    success: function (response) {
-                        var json_response = JSON.parse(response);
-                        if (json_response.status === 0) {
-                            GoalSocietyManager.society.toggleIsAchieved(id);
-                        } else if (json_response.status === -1) {
-                            alert(json_response.message);
+                if (!this.isGoalInSociety(id)) {
+                    return false;
+                } else {
+                    $.ajax({
+                        {# Dirty Hack #}
+                        url: "{% url 'restapi:goal_toggle_is_achieved' 1729 %}".replace('1729', id),
+                        method: "GET",
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                GoalSocietyManager.society.toggleIsAchieved(id);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error toggling completion of goal');
                         }
-                    },
-                    error: function (response) {
-                        alert('Error toggling completion of goal');
-                    }
-                });
+                    });
+                }
             },
             init: function () {
                 this.society.init();
@@ -370,8 +434,17 @@
             containerId: 'goal-canvas-div',
             edgesDataSet: undefined,
             nodesDataSet: undefined,
-            options: {
-                maxLabelLength: 10
+            helpers: {
+                maxLabelLength: 10,
+                truncateToFitLabel: function (string) {
+                    var label;
+                    if (string.length > this.maxLabelLength) {
+                        label = string.substring(0, 15) + '...';
+                    } else {
+                        label = string;
+                    }
+                    return label;
+                }
             },
             getNodeArray: function (families) {
                 var array = [];
@@ -379,12 +452,6 @@
                     var ithFamily = families[i];
                     for (var j = 0; j < ithFamily.length; ++j) {
                         var jthMember = ithFamily[j];
-                        var label;
-                        if (jthMember.description.length > this.options.maxLabelLength) {
-                            label = jthMember.description.substring(0, 15) + '...';
-                        } else {
-                            label = jthMember.description;
-                        }
                         var color = {};
                         if (jthMember.is_achieved === true) {
                             color.background = 'lightgreen';
@@ -396,7 +463,7 @@
                         array.push({
                             id: jthMember.id,
                             color: color,
-                            label: label,
+                            label: GoalSocietyRenderer.helpers.truncateToFitLabel(jthMember.description),
                             title: jthMember.description
                         });
                     }
@@ -452,17 +519,6 @@
                     return new vis.Network(canvasDiv, data, options);
                 };
                 var setListeners = function (graph) {
-                    graph.on('doubleClick', function (params) {
-                        // On node
-                        if (params.nodes.length === 1) {
-                            $('#existing-goal-modal').hide();
-                            GoalSocietyManager.toggleAchievement(params.nodes[0]);
-                        }
-                        // on empty space
-                        else if (params.nodes.length === 0 && params.edges.length === 0) {
-                            $('#new-goal-modal').toggle();
-                        }
-                    });
                     graph.on('click', function (params) {
                         $('#goal-results-div').hide();
                         // on empty space
@@ -477,8 +533,32 @@
                         $('#existing-goal-id').val(goal.id);
                         $('#existing-goal-modal').show();
                     });
+                    graph.on('selectEdge', function (params) {
+                        {#console.log('selectEdge Event:', params);#}
+                    });
+                    graph.on('doubleClick', function (params) {
+                        $('#existing-goal-modal').hide();
+                        // On node
+                        if (params.nodes.length === 1) {
+                            GoalSocietyManager.toggleAchievement(params.nodes[0]);
+                        }
+                        // On Edge
+                        else if (params.edges.length === 1) {
+                            var edge = GoalSocietyRenderer.edgesDataSet.get(params.edges[0]);
+                            var fromGoalId = edge.from;
+                            var toGoalId = edge.to;
+                            GoalSocietyManager.removeRelation(fromGoalId, toGoalId);
+                        }
+                        // On empty space
+                        else if (params.nodes.length === 0 && params.edges.length === 0) {
+                            $('#new-goal-modal').toggle();
+                        }
+                    });
+                    graph.on("oncontext", function (params) {
+                        console.log('onContext Event:', params);
+                    });
                     graph.on('showPopup', function (nodeId) {
-                        console.log(GoalSocietyRenderer.nodesDataSet.get(nodeId));
+                        {#console.log('popUp Event:', GoalSocietyRenderer.nodesDataSet.get(nodeId));#}
                     });
                 };
                 emptyContainer();
@@ -490,7 +570,11 @@
                 this.edgesDataSet.add(this.getEdgeArray([family]));
             },
             updateNode: function (goal) {
-                this.nodesDataSet.update([{id: goal.id, label: goal.description, title: goal.description}]);
+                this.nodesDataSet.update([{
+                    id: goal.id,
+                    label: GoalSocietyRenderer.helpers.truncateToFitLabel(goal.description),
+                    title: goal.description
+                }]);
             },
             removeNodes: function (family) {
                 this.nodesDataSet.remove(this.getNodeArray([family]));

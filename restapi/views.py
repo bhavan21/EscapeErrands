@@ -7,7 +7,7 @@ import re
 import json
 
 
-def to_json_style(goal):
+def jsonize(goal):
     deadline = None
     if goal.deadline is not None:
         deadline = {
@@ -47,7 +47,7 @@ def read_regex(request):
         matched_goals = Goal.objects.filter(description__iregex=pattern)
         json_goals = []
         for goal in matched_goals:
-            json_goals.append(to_json_style(goal))
+            json_goals.append(jsonize(goal))
 
         return HttpResponse(json.dumps({'status': 0, 'body': json_goals}))
     else:
@@ -61,7 +61,7 @@ def read_family(request, pk):
         json_family = []
         for member_id in family_of_ids:
             member = Goal.objects.get(pk=member_id)
-            json_family.append(to_json_style(member))
+            json_family.append(jsonize(member))
 
         return HttpResponse(json.dumps({'status': 0, 'body': json_family}))
     except ObjectDoesNotExist:
@@ -84,7 +84,7 @@ def create(request):
                               microseconds=deadline['microsecond'])
             new_goal = Goal(description=description, deadline=deadline)
             new_goal.save()
-            return HttpResponse(json.dumps({'status': 0, 'body': to_json_style(new_goal)}))
+            return HttpResponse(json.dumps({'status': 0, 'body': jsonize(new_goal)}))
         except (ValueError, TypeError):
             return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
     else:
@@ -111,9 +111,44 @@ def update(request):
             existing_goal.deadline = deadline
             is_saved = existing_goal.save()
             if is_saved is True:
-                return HttpResponse(json.dumps({'status': 0, 'body': to_json_style(existing_goal)}))
+                return HttpResponse(json.dumps({'status': 0, 'body': jsonize(existing_goal)}))
             else:
                 return HttpResponse(json.dumps({'status': -1, 'message': is_saved[1]}))
+        except (ValueError, TypeError):
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
+        except ObjectDoesNotExist:
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
+
+    else:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
+
+
+def remove_relation(request):
+    def jsonize_set(goal_ids):
+        jsoned = []
+        for goal_id in goal_ids:
+            goal = Goal.objects.get(pk=goal_id)
+            jsoned.append(jsonize(goal))
+        return jsoned
+
+    if request.method == 'POST':
+        try:
+            parent_id = int(request.POST['parent_id'])
+            child_id = int(request.POST['child_id'])
+
+            parent = Goal.objects.get(pk=parent_id)
+            child = Goal.objects.get(pk=child_id)
+            parent.remove_child(child)
+
+            parent_family = parent.get_family_set()
+            jsoned_parent_family = jsonize_set(parent_family)
+            body = [jsoned_parent_family]
+            if child_id not in parent_family:
+                child_family = child.get_family_set()
+                jsoned_child_family = jsonize_set(child_family)
+                body.append(jsoned_child_family)
+
+            return HttpResponse(json.dumps({'status': 0, 'body': body}))
         except (ValueError, TypeError):
             return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
         except ObjectDoesNotExist:

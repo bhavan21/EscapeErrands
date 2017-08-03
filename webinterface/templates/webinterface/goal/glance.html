@@ -462,16 +462,30 @@
             containerId: 'goal-canvas-div',
             edgesDataSet: undefined,
             nodesDataSet: undefined,
-            helpers: {
-                maxLabelLength: 10,
+            uiSettings: {
+                MAX_LABEL_LENGTH: 10,
                 truncateToFitLabel: function (string) {
                     var label;
-                    if (string.length > this.maxLabelLength) {
+                    if (string.length > this.MAX_LABEL_LENGTH) {
                         label = string.substring(0, 15) + '...';
                     } else {
                         label = string;
                     }
                     return label;
+                },
+                colors: {
+                    UN_ACHIEVED: {
+                        background: 'pink',
+                        border: 'purple'
+                    },
+                    ACHIEVED: {
+                        background: 'lightgreen',
+                        border: 'green'
+                    },
+                    SELECTED: {
+                        background: 'orange',
+                        border: 'red'
+                    }
                 }
             },
             getNodeArray: function (families) {
@@ -480,18 +494,16 @@
                     var ithFamily = families[i];
                     for (var j = 0; j < ithFamily.length; ++j) {
                         var jthMember = ithFamily[j];
-                        var color = {};
+                        var color;
                         if (jthMember.is_achieved === true) {
-                            color.background = 'lightgreen';
-                            color.border = 'green';
+                            color = GoalSocietyRenderer.uiSettings.colors.ACHIEVED;
                         } else {
-                            color.background = 'pink';
-                            color.border = 'purple';
+                            color = GoalSocietyRenderer.uiSettings.colors.UN_ACHIEVED;
                         }
                         array.push({
                             id: jthMember.id,
                             color: color,
-                            label: GoalSocietyRenderer.helpers.truncateToFitLabel(jthMember.description),
+                            label: GoalSocietyRenderer.uiSettings.truncateToFitLabel(jthMember.description),
                             title: jthMember.description
                         });
                     }
@@ -548,10 +560,51 @@
                     return new vis.Network(canvasDiv, data, options);
                 };
                 var setListeners = function (graph) {
+                    var NewEdgeMaker = {
+                        fromId: undefined,
+                        toId: undefined,
+                        fromColor: undefined,
+                        reset: function () {
+                            this.fromId = undefined;
+                            this.toId = undefined;
+                            this.fromColor = undefined;
+                        },
+                        startOrEnd: function (nodeId) {
+                            // Start
+                            if (this.fromId === undefined && this.toId === undefined) {
+                                this.fromId = nodeId;
+                                this.fromColor = GoalSocietyRenderer.nodesDataSet.get(nodeId).color;
+                                GoalSocietyRenderer.nodesDataSet.update({
+                                    id: NewEdgeMaker.fromId,
+                                    color: GoalSocietyRenderer.uiSettings.colors.SELECTED
+                                });
+                            }
+                            // End
+                            else if (this.fromId !== undefined && this.toId === undefined) {
+                                GoalSocietyRenderer.nodesDataSet.update({
+                                    id: NewEdgeMaker.fromId,
+                                    color: NewEdgeMaker.fromColor
+                                });
+                                this.toId = nodeId;
+                                GoalSocietyManager.addRelation(this.fromId, this.toId);
+                                this.reset();
+                            }
+                        },
+                        discardOperation: function () {
+                            if (this.fromId !== undefined && this.toId === undefined) {
+                                GoalSocietyRenderer.nodesDataSet.update({
+                                    id: NewEdgeMaker.fromId,
+                                    color: NewEdgeMaker.fromColor
+                                });
+                                this.reset();
+                            }
+                        }
+                    };
                     graph.on('click', function (params) {
                         $('#goal-results-div').hide();
                         // on empty space
                         if (params.nodes.length === 0 && params.edges.length === 0) {
+                            NewEdgeMaker.discardOperation();
                             $('#existing-goal-modal').hide();
                         }
                     });
@@ -569,7 +622,8 @@
                         $('#existing-goal-modal').hide();
                         // On node
                         if (params.nodes.length === 1) {
-                            GoalSocietyManager.toggleAchievement(params.nodes[0]);
+                            var nodeId = params.nodes[0];
+                            NewEdgeMaker.startOrEnd(nodeId);
                         }
                         // On Edge
                         else if (params.edges.length === 1) {
@@ -584,7 +638,10 @@
                         }
                     });
                     graph.on("oncontext", function (params) {
-                        console.log('onContext Event:', params);
+                        // On node
+                        if (params.nodes.length === 1) {
+                            GoalSocietyManager.toggleAchievement(params.nodes[0]);
+                        }
                     });
                     graph.on('showPopup', function (nodeId) {
                         {#console.log('popUp Event:', GoalSocietyRenderer.nodesDataSet.get(nodeId));#}
@@ -601,7 +658,7 @@
             updateNode: function (goal) {
                 this.nodesDataSet.update([{
                     id: goal.id,
-                    label: GoalSocietyRenderer.helpers.truncateToFitLabel(goal.description),
+                    label: GoalSocietyRenderer.uiSettings.truncateToFitLabel(goal.description),
                     title: goal.description
                 }]);
             },

@@ -37,6 +37,14 @@ def jsonize(goal):
     return json_goal
 
 
+def jsonize_iterable(goal_ids):
+    jsoned = []
+    for goal_id in goal_ids:
+        goal = Goal.objects.get(pk=goal_id)
+        jsoned.append(jsonize(goal))
+    return jsoned
+
+
 def read_regex(request):
     if request.method == 'GET' and 'search' in request.GET:
         pattern = request.GET['search']
@@ -123,14 +131,33 @@ def update(request):
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
 
-def remove_relation(request):
-    def jsonize_set(goal_ids):
-        jsoned = []
-        for goal_id in goal_ids:
-            goal = Goal.objects.get(pk=goal_id)
-            jsoned.append(jsonize(goal))
-        return jsoned
+def add_relation(request):
+    if request.method == 'POST':
+        try:
+            parent_id = int(request.POST['parent_id'])
+            child_id = int(request.POST['child_id'])
 
+            parent = Goal.objects.get(pk=parent_id)
+            child = Goal.objects.get(pk=child_id)
+            was_relation_added = parent.add_child(child)
+
+            if was_relation_added is True:
+                new_family = parent.get_family_set()
+                jsoned_new_family = jsonize_iterable(new_family)
+                return HttpResponse(json.dumps({'status': 0, 'body': jsoned_new_family}))
+            else:
+                return HttpResponse(json.dumps({'status': -1, 'message': was_relation_added[1]}))
+
+        except (ValueError, TypeError):
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
+        except ObjectDoesNotExist:
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
+
+    else:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
+
+
+def remove_relation(request):
     if request.method == 'POST':
         try:
             parent_id = int(request.POST['parent_id'])
@@ -141,11 +168,11 @@ def remove_relation(request):
             parent.remove_child(child)
 
             parent_family = parent.get_family_set()
-            jsoned_parent_family = jsonize_set(parent_family)
+            jsoned_parent_family = jsonize_iterable(parent_family)
             body = [jsoned_parent_family]
             if child_id not in parent_family:
                 child_family = child.get_family_set()
-                jsoned_child_family = jsonize_set(child_family)
+                jsoned_child_family = jsonize_iterable(child_family)
                 body.append(jsoned_child_family)
 
             return HttpResponse(json.dumps({'status': 0, 'body': body}))
@@ -163,9 +190,9 @@ def toggle_is_achieved(request, pk):
         goal = Goal.objects.get(pk=pk)
         goal.is_achieved = not goal.is_achieved
         is_saved = goal.save()
-        if is_saved is not True:
-            return HttpResponse(json.dumps({'status': -1, 'message': is_saved[1]}))
+        if is_saved is True:
+            return HttpResponse(json.dumps({'status': 0, 'body': goal.is_achieved}))
         else:
-            return HttpResponse(json.dumps({'status': 0}))
+            return HttpResponse(json.dumps({'status': -1, 'message': is_saved[1]}))
     except ObjectDoesNotExist:
         return HttpResponse(json.dumps({'status': -1, 'message': 'No goal with such id'}))

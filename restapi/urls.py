@@ -13,6 +13,8 @@ urlpatterns = [
     url(r'^goal/create/$', views.create, name='goal_create'),
     # host/rest/goal/update/<POST id, description, deadline>
     url(r'^goal/update/$', views.update, name='goal_update'),
+    # host/rest/goal/add_relation/<POST parent_id, child_id>
+    url(r'^goal/add_relation/$', views.add_relation, name='goal_add_relation'),
     # host/rest/goal/remove_relation/<POST parent_id, child_id>
     url(r'^goal/remove_relation/$', views.remove_relation, name='goal_remove_relation'),
 

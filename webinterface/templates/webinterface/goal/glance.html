@@ -5,6 +5,7 @@
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
     <script src="{% static 'webinterface/cookies.js' %}"></script>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis.min.css' %}"/>
+    <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis-network.min.css' %}"/>
 {% endblock %}
 {% block css %}
     <style>
@@ -121,92 +122,115 @@
 {% block body %}
     <script>
         var GoalSocietyManager = {
-            society: {
-                families: [],
-                add: function (family) {
-                    this.families.push(family);
-                    GoalSocietyRenderer.addNodes(family);
-                },
-                edit: function (goal) {
-                    var id = goal.id;
-                    for (var i = 0; i < this.families.length; ++i) {
-                        var ithFamily = this.families[i];
-                        for (var j = 0; j < ithFamily.length; ++j) {
-                            var jthMember = ithFamily[j];
-                            if (jthMember.id === id) {
-                                this.families[i][j] = goal;
-                                GoalSocietyRenderer.updateNode(goal);
-                                return;
-                            }
-                        }
-                    }
-                },
-                remove: function (familyIndex) {
-                    var removedFamilies = this.families.splice(familyIndex, 1);
-                    GoalSocietyRenderer.removeNodes(removedFamilies[0]);
-                },
-                breakRelation: function (parentId, childId, newFamilies) {
-                    var familyIndex = -1;
-                    for (var i = 0; i < this.families.length; ++i) {
-                        var ithFamily = this.families[i];
-                        for (var j = 0; j < ithFamily.length; ++j) {
-                            var jthMember = ithFamily[j];
-                            if (jthMember.id === parentId) {
-                                familyIndex = i;
-                                break;
-                            }
-                        }
-                        if (familyIndex > -1) {
-                            break;
-                        }
-                    }
-                    if (familyIndex > -1) {
-                        this.families.splice(familyIndex, 1);
-                        this.families.push(newFamilies[0]);
-                        if (newFamilies.length === 2) {
-                            this.families.push(newFamilies[1]);
-                        }
-                        GoalSocietyRenderer.reRender(this.families);
-                    }
-                },
-                set: function (family) {
-                    this.families = [family];
-                    GoalSocietyRenderer.reRender(this.families);
-                },
-                clear: function () {
-                    this.families = [];
-                    GoalSocietyRenderer.reRender(this.families);
-                },
-                toggleIsAchieved: function (id) {
+            _society: {
+                __families: [],
+                _getGoal: function (id) {
                     id = Number(id);
-                    for (var i = 0; i < this.families.length; ++i) {
-                        var ithFamily = this.families[i];
+                    for (var i = 0; i < this.__families.length; ++i) {
+                        var ithFamily = this.__families[i];
                         for (var j = 0; j < ithFamily.length; ++j) {
                             var jthMember = ithFamily[j];
                             if (jthMember.id === id) {
-                                jthMember.is_achieved = !jthMember.is_achieved;
+                                return jthMember;
+                            }
+                        }
+                    }
+                    return false;
+                },
+                _isGoalInSociety: function (id) {
+                    id = Number(id);
+                    for (var i = 0; i < this.__families.length; ++i) {
+                        var ithFamily = this.__families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
+                _deleteFamilyWithGoalId: function (id) {
+                    id = Number(id);
+                    for (var i = 0; i < this.__families.length; ++i) {
+                        var ithFamily = this.__families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                return this.__families.splice(i, 1)[0];
+                            }
+                        }
+                    }
+                },
+                _setSociety: function (family) {
+                    this.__families = [family];
+                    GoalSocietyRenderer.reRender(this.__families);
+                },
+                _setIsAchievedOfGoal: function (id, val) {
+                    id = Number(id);
+                    for (var i = 0; i < this.__families.length; ++i) {
+                        var ithFamily = this.__families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                jthMember.is_achieved = val;
                                 GoalSocietyRenderer.toggleColorOfNodeInGraph(id, jthMember.is_achieved);
                                 return;
                             }
                         }
                     }
                 },
-                init: function () {
-                    GoalSocietyRenderer.reRender(this.families);
+                _addFamily: function (family) {
+                    this.__families.push(family);
+                    GoalSocietyRenderer.addNodes(family);
+                },
+                _editGoal: function (goal) {
+                    var id = goal.id;
+                    for (var i = 0; i < this.__families.length; ++i) {
+                        var ithFamily = this.__families[i];
+                        for (var j = 0; j < ithFamily.length; ++j) {
+                            var jthMember = ithFamily[j];
+                            if (jthMember.id === id) {
+                                this.__families[i][j] = goal;
+                                GoalSocietyRenderer.updateNode(goal);
+                                return;
+                            }
+                        }
+                    }
+                },
+                _removeFamily: function (id) {
+                    id = Number(id);
+                    var removedFamily = this._deleteFamilyWithGoalId(id);
+                    GoalSocietyRenderer.removeNodes(removedFamily);
+                },
+                _breakRelation: function (parentId, childId, newFamilies) {
+                    parentId = Number(parentId);
+                    childId = Number(childId);
+                    this._deleteFamilyWithGoalId(parentId);
+                    this.__families.push(newFamilies[0]);
+                    if (newFamilies.length === 2) {
+                        this.__families.push(newFamilies[1]);
+                    }
+                    GoalSocietyRenderer.reRender(this.__families);
+                },
+                _makeRelation: function (parentId, childId, newFamily) {
+                    parentId = Number(parentId);
+                    childId = Number(childId);
+                    this._deleteFamilyWithGoalId(parentId);
+                    this._deleteFamilyWithGoalId(childId);
+                    this.__families.push(newFamily);
+                    GoalSocietyRenderer.reRender(this.__families);
+                },
+                _clearSociety: function () {
+                    this.__families = [];
+                    GoalSocietyRenderer.reRender(this.__families);
+                },
+                _initSociety: function () {
+                    GoalSocietyRenderer.reRender(this.__families);
                 }
             },
             getGoal: function (id) {
-                id = Number(id);
-                for (var i = 0; i < this.society.families.length; ++i) {
-                    var ithFamily = this.society.families[i];
-                    for (var j = 0; j < ithFamily.length; ++j) {
-                        var jthMember = ithFamily[j];
-                        if (jthMember.id === id) {
-                            return jthMember;
-                        }
-                    }
-                }
-                return false;
+                return this._society._getGoal(id);
             },
             // todo : create deadline parser breakdown
             createGoal: function (description, deadline) {
@@ -231,7 +255,7 @@
                     success: function (response) {
                         var json_response = JSON.parse(response);
                         if (json_response.status === 0) {
-                            GoalSocietyManager.society.add([json_response.body]);
+                            GoalSocietyManager._society._addFamily([json_response.body]);
                         } else if (json_response.status === -1) {
                             alert(json_response.message);
                         }
@@ -273,13 +297,47 @@
                         success: function (response) {
                             var json_response = JSON.parse(response);
                             if (json_response.status === 0) {
-                                GoalSocietyManager.society.edit(json_response.body);
+                                GoalSocietyManager._society._editGoal(json_response.body);
                             } else if (json_response.status === -1) {
                                 alert(json_response.message);
                             }
                         },
                         error: function (response) {
                             alert('Error updating goal');
+                        },
+                        beforeSend: function (xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                            }
+                        }
+                    });
+                }
+            },
+            addRelation: function (parentId, childId) {
+                if (!this.isGoalInSociety(parentId) || !this.isGoalInSociety(childId)) {
+                    return false;
+                } else {
+                    var csrfSafeMethod = function (method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    };
+                    $.ajax({
+                        url: "{% url 'restapi:goal_add_relation' %}",
+                        method: 'POST',
+                        data: {
+                            parent_id: parentId,
+                            child_id: childId
+                        },
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                GoalSocietyManager._society._makeRelation(parentId, childId, json_response.body);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error adding relation');
                         },
                         beforeSend: function (xhr, settings) {
                             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -307,7 +365,7 @@
                         success: function (response) {
                             var json_response = JSON.parse(response);
                             if (json_response.status === 0) {
-                                GoalSocietyManager.society.breakRelation(parentId, childId, json_response.body);
+                                GoalSocietyManager._society._breakRelation(parentId, childId, json_response.body);
                             } else if (json_response.status === -1) {
                                 alert(json_response.message);
                             }
@@ -324,17 +382,7 @@
                 }
             },
             isGoalInSociety: function (id) {
-                id = Number(id);
-                for (var i = 0; i < this.society.families.length; ++i) {
-                    var ithFamily = this.society.families[i];
-                    for (var j = 0; j < ithFamily.length; ++j) {
-                        var jthMember = ithFamily[j];
-                        if (jthMember.id === id) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
+                return this._society._isGoalInSociety(id);
             },
             selectFamilyOfGoal: function (id) {
                 if (this.isGoalInSociety(id)) {
@@ -348,7 +396,7 @@
                             var json_response = JSON.parse(response);
                             if (json_response.status === 0) {
                                 var family = json_response.body;
-                                GoalSocietyManager.society.add(family);
+                                GoalSocietyManager._society._addFamily(family);
                             } else if (json_response.status === -1) {
                                 alert(json_response.message);
                             }
@@ -360,27 +408,7 @@
                 }
             },
             deselectFamilyOfGoal: function (id) {
-                id = Number(id);
-                var indexOfFamilyToBeDeSelected = -1;
-                for (var i = 0; i < this.society.families.length; ++i) {
-                    var ithFamily = this.society.families[i];
-                    for (var j = 0; j < ithFamily.length; ++j) {
-                        var jthMember = ithFamily[j];
-                        if (jthMember.id === id) {
-                            indexOfFamilyToBeDeSelected = i;
-                            break;
-                        }
-                    }
-                    if (indexOfFamilyToBeDeSelected > -1) {
-                        break;
-                    }
-                }
-                if (indexOfFamilyToBeDeSelected > -1) {
-                    this.society.remove(indexOfFamilyToBeDeSelected);
-                    return true;
-                } else {
-                    return false;
-                }
+                return this._society._removeFamily(id) !== undefined;
             },
             hardSelectFamilyOfGoal: function (id) {
                 $.ajax({
@@ -391,7 +419,7 @@
                         var json_response = JSON.parse(response);
                         if (json_response.status === 0) {
                             var family = json_response.body;
-                            GoalSocietyManager.society.set(family);
+                            GoalSocietyManager._society._setSociety(family);
                         } else if (json_response.status === -1) {
                             alert(json_response.message);
                         }
@@ -402,7 +430,7 @@
                 });
             },
             clearSociety: function () {
-                this.society.clear();
+                this._society._clearSociety();
             },
             toggleAchievement: function (id) {
                 if (!this.isGoalInSociety(id)) {
@@ -415,7 +443,7 @@
                         success: function (response) {
                             var json_response = JSON.parse(response);
                             if (json_response.status === 0) {
-                                GoalSocietyManager.society.toggleIsAchieved(id);
+                                GoalSocietyManager._society._setIsAchievedOfGoal(id, json_response.body);
                             } else if (json_response.status === -1) {
                                 alert(json_response.message);
                             }
@@ -427,7 +455,7 @@
                 }
             },
             init: function () {
-                this.society.init();
+                this._society._initSociety();
             }
         };
         var GoalSocietyRenderer = {
@@ -513,7 +541,8 @@
                             }
                         },
                         interaction: {
-                            hover: true
+                            hover: true,
+                            navigationButtons: true
                         }
                     };
                     return new vis.Network(canvasDiv, data, options);

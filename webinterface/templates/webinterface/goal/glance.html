@@ -121,6 +121,51 @@
 {% endblock %}
 {% block body %}
     <script>
+        var DatetimeManager = {
+            shortForms: {
+                u: 'microsecond',
+                s: 'second',
+                t: 'minute',
+                h: 'hour',
+                d: 'day',
+                m: 'month',
+                y: 'year'
+            },
+            longForms: {
+                microsecond: 'u',
+                second: 's',
+                minute: 't',
+                hour: 'h',
+                day: 'd',
+                month: 'm',
+                year: 'y'
+            },
+            parse: function (datetimeStr) {
+                try {
+                    if (datetimeStr === '') {
+                        return null;
+                    }
+                    var ans = {microsecond: 0, second: 0, minute: 0, hour: 0, day: 0, month: 0, year: 0};
+                    var spilt = datetimeStr.split(' ');
+                    for (var i = 0; i < spilt.length; ++i) {
+                        var unit = spilt[i];
+                        ans[this.shortForms[unit.charAt(0)]] = Number(unit.substr(1));
+                    }
+                    return ans;
+                } catch (e) {
+                    return false;
+                }
+            },
+            format: function (datetimeObj) {
+                var ans = '';
+                for (var key in datetimeObj) {
+                    if (datetimeObj.hasOwnProperty(key)) {
+                        ans += this.longForms[key] + datetimeObj[key] + ' ';
+                    }
+                }
+                return ans;
+            }
+        };
         var GoalSocietyManager = {
             _society: {
                 __families: [],
@@ -238,13 +283,9 @@
                     // these HTTP methods do not require CSRF protection
                     return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
                 };
-                var parseDeadline = function (deadline) {
-                    deadline = deadline === '' ? null : deadline;
-                    return deadline;
-                };
                 var jsonStringedData = JSON.stringify({
                     description: description,
-                    deadline: parseDeadline(deadline)
+                    deadline: deadline
                 });
                 $.ajax({
                     url: "{% url 'restapi:goal_create' %}",
@@ -279,14 +320,10 @@
                         // these HTTP methods do not require CSRF protection
                         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
                     };
-                    var parseDeadline = function (deadline) {
-                        deadline = deadline === '' ? null : deadline;
-                        return deadline;
-                    };
                     var jsonStringedData = JSON.stringify({
                         id: id,
                         description: description,
-                        deadline: parseDeadline(deadline)
+                        deadline: deadline
                     });
                     $.ajax({
                         url: "{% url 'restapi:goal_update' %}",
@@ -644,7 +681,7 @@
                     graph.on('selectNode', function (params) {
                         var goal = GoalSocietyManager.getGoal(params.nodes[0]);
                         $('#existing-goal-description').val(goal.description);
-                        $('#existing-goal-deadline').val(goal.deadline);
+                        $('#existing-goal-deadline').val(DatetimeManager.format(goal.deadline));
                         $('#existing-goal-id').val(goal.id);
                         $('#existing-goal-modal').show();
                     });
@@ -772,7 +809,7 @@
                     var IS_ACHIEVED_FALSE_ICON = "crop_square";
 
                     description = description === "" ? "@Empty" : description;
-                    deadline = deadline === null ? "@Free" : deadline;
+                    deadline = deadline === null ? "|:)" : DatetimeManager.format(deadline);
                     var is_achieved_res = '<i class="material-icons orange-text">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
                         is_achieved_res = '<i class="material-icons green-text">' + IS_ACHIEVED_TRUE_ICON + '</i>';
@@ -838,10 +875,15 @@
                         var deadlineInput = $('#new-goal-deadline');
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-                        GoalSocietyManager.createGoal(description, deadline);
-                        $(descriptionInput).val('');
-                        $(deadlineInput).val('');
-                        $('#new-goal-modal').hide();
+                        var deadlineObject = DatetimeManager.parse(deadline);
+                        if (deadlineObject !== false) {
+                            GoalSocietyManager.createGoal(description, deadlineObject);
+                            $(descriptionInput).val('');
+                            $(deadlineInput).val('');
+                            $('#new-goal-modal').hide();
+                        } else {
+                            alert('Incorrect datetime format, try again');
+                        }
                     }submit()">
                 <i class="material-icons">send</i></button>
         </div>
@@ -865,11 +907,16 @@
                         var id = $(idInput).val();
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-                        GoalSocietyManager.updateGoal(id, description, deadline);
-                        $(descriptionInput).val('');
-                        $(deadlineInput).val('');
-                        $(idInput).val('');
-                        $('#existing-goal-modal').hide();
+                        var deadlineObject = DatetimeManager.parse(deadline);
+                        if (deadlineObject !== false) {
+                            GoalSocietyManager.updateGoal(id, description, deadlineObject);
+                            $(descriptionInput).val('');
+                            $(deadlineInput).val('');
+                            $(idInput).val('');
+                            $('#existing-goal-modal').hide();
+                        } else {
+                            alert('Incorrect datetime format, try again');
+                        }
                     }submit()">
                 <i class="material-icons">sync</i></button>
             <button id="existing-goal-family-deselect-btn"

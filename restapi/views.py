@@ -89,7 +89,7 @@ def create(request):
                               hour=deadline['hour'],
                               minute=deadline['minute'],
                               second=deadline['second'],
-                              microseconds=deadline['microsecond'])
+                              microsecond=deadline['microsecond'])
             new_goal = Goal(description=description, deadline=deadline)
             new_goal.save()
             return HttpResponse(json.dumps({'status': 0, 'body': jsonize(new_goal)}))
@@ -113,7 +113,7 @@ def update(request):
                               hour=deadline['hour'],
                               minute=deadline['minute'],
                               second=deadline['second'],
-                              microseconds=deadline['microsecond'])
+                              microsecond=deadline['microsecond'])
             existing_goal = Goal.objects.get(pk=pk)
             existing_goal.description = description
             existing_goal.deadline = deadline
@@ -126,7 +126,6 @@ def update(request):
             return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
         except ObjectDoesNotExist:
             return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
-
     else:
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
@@ -170,7 +169,6 @@ def add_relation(request):
             return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
         except ObjectDoesNotExist:
             return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
-
     else:
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
@@ -198,7 +196,6 @@ def remove_relation(request):
             return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
         except ObjectDoesNotExist:
             return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
-
     else:
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 

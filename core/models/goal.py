@@ -105,7 +105,16 @@ class Goal(models.Model):
         is_acyclically_valid = self.is_acyclically_valid()
         if is_acyclically_valid is not True:
             self._parents.remove(parent)
-        return is_acyclically_valid
+            return is_acyclically_valid
+        is_deadline_valid = self.is_deadline_valid()
+        if is_deadline_valid is not True:
+            self._parents.remove(parent)
+            return is_deadline_valid
+        is_is_achieved_valid = self.is_is_achieved_valid()
+        if is_is_achieved_valid is not True:
+            self._parents.remove(parent)
+            return is_is_achieved_valid
+        return True
 
     def remove_parent(self, parent):
         self._parents.remove(parent)
@@ -118,7 +127,16 @@ class Goal(models.Model):
         is_acyclically_valid = self.is_acyclically_valid()
         if is_acyclically_valid is not True:
             self._children.remove(child)
-        return is_acyclically_valid
+            return is_acyclically_valid
+        is_deadline_valid = self.is_deadline_valid()
+        if is_deadline_valid is not True:
+            self._children.remove(child)
+            return is_deadline_valid
+        is_is_achieved_valid = self.is_is_achieved_valid()
+        if is_is_achieved_valid is not True:
+            self._children.remove(child)
+            return is_is_achieved_valid
+        return True
 
     def remove_child(self, child):
         self._children.remove(child)

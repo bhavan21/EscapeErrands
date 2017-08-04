@@ -131,6 +131,24 @@ def update(request):
         return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
 
 
+def delete_if_single(request):
+    if request.method == 'POST':
+        try:
+            pk = request.POST['id']
+            existing_goal = Goal.objects.get(pk=pk)
+            if len(existing_goal.get_parents()) == 0 and len(existing_goal.get_children()) == 0:
+                existing_goal.delete()
+                return HttpResponse(json.dumps({'status': 0}))
+            else:
+                return HttpResponse(json.dumps({'status': -1, 'message': 'Goal is not single'}))
+        except (ValueError, TypeError):
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Improper data'}))
+        except ObjectDoesNotExist:
+            return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid id'}))
+    else:
+        return HttpResponse(json.dumps({'status': -1, 'message': 'Invalid request'}))
+
+
 def add_relation(request):
     if request.method == 'POST':
         try:

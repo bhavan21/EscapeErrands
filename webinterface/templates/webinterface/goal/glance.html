@@ -113,7 +113,7 @@
             right: 10px;
         }
 
-        #new-goal-modal-submit-btn, #existing-goal-modal-submit-btn {
+        #new-goal-modal-submit-btn, #existing-goal-modal-submit-btn, #existing-goal-delete-btn {
             padding: 0;
         }
 
@@ -313,6 +313,39 @@
                     });
                 }
             },
+            deleteGoalIfSingle: function (id) {
+                if (!this.isGoalInSociety(id)) {
+                    return false;
+                } else {
+                    var csrfSafeMethod = function (method) {
+                        // these HTTP methods do not require CSRF protection
+                        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+                    };
+                    $.ajax({
+                        url: "{% url 'restapi:goal_delete_if_single' %}",
+                        method: 'POST',
+                        data: {
+                            id: id
+                        },
+                        success: function (response) {
+                            var json_response = JSON.parse(response);
+                            if (json_response.status === 0) {
+                                GoalSocietyManager._society._removeFamily(id);
+                            } else if (json_response.status === -1) {
+                                alert(json_response.message);
+                            }
+                        },
+                        error: function (response) {
+                            alert('Error deleting goal');
+                        },
+                        beforeSend: function (xhr, settings) {
+                            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                                xhr.setRequestHeader("X-CSRFToken", Cookies.get('csrftoken'));
+                            }
+                        }
+                    });
+                }
+            },
             addRelation: function (parentId, childId) {
                 if (!this.isGoalInSociety(parentId) || !this.isGoalInSociety(childId)) {
                     return false;
@@ -463,11 +496,11 @@
             edgesDataSet: undefined,
             nodesDataSet: undefined,
             uiSettings: {
-                MAX_LABEL_LENGTH: 10,
+                MAX_LABEL_LENGTH: 15,
                 truncateToFitLabel: function (string) {
                     var label;
                     if (string.length > this.MAX_LABEL_LENGTH) {
-                        label = string.substring(0, 15) + '...';
+                        label = string.substring(0, this.MAX_LABEL_LENGTH) + '...';
                     } else {
                         label = string;
                     }
@@ -823,7 +856,7 @@
             <label for="existing-goal-deadline">Deadline</label><input id="existing-goal-deadline">
             <input id="existing-goal-id" hidden>
             <button id="existing-goal-modal-submit-btn"
-                    class="btn btn-large white black-text z-depth-0"
+                    class="btn btn-large white blue-text z-depth-0"
                     title="Update"
                     onclick="function submit() {
                         var idInput = $('#existing-goal-id');
@@ -848,6 +881,15 @@
                         $('#existing-goal-modal').hide();
                     }submit()">
                 <i class="material-icons">input</i></button>
+            <button id="existing-goal-delete-btn"
+                    class="btn btn-large white red-text z-depth-0"
+                    title="Delete"
+                    onclick="function submit() {
+                        var goalId = $('#existing-goal-id').val();
+                        GoalSocietyManager.deleteGoalIfSingle(goalId);
+                        $('#existing-goal-modal').hide();
+                    }submit()">
+                <i class="material-icons">delete</i></button>
         </div>
     </div>
 {% endblock %}

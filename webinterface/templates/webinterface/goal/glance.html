@@ -4,6 +4,7 @@
 {% block extra_headers %}
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
     <script src="{% static 'webinterface/cookies.js' %}"></script>
+    <script src="{% static 'webinterface/moment.js' %}"></script>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis.min.css' %}"/>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis-network.min.css' %}"/>
 {% endblock %}
@@ -122,23 +123,15 @@
 {% block body %}
     <script>
         var DatetimeManager = {
-            shortForms: {
-                u: 'microsecond',
-                s: 'second',
-                t: 'minute',
-                h: 'hour',
-                d: 'day',
-                m: 'month',
-                y: 'year'
+            shortForms: ['d', 'm', 'y', 'h', 't', 's', 'u'],
+            longForms: ['day', 'month', 'year', 'hour', 'minute', 'second', 'microsecond'],
+            getShortForm: function (longForm) {
+                var index = this.longForms.indexOf(longForm);
+                return this.shortForms[index];
             },
-            longForms: {
-                microsecond: 'u',
-                second: 's',
-                minute: 't',
-                hour: 'h',
-                day: 'd',
-                month: 'm',
-                year: 'y'
+            getLongForm: function (shortForm) {
+                var index = this.shortForms.indexOf(shortForm);
+                return this.longForms[index];
             },
             parse: function (datetimeStr) {
                 try {
@@ -149,7 +142,7 @@
                     var spilt = datetimeStr.split(' ');
                     for (var i = 0; i < spilt.length; ++i) {
                         var unit = spilt[i];
-                        ans[this.shortForms[unit.charAt(0)]] = Number(unit.substr(1));
+                        ans[this.getLongForm(unit.charAt(0))] = Number(unit.substr(1));
                     }
                     return ans;
                 } catch (e) {
@@ -157,13 +150,24 @@
                 }
             },
             format: function (datetimeObj) {
+                if (datetimeObj === null) {
+                    return '';
+                }
                 var ans = '';
-                for (var key in datetimeObj) {
-                    if (datetimeObj.hasOwnProperty(key)) {
-                        ans += this.longForms[key] + datetimeObj[key] + ' ';
-                    }
+                for (var i = 0; i < this.longForms.length; ++i) {
+                    ans += this.shortForms[i] + datetimeObj[this.longForms[i]] + ' ';
                 }
                 return ans;
+            },
+            formatNow: function () {
+                var now = moment();
+                return this.getShortForm('day') + now.date() + ' '
+                    + this.getShortForm('month') + now.month() + ' '
+                    + this.getShortForm('year') + now.year() + ' '
+                    + this.getShortForm('hour') + now.hour() + ' '
+                    + this.getShortForm('minute') + now.minute() + ' '
+                    + this.getShortForm('second') + now.second() + ' '
+                    + this.getShortForm('microsecond') + (now.millisecond() * 1000)
             }
         };
         var GoalSocietyManager = {
@@ -809,7 +813,7 @@
                     var IS_ACHIEVED_FALSE_ICON = "crop_square";
 
                     description = description === "" ? "@Empty" : description;
-                    deadline = deadline === null ? "|:)" : DatetimeManager.format(deadline);
+                    deadline = deadline === null ? "#" : DatetimeManager.format(deadline);
                     var is_achieved_res = '<i class="material-icons orange-text">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
                         is_achieved_res = '<i class="material-icons green-text">' + IS_ACHIEVED_TRUE_ICON + '</i>';
@@ -866,7 +870,9 @@
                     onclick="function hideNewGoalModal() {$('#new-goal-modal').hide();}hideNewGoalModal()">
                 <i class="material-icons">close</i></button>
             <label for="new-goal-description">Description</label><textarea id="new-goal-description"></textarea>
-            <label for="new-goal-deadline">Deadline</label><input id="new-goal-deadline">
+            <label for="new-goal-deadline">Deadline: Deadline: t -> minute, m -> month, u -> microsecond</label><input
+                id="new-goal-deadline"
+                ondblclick="this.value = DatetimeManager.formatNow()">
             <button id="new-goal-modal-submit-btn"
                     class="btn btn-large white black-text z-depth-0"
                     title="Submit"
@@ -895,7 +901,9 @@
                 <i class="material-icons">close</i></button>
             <label for="existing-goal-description">Description</label><textarea
                 id="existing-goal-description"></textarea>
-            <label for="existing-goal-deadline">Deadline</label><input id="existing-goal-deadline">
+            <label for="existing-goal-deadline">Deadline: t -> minute, m -> month, u -> microsecond</label><input
+                id="existing-goal-deadline"
+                ondblclick="this.value = DatetimeManager.formatNow()">
             <input id="existing-goal-id" hidden>
             <button id="existing-goal-modal-submit-btn"
                     class="btn btn-large white blue-text z-depth-0"

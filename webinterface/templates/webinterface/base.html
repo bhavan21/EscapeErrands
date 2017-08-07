@@ -8,7 +8,10 @@
     {# Materialize #}
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
-{#    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>#}
+    {#    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/js/materialize.min.js"></script>#}
+    {# Toastr #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     {# Extra Headers #}
     {% block extra_headers %}{% endblock %}
     {# Icon and Title #}
@@ -17,5 +20,25 @@
     {# CSS #}
     {% block css %}{% endblock %}
 </head>
-<body>{% block body %}{% endblock %}</body>
+<body>
+{# Default toastr configuration #}
+<script>
+    toastr.options = {
+        "closeButton": false,
+        "newestOnTop": false,
+        "progressBar": false,
+        "positionClass": "toast-top-right",
+        "preventDuplicates": false,
+        "onclick": null,
+        "showDuration": "300",
+        "hideDuration": "300",
+        "timeOut": "1000",
+        "extendedTimeOut": "1000",
+        "showEasing": "linear",
+        "hideEasing": "linear",
+        "showMethod": "fadeIn",
+        "hideMethod": "fadeOut"
+    }
+</script>
+{% block body %}{% endblock %}</body>
 </html>

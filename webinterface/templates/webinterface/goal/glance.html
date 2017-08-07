@@ -302,11 +302,11 @@
                         if (json_response.status === 0) {
                             GoalSocietyManager._society._addFamily([json_response.body]);
                         } else if (json_response.status === -1) {
-                            alert(json_response.message);
+                            toastr.error(json_response.message);
                         }
                     },
                     error: function (response) {
-                        alert('Error creating goal');
+                        toastr.error('Error creating goal');
                     },
                     beforeSend: function (xhr, settings) {
                         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -340,11 +340,11 @@
                             if (json_response.status === 0) {
                                 GoalSocietyManager._society._editGoal(json_response.body);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error updating goal');
+                            toastr.error('Error updating goal');
                         },
                         beforeSend: function (xhr, settings) {
                             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -373,11 +373,11 @@
                             if (json_response.status === 0) {
                                 GoalSocietyManager._society._removeFamily(id);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error deleting goal');
+                            toastr.error('Error deleting goal');
                         },
                         beforeSend: function (xhr, settings) {
                             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -407,11 +407,11 @@
                             if (json_response.status === 0) {
                                 GoalSocietyManager._society._makeRelation(parentId, childId, json_response.body);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error adding relation');
+                            toastr.error('Error adding relation');
                         },
                         beforeSend: function (xhr, settings) {
                             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -441,11 +441,11 @@
                             if (json_response.status === 0) {
                                 GoalSocietyManager._society._breakRelation(parentId, childId, json_response.body);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error removing relation');
+                            toastr.error('Error removing relation');
                         },
                         beforeSend: function (xhr, settings) {
                             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -472,11 +472,11 @@
                                 var family = json_response.body;
                                 GoalSocietyManager._society._addFamily(family);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error reading family of ' + id);
+                            toastr.error('Error reading family of ' + id);
                         }
                     });
                 }
@@ -495,11 +495,11 @@
                             var family = json_response.body;
                             GoalSocietyManager._society._setSociety(family);
                         } else if (json_response.status === -1) {
-                            alert(json_response.message);
+                            toastr.error(json_response.message);
                         }
                     },
                     error: function (response) {
-                        alert('Error reading family of ' + id);
+                        toastr.error('Error reading family of ' + id);
                     }
                 });
             },
@@ -519,11 +519,11 @@
                             if (json_response.status === 0) {
                                 GoalSocietyManager._society._setIsAchievedOfGoal(id, json_response.body);
                             } else if (json_response.status === -1) {
-                                alert(json_response.message);
+                                toastr.error(json_response.message);
                             }
                         },
                         error: function (response) {
-                            alert('Error toggling completion of goal');
+                            toastr.error('Error toggling completion of goal');
                         }
                     });
                 }
@@ -769,7 +769,7 @@
                                     if (jsonResponse.status === 0) {
                                         GoalSearchManager.results.setTable(jsonResponse.body);
                                     } else if (jsonResponse.status === -1) {
-                                        alert(jsonResponse.message);
+                                        toastr.error(jsonResponse.message);
                                     }
                                 },
                                 error: function (response) {
@@ -888,7 +888,7 @@
                             $(deadlineInput).val('');
                             $('#new-goal-modal').hide();
                         } else {
-                            alert('Incorrect datetime format, try again');
+                            toastr.error('Incorrect datetime format, try again');
                         }
                     }submit()">
                 <i class="material-icons">send</i></button>
@@ -923,7 +923,7 @@
                             $(idInput).val('');
                             $('#existing-goal-modal').hide();
                         } else {
-                            alert('Incorrect datetime format, try again');
+                            toastr.error('Incorrect datetime format, try again');
                         }
                     }submit()">
                 <i class="material-icons">sync</i></button>

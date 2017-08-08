@@ -1,1 +1,1 @@
-web: gunicorn simplify.wsgi --log-file -
+web: gunicorn escapeerrands.wsgi --log-file -

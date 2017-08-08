@@ -8,7 +8,7 @@ from goal import Goal
 class Job(models.Model):
     # Relational fields
     id = models.AutoField(primary_key=True)
-    _time_tree = models.OneToOneField(TimeTree, blank=True, null=True, on_delete=models.SET_NULL)
+    time_tree = models.OneToOneField(TimeTree, blank=True, null=True, on_delete=models.SET_NULL)
     _goals = models.ManyToManyField(Goal, related_name='_jobs')
     # Other fields
     description = models.TextField(default='')
@@ -50,9 +50,9 @@ class Job(models.Model):
     def is_timewise_valid(self):
         # Not saved yet
         if self.id is not None:
-            if self._time_tree is not None and self._goals.count() > 0:
+            if self.time_tree is not None and self._goals.count() > 0:
                 for goal in self._goals.all():
-                    for time_branch in self._time_tree.timebranch_set.all():
+                    for time_branch in self.time_tree.branches.all():
                         time_branch_end = time_branch.end
                         goal_end = goal.end
                         # goal_end must be >= time_branch_end
@@ -70,13 +70,6 @@ class Job(models.Model):
             return True
         else:
             return True
-
-    def get_time_tree(self):
-        return self._time_tree
-
-    def set_time_tree(self, time_tree):
-        self._time_tree = time_tree
-        return self.save()
 
     def get_goals(self):
         return self._goals.all()

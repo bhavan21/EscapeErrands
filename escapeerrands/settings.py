@@ -49,9 +49,9 @@ TEMPLATES = [
     },
 ]
 
-ROOT_URLCONF = 'simplify.urls'
+ROOT_URLCONF = 'escapeerrands.urls'
 
-WSGI_APPLICATION = 'simplify.wsgi.application'
+WSGI_APPLICATION = 'escapeerrands.wsgi.application'
 
 DATABASES = {
     'default': {

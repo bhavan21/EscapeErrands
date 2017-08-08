@@ -13,19 +13,23 @@ class Goal(models.Model):
     is_achieved = models.BooleanField(default=False)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        is_savable = self.is_savable()
-        if is_savable is True:
+        is_valid = self.is_valid()
+        if is_valid is True:
             super(Goal, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
             return True
         else:
-            return is_savable
+            return is_valid
 
-    def is_savable(self):
+    def is_valid(self):
         is_deadline_valid = self.is_deadline_valid()
         if is_deadline_valid is True:
             is_is_achieved_valid = self.is_is_achieved_valid()
             if is_is_achieved_valid is True:
-                return True
+                is_acyclically_valid = self.is_acyclically_valid()
+                if is_acyclically_valid is True:
+                    return True
+                else:
+                    error_message = is_acyclically_valid[1]
             else:
                 error_message = is_is_achieved_valid[1]
         else:
@@ -88,7 +92,6 @@ class Goal(models.Model):
                     return True
 
     def is_acyclically_valid(self):
-        # Assumes the graph before inserting this vertex is acyclic
         if self.id is not None:
             if self._dfs_for_checking_cycles(self, self.id, True) is not True:
                 return True
@@ -102,19 +105,10 @@ class Goal(models.Model):
 
     def add_parent(self, parent):
         self._parents.add(parent)
-        is_acyclically_valid = self.is_acyclically_valid()
-        if is_acyclically_valid is not True:
+        is_valid = self.is_valid()
+        if is_valid is not True:
             self._parents.remove(parent)
-            return is_acyclically_valid
-        is_deadline_valid = self.is_deadline_valid()
-        if is_deadline_valid is not True:
-            self._parents.remove(parent)
-            return is_deadline_valid
-        is_is_achieved_valid = self.is_is_achieved_valid()
-        if is_is_achieved_valid is not True:
-            self._parents.remove(parent)
-            return is_is_achieved_valid
-        return True
+        return is_valid
 
     def remove_parent(self, parent):
         self._parents.remove(parent)
@@ -124,19 +118,10 @@ class Goal(models.Model):
 
     def add_child(self, child):
         self._children.add(child)
-        is_acyclically_valid = self.is_acyclically_valid()
-        if is_acyclically_valid is not True:
+        is_valid = self.is_valid()
+        if is_valid is not True:
             self._children.remove(child)
-            return is_acyclically_valid
-        is_deadline_valid = self.is_deadline_valid()
-        if is_deadline_valid is not True:
-            self._children.remove(child)
-            return is_deadline_valid
-        is_is_achieved_valid = self.is_is_achieved_valid()
-        if is_is_achieved_valid is not True:
-            self._children.remove(child)
-            return is_is_achieved_valid
-        return True
+        return is_valid
 
     def remove_child(self, child):
         self._children.remove(child)
@@ -145,7 +130,7 @@ class Goal(models.Model):
         return self._jobs.all()
 
     def add_job(self, job):
-        self._jobs.add(job)
+        return job.add_goal(self)
 
     def remove_job(self, job):
         self._jobs.remove(job)

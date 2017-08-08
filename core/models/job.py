@@ -15,17 +15,21 @@ class Job(models.Model):
     is_done = models.BooleanField(default=False)
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        is_savable = self.is_savable()
-        if is_savable is True:
+        is_valid = self.is_valid()
+        if is_valid is True:
             super(Job, self).save(force_insert=False, force_update=False, using=None, update_fields=None)
             return True
         else:
-            return is_savable
+            return is_valid
 
-    def is_savable(self):
+    def is_valid(self):
         is_is_done_valid = self.is_is_done_valid()
         if is_is_done_valid is True:
-            return True
+            is_timewise_valid = self.is_timewise_valid()
+            if is_timewise_valid is True:
+                return True
+            else:
+                error_message = is_timewise_valid[1]
         else:
             error_message = is_is_done_valid[1]
 
@@ -34,7 +38,7 @@ class Job(models.Model):
     def is_is_done_valid(self):
         if self.id is not None:
             if self.is_done is False:
-                for goal in self._goals:
+                for goal in self._goals.all():
                     if goal.is_achieved is True:
                         return False, 'Goal is achieved before its job is done'
 
@@ -47,7 +51,7 @@ class Job(models.Model):
         # Not saved yet
         if self.id is not None:
             if self._time_tree is not None and self._goals.count() > 0:
-                for goal in self._goals:
+                for goal in self._goals.all():
                     for time_branch in self._time_tree.timebranch_set.all():
                         time_branch_end = time_branch.end
                         goal_end = goal.end
@@ -71,22 +75,18 @@ class Job(models.Model):
         return self._time_tree
 
     def set_time_tree(self, time_tree):
-        prev_time_tree = self._time_tree
         self._time_tree = time_tree
-        is_timewise_valid = self.is_timewise_valid()
-        if is_timewise_valid is not True:
-            self._time_tree = prev_time_tree
-        return is_timewise_valid
+        return self.save()
 
     def get_goals(self):
         return self._goals.all()
 
     def add_goal(self, goal):
         self._goals.add(goal)
-        is_timewise_valid = self.is_timewise_valid()
-        if is_timewise_valid is not True:
+        is_valid = self.is_valid()
+        if is_valid is not True:
             self._goals.remove(goal)
-        return is_timewise_valid
+        return is_valid
 
     def remove_goal(self, goal):
         self._goals.remove(goal)

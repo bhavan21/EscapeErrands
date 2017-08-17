@@ -1,4 +1,4 @@
-package com.yashasvi.www.escapeerrands;
+package org.yashasvi.escapeerrands;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.yashasvi.www.escapeerrands", appContext.getPackageName());
+        assertEquals("org.yashasvi.escapeerrands", appContext.getPackageName());
     }
 }

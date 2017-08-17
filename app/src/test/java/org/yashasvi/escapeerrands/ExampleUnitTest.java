@@ -1,4 +1,4 @@
-package com.yashasvi.www.escapeerrands;
+package org.yashasvi.escapeerrands;
 
 import org.junit.Test;
 

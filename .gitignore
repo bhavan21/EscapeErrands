@@ -1,7 +1,9 @@
-*.pyc
-*.idea/
-*/__pycache__/
-db.sqlite3
-*/migrations/*
-!*/migrations/__init__.py
-tests.py
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild

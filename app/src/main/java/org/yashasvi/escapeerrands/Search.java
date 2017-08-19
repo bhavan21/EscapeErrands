@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import org.androidannotations.annotations.EActivity;
 
-@EActivity(R.layout.activity_scratch)
-public class Scratch extends AppCompatActivity {
+@EActivity(R.layout.a_search)
+public class Search extends AppCompatActivity {
+
 }

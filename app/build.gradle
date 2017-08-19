@@ -42,13 +42,18 @@ dependencies {
     androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-
+    // android-annotations
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
 
     compile 'com.android.support:appcompat-v7:26.+'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    // gson
     compile 'com.google.code.gson:gson:2.7'
+    // lombok
     compile 'org.projectlombok:lombok:1.16.18'
+    // retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+
     testCompile 'junit:junit:4.12'
 }

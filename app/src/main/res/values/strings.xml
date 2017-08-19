@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Escape Errands</string>
+    <string name="search_in_menu">Search</string>
 </resources>

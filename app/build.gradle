@@ -1,20 +1,20 @@
-apply plugin: 'com.android.application'
-apply plugin: 'android-apt'
-def AAVersion = '4.0.0'
+apply plugin: "com.android.application"
+apply plugin: "android-apt"
+def AAVersion = "4.0.0"
 
 buildscript {
     repositories {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.4'
+        classpath "com.neenbedankt.gradle.plugins:android-apt:1.4"
     }
 }
 
 apt {
     arguments {
         androidManifestFile variant.outputs[0].processResources.manifestFile
-        resourcePackageName 'org.yashasvi.escapeerrands'
+        resourcePackageName "org.yashasvi.escapeerrands"
     }
 }
 
@@ -32,28 +32,28 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
-        exclude group: 'com.android.support', module: 'support-annotations'
+    compile fileTree(dir: "libs", include: ["*.jar"])
+    androidTestCompile("com.android.support.test.espresso:espresso-core:2.2.2", {
+        exclude group: "com.android.support", module: "support-annotations"
     })
     // android-annotations
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
 
-    compile 'com.android.support:appcompat-v7:26.+'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile "com.android.support:appcompat-v7:26.+"
+    compile "com.android.support.constraint:constraint-layout:1.0.2"
     // gson
-    compile 'com.google.code.gson:gson:2.7'
+    compile "com.google.code.gson:gson:2.7"
     // lombok
-    compile 'org.projectlombok:lombok:1.16.18'
+    compile "org.projectlombok:lombok:1.16.18"
     // retrofit
-    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile "com.squareup.retrofit2:retrofit:2.3.0"
 
-    testCompile 'junit:junit:4.12'
+    testCompile "junit:junit:4.12"
 }

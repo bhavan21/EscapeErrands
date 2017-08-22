@@ -4,9 +4,13 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
+import org.androidannotations.annotations.EBean;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.yashasvi.calender4j.core.classes.DateTime;
+import org.yashasvi.calender4j.core.exceptions.InvalidDateException;
+import org.yashasvi.calender4j.core.exceptions.InvalidTimeException;
 import org.yashasvi.escapeerrands.models.Goal;
 import org.yashasvi.escapeerrands.restapi.GoalDAO;
 
@@ -70,17 +74,16 @@ public class GoalDAOImpl implements GoalDAO {
 
                 if (!Objects.equals(jsonGoal.getString("deadline"), "null")) {
                     JSONObject jDeadline = jsonGoal.getJSONObject("deadline");
-                    // fixme
-//                    LocalDateTime deadline = LocalDateTime.of(
-//                            jDeadline.getInt("year"),
-//                            jDeadline.getInt("month"),
-//                            jDeadline.getInt("day"),
-//                            jDeadline.getInt("hour"),
-//                            jDeadline.getInt("minute"),
-//                            jDeadline.getInt("second"),
-//                            jDeadline.getInt("microsecond") * 1000
-//                    );
-//                    goal.setDeadline(deadline);
+                    DateTime deadline = DateTime.of(
+                            jDeadline.getInt("year"),
+                            jDeadline.getInt("month"),
+                            jDeadline.getInt("day"),
+                            jDeadline.getInt("hour"),
+                            jDeadline.getInt("minute"),
+                            jDeadline.getInt("second"),
+                            jDeadline.getInt("microsecond")
+                    );
+                    goal.setDeadline(deadline);
                 } else {
                     goal.setDeadline(null);
                 }
@@ -88,7 +91,7 @@ public class GoalDAOImpl implements GoalDAO {
             }
 
             return answer;
-        } catch (IOException | JSONException | NullPointerException e) {
+        } catch (IOException | JSONException | NullPointerException | InvalidDateException | InvalidTimeException e) {
             e.printStackTrace();
             return null;
         }

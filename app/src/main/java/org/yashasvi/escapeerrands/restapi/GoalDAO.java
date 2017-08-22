@@ -1,5 +1,6 @@
 package org.yashasvi.escapeerrands.restapi;
 
+import org.androidannotations.annotations.EBean;
 import org.yashasvi.escapeerrands.models.Goal;
 
 import java.util.List;

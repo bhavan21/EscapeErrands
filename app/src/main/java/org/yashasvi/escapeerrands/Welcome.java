@@ -16,10 +16,10 @@ import org.androidannotations.api.BackgroundExecutor;
 @EActivity(R.layout.a_welcome)
 public class Welcome extends AppCompatActivity {
 
-    private static final String welcomeMessage = "Hi There!\nWelcome To\nEscape Errands!";
+    private static final String WELCOME_MESSAGE = "Hi There!\nWelcome To\nEscape Errands!";
 
     @ViewById
-    TextView welcome_message_TV;
+    TextView welcomeMessage;
 
     @AfterViews
     void afterViews() {
@@ -29,8 +29,8 @@ public class Welcome extends AppCompatActivity {
     @Background(id = "welcome_animation")
     void startWelcomeAnimation() {
         try {
-            for (int i = 0; i < welcomeMessage.length() + 1; ++i) {
-                renderString(welcomeMessage.substring(0, i));
+            for (int i = 0; i < WELCOME_MESSAGE.length() + 1; ++i) {
+                renderString(WELCOME_MESSAGE.substring(0, i));
                 Thread.sleep(50);
             }
         } catch (InterruptedException ignored) {
@@ -40,13 +40,13 @@ public class Welcome extends AppCompatActivity {
 
     @UiThread
     void renderString(String string) {
-        welcome_message_TV.setText(string);
+        welcomeMessage.setText(string);
     }
 
-    @Click({R.id.welcome_message_TV})
+    @Click({R.id.welcome_message})
     void startApp() {
         BackgroundExecutor.cancelAll("welcome_animation", true);
-        welcome_message_TV.setText(welcomeMessage);
+        welcomeMessage.setText(WELCOME_MESSAGE);
         startActivity(new Intent(this, Search_.class));
         finish();
     }

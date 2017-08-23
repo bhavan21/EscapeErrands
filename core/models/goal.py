@@ -12,7 +12,7 @@ class Goal(models.Model):
     deadline = models.DateTimeField(blank=True, null=True)
     is_achieved = models.BooleanField(default=False)
     # Auxiliary fields
-    color = models.CharField(max_length=7, default='#FFFFFF')
+    color = models.CharField(max_length=7, default='#000000')
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         is_valid = self.is_valid()

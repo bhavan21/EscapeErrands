@@ -5,6 +5,7 @@
     <script src="{% static 'webinterface/vis.min.js' %}"></script>
     <script src="{% static 'webinterface/cookies.js' %}"></script>
     <script src="{% static 'webinterface/moment.js' %}"></script>
+    <script src="{% static 'webinterface/myjs/datetimeconverter.js' %}"></script>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis.min.css' %}"/>
     <link type="text/css" rel="stylesheet" href="{% static 'webinterface/vis-network.min.css' %}"/>
 {% endblock %}
@@ -132,54 +133,6 @@
             return label;
         }
 
-        var DatetimeManager = {
-            shortForms: ['d', 'm', 'y', 'h', 't', 's', 'u'],
-            longForms: ['day', 'month', 'year', 'hour', 'minute', 'second', 'microsecond'],
-            getShortForm: function (longForm) {
-                var index = this.longForms.indexOf(longForm);
-                return this.shortForms[index];
-            },
-            getLongForm: function (shortForm) {
-                var index = this.shortForms.indexOf(shortForm);
-                return this.longForms[index];
-            },
-            parse: function (datetimeStr) {
-                try {
-                    if (datetimeStr === '') {
-                        return null;
-                    }
-                    var ans = {microsecond: 0, second: 0, minute: 0, hour: 0, day: 0, month: 0, year: 0};
-                    var spilt = datetimeStr.split(' ');
-                    for (var i = 0; i < spilt.length; ++i) {
-                        var unit = spilt[i];
-                        ans[this.getLongForm(unit.charAt(0))] = Number(unit.substr(1));
-                    }
-                    return ans;
-                } catch (e) {
-                    return false;
-                }
-            },
-            format: function (datetimeObj) {
-                if (datetimeObj === null) {
-                    return '';
-                }
-                var ans = '';
-                for (var i = 0; i < this.longForms.length; ++i) {
-                    ans += this.shortForms[i] + datetimeObj[this.longForms[i]] + ' ';
-                }
-                return ans;
-            },
-            formatNow: function () {
-                var now = moment();
-                return this.getShortForm('day') + now.date() + ' '
-                    + this.getShortForm('month') + now.month() + ' '
-                    + this.getShortForm('year') + now.year() + ' '
-                    + this.getShortForm('hour') + now.hour() + ' '
-                    + this.getShortForm('minute') + now.minute() + ' '
-                    + this.getShortForm('second') + now.second() + ' '
-                    + this.getShortForm('microsecond') + (now.millisecond() * 1000)
-            }
-        };
         var GoalSocietyManager = {
             _society: {
                 __families: [],
@@ -291,7 +244,6 @@
             getGoal: function (id) {
                 return this._society._getGoal(id);
             },
-            // todo : create deadline parser breakdown
             createGoal: function (description, deadline) {
                 var csrfSafeMethod = function (method) {
                     // these HTTP methods do not require CSRF protection
@@ -325,7 +277,6 @@
                     }
                 });
             },
-            // todo : create deadline parser breakdown
             updateGoal: function (id, description, deadline) {
                 if (!this.isGoalInSociety(id)) {
                     return false;
@@ -686,7 +637,7 @@
                     graph.on('selectNode', function (params) {
                         var goal = GoalSocietyManager.getGoal(params.nodes[0]);
                         $('#existing-goal-description').val(goal.description);
-                        $('#existing-goal-deadline').val(DatetimeManager.format(goal.deadline));
+                        $('#existing-goal-deadline').val(DatetimeConverter.format(goal.deadline));
                         $('#existing-goal-id').val(goal.id);
                         $('#existing-goal-modal').show();
                     });
@@ -806,19 +757,49 @@
                                 rows[i].description,
                                 rows[i].deadline,
                                 rows[i].is_achieved,
+                                rows[i].color,
                                 rows[i].id
                             ));
                         }
                     }
                     $('#' + GoalSearchManager.resultsDivId).show();
                 },
-                getHTMLRow: function (description, deadline, is_achieved, id) {
+                getHTMLRow: function (description, deadline, is_achieved, color, id) {
                     var IS_ACHIEVED_TRUE_ICON = "done";
                     var IS_ACHIEVED_FALSE_ICON = "crop_square";
+                    var getDurationFromNowToDeadline = function (deadline) {
+                        var momentDeadline = moment()
+                            .year(deadline.year)
+                            .month(deadline.month - 1)
+                            .date(deadline.day)
+                            .hour(deadline.hour)
+                            .minute(deadline.minute)
+                            .second(deadline.second)
+                            .millisecond(deadline.microsecond / 1000);
+                        var momentNow = moment();
+                        var diff = momentDeadline.diff(momentNow);
+                        var duration = moment.duration(diff);
+                        var days = parseInt(duration.asDays());
+                        var hours = parseInt(duration.asHours()) - days * 1440;
+                        var minutes = parseInt(duration.asMinutes()) - hours * 60;
 
-                    description = description === "" ? "@@@" : truncateToFitLabel(description, GoalSearchManager.settings.MAX_DESCRIPTION_LENGTH);
-                    deadline = deadline === null ? "@@@" : DatetimeManager.format(deadline);
-                    var is_achieved_res = '<i class="material-icons orange-text">' + IS_ACHIEVED_FALSE_ICON + '</i>';
+                        var ret = '';
+                        if (days !== 0)
+                            ret += days + ' days ';
+                        if (hours !== 0)
+                            ret += hours + ' hrs ';
+                        if (minutes !== 0)
+                            ret += minutes + ' minutes ';
+
+                        if (ret === '')
+                            ret = 'just about now';
+
+                        return ret;
+                    };
+
+                    description = description === "" ? "@empty" : truncateToFitLabel(description, GoalSearchManager.settings.MAX_DESCRIPTION_LENGTH);
+                    deadline = deadline === null ? "." : getDurationFromNowToDeadline(deadline);
+                    var is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
                         is_achieved_res = '<i class="material-icons green-text">' + IS_ACHIEVED_TRUE_ICON + '</i>';
                     }
@@ -827,7 +808,7 @@
                         + 'ondragstart="function transferId(e) {e.dataTransfer.setData(\'id\', e.target.id);} transferId(event)" '
                         + 'onclick="function click(id) {GoalSocietyManager.hardSelectFamilyOfGoal(id);} click(this.id)"'
                         + 'class="search-result">'
-                        + '<td class="description" title="' + description + '">' + description + '</td>'
+                        + '<td class="description" style="' + 'color:' + color + '" title="' + description + '">' + description + '</td>'
                         + '<td class="deadline red-text">' + deadline + '</td>'
                         + '<td class="is-achieved">' + is_achieved_res + '</td>'
                         + '</tr>'
@@ -876,7 +857,7 @@
             <label for="new-goal-description">Description</label><textarea id="new-goal-description"></textarea>
             <label for="new-goal-deadline">Deadline: Deadline: t -> minute, m -> month, u -> microsecond</label><input
                 id="new-goal-deadline"
-                ondblclick="this.value = DatetimeManager.formatNow()">
+                ondblclick="this.value = DatetimeConverter.formatNow()">
             <button id="new-goal-modal-submit-btn"
                     class="btn btn-large white black-text z-depth-0"
                     title="Submit"
@@ -885,7 +866,7 @@
                         var deadlineInput = $('#new-goal-deadline');
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-                        var deadlineObject = DatetimeManager.parse(deadline);
+                        var deadlineObject = DatetimeConverter.parse(deadline);
                         if (deadlineObject !== false) {
                             GoalSocietyManager.createGoal(description, deadlineObject);
                             $(descriptionInput).val('');
@@ -907,7 +888,7 @@
                 id="existing-goal-description"></textarea>
             <label for="existing-goal-deadline">Deadline: t -> minute, m -> month, u -> microsecond</label><input
                 id="existing-goal-deadline"
-                ondblclick="this.value = DatetimeManager.formatNow()">
+                ondblclick="this.value = DatetimeConverter.formatNow()">
             <input id="existing-goal-id" hidden>
             <button id="existing-goal-modal-submit-btn"
                     class="btn btn-large white blue-text z-depth-0"
@@ -919,7 +900,7 @@
                         var id = $(idInput).val();
                         var description = $(descriptionInput).val();
                         var deadline = $(deadlineInput).val();
-                        var deadlineObject = DatetimeManager.parse(deadline);
+                        var deadlineObject = DatetimeConverter.parse(deadline);
                         if (deadlineObject !== false) {
                             GoalSocietyManager.updateGoal(id, description, deadlineObject);
                             $(descriptionInput).val('');

@@ -122,6 +122,16 @@
 {% endblock %}
 {% block body %}
     <script>
+        function truncateToFitLabel(string, maxLength) {
+            var label;
+            if (string.length > maxLength) {
+                label = string.substring(0, maxLength) + '...';
+            } else {
+                label = string;
+            }
+            return label;
+        }
+
         var DatetimeManager = {
             shortForms: ['d', 'm', 'y', 'h', 't', 's', 'u'],
             longForms: ['day', 'month', 'year', 'hour', 'minute', 'second', 'microsecond'],
@@ -538,15 +548,6 @@
             nodesDataSet: undefined,
             uiSettings: {
                 MAX_LABEL_LENGTH: 15,
-                truncateToFitLabel: function (string) {
-                    var label;
-                    if (string.length > this.MAX_LABEL_LENGTH) {
-                        label = string.substring(0, this.MAX_LABEL_LENGTH) + '...';
-                    } else {
-                        label = string;
-                    }
-                    return label;
-                },
                 colors: {
                     UN_ACHIEVED: {
                         background: 'pink',
@@ -577,7 +578,7 @@
                         array.push({
                             id: jthMember.id,
                             color: color,
-                            label: GoalSocietyRenderer.uiSettings.truncateToFitLabel(jthMember.description),
+                            label: truncateToFitLabel(jthMember.description, GoalSocietyRenderer.uiSettings.MAX_LABEL_LENGTH),
                             title: jthMember.description
                         });
                     }
@@ -732,7 +733,7 @@
             updateNode: function (goal) {
                 this.nodesDataSet.update([{
                     id: goal.id,
-                    label: GoalSocietyRenderer.uiSettings.truncateToFitLabel(goal.description),
+                    label: truncateToFitLabel(goal.description, GoalSocietyRenderer.uiSettings.MAX_LABEL_LENGTH),
                     title: goal.description
                 }]);
             },
@@ -755,6 +756,9 @@
             searchInputId: 'goal-search-input',
             resultsTableId: 'goal-results-table',
             resultsDivId: 'goal-results-div',
+            settings: {
+                MAX_DESCRIPTION_LENGTH: 15
+            },
             initService: function () {
                 $('#' + GoalSearchManager.searchInputId).keydown(function (e) {
                     switch (e.keyCode) {
@@ -812,8 +816,8 @@
                     var IS_ACHIEVED_TRUE_ICON = "done";
                     var IS_ACHIEVED_FALSE_ICON = "crop_square";
 
-                    description = description === "" ? "@Empty" : description;
-                    deadline = deadline === null ? "#" : DatetimeManager.format(deadline);
+                    description = description === "" ? "@@@" : truncateToFitLabel(description, GoalSearchManager.settings.MAX_DESCRIPTION_LENGTH);
+                    deadline = deadline === null ? "@@@" : DatetimeManager.format(deadline);
                     var is_achieved_res = '<i class="material-icons orange-text">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
                         is_achieved_res = '<i class="material-icons green-text">' + IS_ACHIEVED_TRUE_ICON + '</i>';

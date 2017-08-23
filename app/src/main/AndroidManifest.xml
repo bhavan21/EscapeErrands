@@ -11,16 +11,16 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Welcome_">
+        <activity
+            android:name=".Welcome_"
+            android:noHistory="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".Search_"
-            android:noHistory="true"/>
+        <activity android:name=".Search_" />
     </application>
 
 </manifest>

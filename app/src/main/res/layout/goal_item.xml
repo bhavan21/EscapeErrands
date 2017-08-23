@@ -1,36 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/goal_item"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/goal_item">
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_margin="2dp">
+        android:layout_margin="5dp"
+        android:orientation="horizontal"
+        android:padding="10dp">
 
-        <TextView
-            android:id="@+id/goal_item_deadline"
-            android:text="@string/app_name"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@color/colorAccent"/>
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/goal_item_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/black"
-            android:layout_marginTop="20dp"/>
+            <TextView
+                android:id="@+id/goal_item_deadline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textColor="@color/colorAccent" />
+
+            <TextView
+                android:id="@+id/goal_item_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/app_name"
+                android:textColor="@color/black" />
+        </LinearLayout>
 
         <CheckBox
             android:id="@+id/goal_item_is_achieved"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_margin="10dp"
-            android:clickable="false"/>
+            android:layout_marginTop="10dp"
+            android:clickable="false" />
 
     </RelativeLayout>
 

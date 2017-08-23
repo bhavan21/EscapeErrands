@@ -16,6 +16,7 @@ import org.yashasvi.escapeerrands.restapiimpl.GoalDAOImpl;
 
 import java.util.List;
 
+import es.dmoral.toasty.Toasty;
 import lombok.NonNull;
 
 @EActivity(R.layout.a_search)
@@ -64,7 +65,7 @@ public class Search extends AppCompatActivity {
 
     @UiThread
     void showMessage(@NonNull final String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Toasty.info(this, message, Toast.LENGTH_SHORT).show();
     }
 
 }

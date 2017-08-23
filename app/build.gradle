@@ -54,6 +54,8 @@ dependencies {
     compile "org.projectlombok:lombok:1.16.18"
     // retrofit
     compile "com.squareup.retrofit2:retrofit:2.3.0"
+    // toasty
+    compile 'com.github.GrenderG:Toasty:1.2.5'
 
     testCompile "junit:junit:4.12"
 }

@@ -7,10 +7,12 @@ class Goal(models.Model):
     # Relational fields
     id = models.AutoField(primary_key=True)
     _parents = models.ManyToManyField('Goal', related_name='_children')
-    # Other fields
+    # Core fields
     description = models.TextField(default='')
     deadline = models.DateTimeField(blank=True, null=True)
     is_achieved = models.BooleanField(default=False)
+    # Auxiliary fields
+    color = models.CharField(max_length=7, default='#FFFFFF')
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         is_valid = self.is_valid()

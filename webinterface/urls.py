@@ -5,7 +5,7 @@ app_name = 'webinterface'
 
 urlpatterns = [
     # host/
-    url(r'^$', views.home, name='home'),
+    url(r'^$', views.index, name='index'),
     # host/goal/glance/
     url(r'^goal/glance/$', views.goal_glance, name='goal_glance'),
 ]

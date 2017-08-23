@@ -1,1 +1,1 @@
-web: gunicorn DjEscapeErrands.wsgi --log-file -
+web: gunicorn EscapeErrands_Dj.wsgi --log-file -

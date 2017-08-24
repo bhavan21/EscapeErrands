@@ -780,8 +780,8 @@
                         var diff = momentDeadline.diff(momentNow);
                         var duration = moment.duration(diff);
                         var days = parseInt(duration.asDays());
-                        var hours = parseInt(duration.asHours()) - days * 1440;
-                        var minutes = parseInt(duration.asMinutes()) - hours * 60;
+                        var hours = parseInt(duration.asHours()) - days * 24;
+                        var minutes = parseInt(duration.asMinutes()) - days * 1440 - hours * 60;
 
                         var ret = '';
                         if (days !== 0)

@@ -53,7 +53,7 @@ def read_regex(request):
             re.compile(pattern)
         except re.error:
             return HttpResponse(json.dumps({'status': -1, 'message': 'Not proper regex'}))
-        matched_goals = Goal.objects.filter(description__iregex=pattern)
+        matched_goals = Goal.objects.filter(description__iregex=pattern).order_by('is_achieved', 'deadline')
         json_goals = []
         for goal in matched_goals:
             json_goals.append(jsonize_goal(goal))

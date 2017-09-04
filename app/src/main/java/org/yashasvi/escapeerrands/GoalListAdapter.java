@@ -7,15 +7,11 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.androidannotations.annotations.ViewById;
 import org.yashasvi.calender4j.core.classes.DateTime;
-import org.yashasvi.escapeerrands.models.Goal;
+import org.yashasvi.escapeerrands.beans.Goal;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 
 // todo : do this better if possible
@@ -23,25 +19,25 @@ public class GoalListAdapter extends BaseAdapter {
     private static LayoutInflater inflater = null;
 
     private Context context;
-    private List<Goal> goalList;
+    private List<Goal> goalDataList;
 
-    public GoalListAdapter(Context context, List<Goal> goalList) {
+    public GoalListAdapter(Context context, List<Goal> goalDataList) {
         this.context = context;
-        this.goalList = goalList;
+        this.goalDataList = goalDataList;
         inflater = (LayoutInflater) this.context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     @Override
     public int getCount() {
-        return this.goalList.size();
+        return this.goalDataList.size();
     }
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        View rowView = inflater.inflate(R.layout.goal_item, null);
+        View rowView = inflater.inflate(R.layout.goal_item, parent, false);
 
-        Holder holder = new Holder(rowView);
-        holder.bind(goalList.get(position));
+        DataViewBinder dataViewBinder = new DataViewBinder(rowView);
+        dataViewBinder.bind(goalDataList.get(position));
 
         rowView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -58,13 +54,13 @@ public class GoalListAdapter extends BaseAdapter {
         return rowView;
     }
 
-    class Holder {
+    private class DataViewBinder {
         private LinearLayout goalItemContainer;
         private TextView description;
         private TextView deadline;
         private CheckBox isAchieved;
 
-        Holder(View rowView) {
+        DataViewBinder(View rowView) {
             this.goalItemContainer = rowView.findViewById(R.id.goal_item);
             this.description = this.goalItemContainer.findViewById(R.id.goal_item_description);
             this.deadline = this.goalItemContainer.findViewById(R.id.goal_item_deadline);

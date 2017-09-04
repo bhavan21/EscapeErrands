@@ -10,9 +10,9 @@ import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
-import org.yashasvi.escapeerrands.models.Goal;
-import org.yashasvi.escapeerrands.restapi.GoalDAO;
-import org.yashasvi.escapeerrands.restapiimpl.GoalDAOImpl;
+import org.yashasvi.escapeerrands.beans.Goal;
+import org.yashasvi.escapeerrands.daos.GoalDAO;
+import org.yashasvi.escapeerrands.daoimpls.GoalDAOImpl;
 
 import java.util.List;
 

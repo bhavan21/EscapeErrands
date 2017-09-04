@@ -19,6 +19,12 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/goal_item_id"
+                android:visibility="gone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
                 android:id="@+id/goal_item_deadline"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

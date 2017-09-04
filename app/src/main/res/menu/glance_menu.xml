@@ -3,9 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/search_menu_search_item"
+        android:id="@+id/a_glance_menu_search_item"
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@string/search_in_menu"
         app:actionViewClass="android.support.v7.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
+
+    <item
+        android:id="@+id/a_glance_menu_pull_all_goals_item"
+        android:title="@string/pull_all_goals" />
+
 </menu>

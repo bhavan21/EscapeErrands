@@ -100,4 +100,28 @@ public class GoalDAOImpl implements GoalDAO {
         return null;
     }
 
+    @Override
+    public Boolean toggleIsAchieved(int id) {
+        try {
+            // Sending request
+            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://escape-errands.herokuapp.com/rest/goal/toggle/is_achieved/" + id).newBuilder();
+            String url = urlBuilder.build().toString();
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .build();
+
+            Request request = new Request.Builder().url(url).build();
+            Response response = client.newCall(request).execute();
+
+            // Parsing response
+            JSONObject httpBody = new JSONObject(response.body().string());
+            // NOTE : there is a body JSON array in body HTTP
+            return httpBody.getBoolean("body");
+        } catch (IOException | JSONException | NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

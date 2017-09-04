@@ -16,4 +16,10 @@ public interface GoalDAO {
     public List<Goal> getGoalsByRegex(@NonNull final String pattern);
 
     public List<Goal> getFamilyOfGoal(final int id);
+
+    /**
+     * @return value of goal's is_achieved after toggling or null if any problem
+     */
+    @Nullable
+    public Boolean toggleIsAchieved(final int id);
 }

@@ -15,7 +15,7 @@
             position: fixed;
             top: 0;
             left: 0;
-            width: 25%;
+            width: 33%;
             z-index: 999;
             margin: 20px;
             background-color: white;
@@ -785,11 +785,11 @@
 
                         var ret = '';
                         if (days !== 0)
-                            ret += days + ' days ';
+                            ret += days + 'day ';
                         if (hours !== 0)
-                            ret += hours + ' hrs ';
+                            ret += hours + 'hrs ';
                         if (minutes !== 0)
-                            ret += minutes + ' minutes ';
+                            ret += minutes + 'min ';
 
                         if (ret === '')
                             ret = 'just about now';
@@ -797,7 +797,7 @@
                         return ret;
                     };
 
-                    description = description === "" ? "@empty" : truncateToFitLabel(description, GoalSearchManager.settings.MAX_DESCRIPTION_LENGTH);
+                    var descTrunc = description === "" ? "@empty" : truncateToFitLabel(description, GoalSearchManager.settings.MAX_DESCRIPTION_LENGTH);
                     deadline = deadline === null ? "." : getDurationFromNowToDeadline(deadline);
                     var is_achieved_res = '<i class="material-icons">' + IS_ACHIEVED_FALSE_ICON + '</i>';
                     if (is_achieved === true) {
@@ -808,7 +808,7 @@
                         + 'ondragstart="function transferId(e) {e.dataTransfer.setData(\'id\', e.target.id);} transferId(event)" '
                         + 'onclick="function click(id) {GoalSocietyManager.hardSelectFamilyOfGoal(id);} click(this.id)"'
                         + 'class="search-result">'
-                        + '<td class="description" style="' + 'color:' + color + '" title="' + description + '">' + description + '</td>'
+                        + '<td class="description" style="' + 'color:' + color + '" title="' + description + '">' + descTrunc + '</td>'
                         + '<td class="deadline red-text">' + deadline + '</td>'
                         + '<td class="is-achieved">' + is_achieved_res + '</td>'
                         + '</tr>'
@@ -839,13 +839,13 @@
              ondrop="function drop(e) {var id = e.dataTransfer.getData('id');GoalSocietyManager.selectFamilyOfGoal(id);}drop(event)"
              ondragover="function allowDrop(e) {e.preventDefault();}allowDrop(event)"></div>
         <button id="goal-canvas-clear-btn"
-                class="btn-floating black z-depth-0"
+                class="btn-floating red z-depth-0"
                 title="Clear canvas"
                 onclick="function clear() {GoalSocietyManager.clearSociety()}clear()">
-            <i class="material-icons">replay</i></button>
+            <i class="material-icons">clear</i></button>
         <button id="new-goal-modal-toggle-btn"
-                class="btn-floating purple z-depth-0"
-                title="Create goal"
+                class="btn-floating green z-depth-0"
+                title="Create a goal"
                 onclick="function toggleNewGoalModal() {$('#new-goal-modal').toggle();}toggleNewGoalModal()">
             <i class="material-icons">add</i></button>
         <div id="new-goal-modal">
@@ -891,7 +891,7 @@
                 ondblclick="this.value = DatetimeConverter.formatNow()">
             <input id="existing-goal-id" hidden>
             <button id="existing-goal-modal-submit-btn"
-                    class="btn btn-large white blue-text z-depth-0"
+                    class="btn-floating blue z-depth-0"
                     title="Update"
                     onclick="function submit() {
                         var idInput = $('#existing-goal-id');
@@ -913,16 +913,17 @@
                     }submit()">
                 <i class="material-icons">sync</i></button>
             <button id="existing-goal-family-deselect-btn"
-                    class="btn btn-large white black-text z-depth-0"
-                    title="De-Select"
+                    class="btn-floating black z-depth-0"
+                    title="remove from canvas"
                     onclick="function submit() {
                         var goalId = $('#existing-goal-id').val();
                         GoalSocietyManager.deselectFamilyOfGoal(goalId);
                         $('#existing-goal-modal').hide();
                     }submit()">
-                <i class="material-icons">input</i></button>
+                <i class="material-icons">vertical_align_bottom</i></button>
             <button id="existing-goal-delete-btn"
-                    class="btn btn-large white red-text z-depth-0"
+                    class="btn-floating red z-depth-0"
+                    style="position: absolute; right: 20px;"
                     title="Delete"
                     onclick="function submit() {
                         var goalId = $('#existing-goal-id').val();
